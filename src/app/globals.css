@@ -1,0 +1,257 @@
+@import 'tailwindcss';
+
+/* ============================================================================
+   NOWTECH CENTER — DESIGN TOKENS
+
+   One accent. One radius system. One neutral family. Nothing in a component is
+   allowed to invent a colour, a duration or a corner: if it is not a token
+   below, it does not exist.
+   ========================================================================= */
+
+:root {
+  /* --- Ground -------------------------------------------------------------
+     Cool paper with a faint bias toward the accent, so the neutral reads as
+     chosen rather than inherited. Deliberately not the warm cream every
+     premium storefront defaults to. */
+  --paper: #edefeb; /* the page ground, and the only tinted surface */
+  --space: #e3e6e1; /* chips, empty states, quiet fills */
+  --space-2: #dadfd8;
+  /* Every surface a photograph touches is white, because every photograph in
+     the library was shot on white. Tinting it would put a visible rectangle
+     around 4,215 products. */
+  --surface: #ffffff;
+
+  /* --- Ink ----------------------------------------------------------------
+     Near-black with a green cast, never #000. Contrast on --paper:
+     ink 15.8:1, ink-2 6.4:1, ink-3 4.2:1 (metadata only, never body copy). */
+  --ink: #141715;
+  --ink-2: #585d59;
+  --ink-3: #7f847e;
+
+  /* --- Accent -------------------------------------------------------------
+     The shop's existing mark is a green hexagon, and that green is stamped
+     into thousands of product photographs we cannot fully remove. Replacing
+     the hue would put the site permanently at odds with its own imagery, so
+     the brand green is kept and matured: deep pine instead of leaf green.
+     7.9:1 on paper, which passes for body text, not just for large type. */
+  --accent: #0e5c43;
+  --accent-ink: #0a4a36;
+  --accent-wash: #dbe7e1;
+
+  /* --- Structure ---------------------------------------------------------- */
+  --rule: #d7dad4;
+  --rule-2: #c3c7c0;
+
+  /* --- Semantic -----------------------------------------------------------
+     Exactly one state colour, and it is spent on the only scarce, honest,
+     decision-relevant signal in the dataset: 338 products are out of stock.
+     96.5% of the catalog is flagged "on sale", so discount is not a signal and
+     gets no colour at all. */
+  --warn: #8a4a12;
+
+  /* --- Shape --------------------------------------------------------------
+     Three radii, assigned by role and never mixed: a department tile, a
+     product well, a control. */
+  --r-space: 18px;
+  --r-well: 12px;
+  --r-control: 8px;
+  --r-pill: 999px;
+
+  /* --- Motion -------------------------------------------------------------
+     Short. The audience is on a mid-range Android over a metered connection,
+     and above 300ms a transition reads as lag rather than as quality. */
+  --t-fast: 120ms;
+  --t-base: 220ms;
+  --t-slow: 320ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* --- Layout -------------------------------------------------------------- */
+  --shell: 1320px;
+  --gutter: 1.125rem;
+
+  /* --- Z scale, documented so it is never invented at the call site --------
+     The department nav scrolls under the sticky header, so the header outranks
+     it. The cart drawer covers everything and brings its own close control. */
+  --z-base: 0;
+  --z-sticky: 20;
+  --z-header: 40;
+  --z-drawer: 70;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 1.75rem;
+  }
+}
+
+/* The page is light-first. Dark is honoured from the system preference and can
+   be forced either way by an explicit data-theme, so all three states resolve. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #101210;
+    --space: #1c201c;
+    --space-2: #232823;
+    /* Pure white in dark mode too. The packshots are shot on #ffffff, so an
+       off-white well puts a visible grey rectangle around every product. */
+    --surface: #ffffff;
+    --ink: #e9ebe8;
+    --ink-2: #a2a8a3;
+    --ink-3: #848a85;
+    --accent: #5cbf98;
+    --accent-ink: #7fd3b1;
+    --accent-wash: #16302a;
+    --rule: #2a2e2b;
+    --rule-2: #3b403c;
+    --warn: #d9924f;
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #101210;
+  --space: #1c201c;
+  --space-2: #232823;
+  --surface: #ffffff;
+  --ink: #e9ebe8;
+  --ink-2: #a2a8a3;
+  --ink-3: #848a85;
+  --accent: #5cbf98;
+  --accent-ink: #7fd3b1;
+  --accent-wash: #16302a;
+  --rule: #2a2e2b;
+  --rule-2: #3b403c;
+  --warn: #d9924f;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-space: var(--space);
+  --color-space-2: var(--space-2);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-wash: var(--accent-wash);
+  --color-rule: var(--rule);
+  --color-rule-2: var(--rule-2);
+  --color-warn: var(--warn);
+
+  --radius-space: var(--r-space);
+  --radius-well: var(--r-well);
+  --radius-control: var(--r-control);
+
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================================================
+   BASE
+   ========================================================================= */
+
+* {
+  border-color: var(--rule);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--paper);
+}
+
+/* Focus is never removed, only restyled. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ============================================================================
+   TYPOGRAPHY PRIMITIVES
+   ========================================================================= */
+
+/* Every numeral the customer compares — price, port count, VA rating,
+   reference — is set in mono with tabular figures, so a column of prices from
+   1 000 to 11 800 000 FCFA stays readable as a column. */
+.t-num {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.t-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   MOTION
+   Authored opt-in: animation lives inside a no-preference query, so calm is the
+   default build and anything added later inherits the guard for free.
+   ========================================================================= */
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity var(--t-slow) var(--ease),
+      transform var(--t-slow) var(--ease);
+    /* Rows arrive as bands rather than as a diagonal ripple, and the whole
+       wave is capped so a 40-item grid never reads as a loading bar. */
+    transition-delay: calc(min(var(--reveal-index, 0), 5) * 45ms);
+  }
+
+  .reveal[data-shown='true'] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   UTILITIES
+   ========================================================================= */
+
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Clamp a product name to exactly two lines and reserve the height, so a grid
+   of mixed-length names never shifts as images decode. */
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

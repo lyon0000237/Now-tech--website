@@ -1,0 +1,268 @@
+﻿category_id,name,slug,parent_id,level,full_path,product_count
+67,.Ordinateurs,ordinateur,0,0,.Ordinateurs,541
+1047,ALL IN ONE,all-in-one,67,1,.Ordinateurs > ALL IN ONE,18
+92,Ecrans Moniteurs,ecran_ordinateur,67,1,.Ordinateurs > Ecrans Moniteurs,69
+69,Ordinateur de Bureau/ Desktop,desktop,67,1,.Ordinateurs > Ordinateur de Bureau/ Desktop,94
+111,Desktop DELL,desktop_dell,69,2,.Ordinateurs > Ordinateur de Bureau/ Desktop > Desktop DELL,14
+110,Desktop HP,desktop_hp,69,2,.Ordinateurs > Ordinateur de Bureau/ Desktop > Desktop HP,73
+448,Desktop Lenovo,desktop-lenovo,69,2,.Ordinateurs > Ordinateur de Bureau/ Desktop > Desktop Lenovo,12
+70,Ordinateurs portables / Laptop,laptop,67,1,.Ordinateurs > Ordinateurs portables / Laptop,306
+145,Laptop ASUS,laptop_asus,70,2,.Ordinateurs > Ordinateurs portables / Laptop > Laptop ASUS,5
+114,Laptop DELL,laptop_dell,70,2,.Ordinateurs > Ordinateurs portables / Laptop > Laptop DELL,16
+113,Laptop HP,laptop_hp,70,2,.Ordinateurs > Ordinateurs portables / Laptop > Laptop HP,188
+115,Laptop LENOVO,laptop_lenovo,70,2,.Ordinateurs > Ordinateurs portables / Laptop > Laptop LENOVO,83
+120,Laptop MAC,laptop_mac,70,2,.Ordinateurs > Ordinateurs portables / Laptop > Laptop MAC,7
+466,Surface Pro,surface-pro,70,2,.Ordinateurs > Ordinateurs portables / Laptop > Surface Pro,4
+146,Serveurs,serveur,67,1,.Ordinateurs > Serveurs,53
+407,Accessoires serveurs,accessoire-serveur,146,2,.Ordinateurs > Serveurs > Accessoires serveurs,12
+745,Serveur Dell,serveur-dell,146,2,.Ordinateurs > Serveurs > Serveur Dell,13
+406,Serveurs HP,serveur-hp,146,2,.Ordinateurs > Serveurs > Serveurs HP,16
+1195,Accessoires de sécurité électronique,accessoires-de-securite-electronique,0,0,Accessoires de sécurité électronique,3
+456,Accessoires électriques et rallonges,rallonge-accesoire,0,0,Accessoires électriques et rallonges,15
+388,Multimètre,multimetre,456,1,Accessoires électriques et rallonges > Multimètre,3
+65,Accessoires Ordinateurs,accessoires_ordinateurs,0,0,Accessoires Ordinateurs,285
+93,Afficheurs Laptop,afficheur_laptop,65,1,Accessoires Ordinateurs > Afficheurs Laptop,7
+97,Batteries Laptop,batterie_laptop,65,1,Accessoires Ordinateurs > Batteries Laptop,24
+339,Cartes Graphiques,cartes-graphiques,65,1,Accessoires Ordinateurs > Cartes Graphiques,12
+413,Casques,casques,65,1,Accessoires Ordinateurs > Casques,13
+312,chargeurs laptop,chargeurs-laptop,65,1,Accessoires Ordinateurs > chargeurs laptop,18
+95,Claviers Externes Ordinateurs,clavier_externe,65,1,Accessoires Ordinateurs > Claviers Externes Ordinateurs,14
+94,Claviers Laptop,clavier_laptop,65,1,Accessoires Ordinateurs > Claviers Laptop,10
+103,clés USB,cle_usb,65,1,Accessoires Ordinateurs > clés USB,16
+497,Ecran Projecteur,ecran-projecteur,65,1,Accessoires Ordinateurs > Ecran Projecteur,3
+396,Lecteurs CD/DVD,lecteur-cd-dvd,65,1,Accessoires Ordinateurs > Lecteurs CD/DVD,3
+99,RAM Desktop,ram_desktop,65,1,Accessoires Ordinateurs > RAM Desktop,7
+98,RAM Laptop,ram_laptop,65,1,Accessoires Ordinateurs > RAM Laptop,20
+728,Ram Serveur,ram-serveur,65,1,Accessoires Ordinateurs > Ram Serveur,8
+1091,Sacs Laptop,sacs-laptop,65,1,Accessoires Ordinateurs > Sacs Laptop,5
+345,souris,souris,65,1,Accessoires Ordinateurs > souris,30
+490,Tapis souris,tapis-souris,65,1,Accessoires Ordinateurs > Tapis souris,2
+1345,TRADUCTEUR,traducteur,490,2,Accessoires Ordinateurs > Tapis souris > TRADUCTEUR,1
+409,Webcam pc camera,webcam-pc,65,1,Accessoires Ordinateurs > Webcam pc camera,10
+1043,ALIMENTATION CHARGEUR,alimentation-chargeur,0,0,ALIMENTATION CHARGEUR,12
+1229,antenne,antenne,0,0,antenne,1
+1041,Appareils photo,appareil-photo,0,0,Appareils photo,20
+382,Backup Electrique/Solaire,backup-electrique-solaire,0,0,Backup Electrique/Solaire,46
+385,Système Solaire,systeme-solaires,382,1,Backup Electrique/Solaire > Système Solaire,36
+1314,KIT SOLAIRE,kit-solaire,385,2,Backup Electrique/Solaire > Système Solaire > KIT SOLAIRE,1
+1240,batterie,batterie,0,0,batterie,21
+372,bureautique,bureautique,0,0,bureautique,7
+429,CAISSE ENREGISTREUSE,caisse-enregistreuse,0,0,CAISSE ENREGISTREUSE,10
+325,Calculatrices,calculatrice,0,0,Calculatrices,1
+402,Chargeur Alimentation ubitiqui,charger-ubitiqui,0,0,Chargeur Alimentation ubitiqui,2
+180,Compteurs Billets/Detecteurs Faux Billets,detecteur_billet,0,0,Compteurs Billets/Detecteurs Faux Billets,8
+1094,Connectiques,connectiques,0,0,Connectiques,205
+104,Adaptateurs/Cartes/Convertisseurs,adaptateur-conversitisseur,1094,1,Connectiques > Adaptateurs/Cartes/Convertisseurs,135
+364,Adaptateurs Divers,adaptateur-2,104,2,Connectiques > Adaptateurs/Cartes/Convertisseurs > Adaptateurs Divers,9
+741,HDMI/VGA/Display,hdmi-vga-display,104,2,Connectiques > Adaptateurs/Cartes/Convertisseurs > HDMI/VGA/Display,28
+740,Splitter/Extendeur,splitter-extendeur,104,2,Connectiques > Adaptateurs/Cartes/Convertisseurs > Splitter/Extendeur,19
+738,TYPE C,type-c,104,2,Connectiques > Adaptateurs/Cartes/Convertisseurs > TYPE C,18
+1095,Cables HDMI/mini HDMI,cables-hdmi,1094,1,Connectiques > Cables HDMI/mini HDMI,32
+105,Câbles Informatiques,cable_info,1094,1,Connectiques > Câbles Informatiques,34
+1096,Cables Reseaux,cables-reseaux-connectiques,1094,1,Connectiques > Cables Reseaux,5
+1097,Cables VGA,cables-vga,1094,1,Connectiques > Cables VGA,6
+84,Consommables Imprimantes,accessoire_imprimante,0,0,Consommables Imprimantes,229
+1332,Cartouche de nettoyage,cartouche-de-nettoyage,84,1,Consommables Imprimantes > Cartouche de nettoyage,1
+298,Encre EPSON,encre-epson,84,1,Consommables Imprimantes > Encre EPSON,4
+297,Encre HP,encre-hp,84,1,Consommables Imprimantes > Encre HP,114
+300,Encre RICOH,encre-ricoh,84,1,Consommables Imprimantes > Encre RICOH,4
+296,Encres CANON,encre-canon,84,1,Consommables Imprimantes > Encres CANON,57
+498,Papier ruban,papier-ruban,84,1,Consommables Imprimantes > Papier ruban,23
+723,Tambours/raclette/rouleau,tambours-raclette,84,1,Consommables Imprimantes > Tambours/raclette/rouleau,12
+1238,Controleur de charge,controleur-de-charge-energie_solaire,0,0,Controleur de charge,10
+395,Dictaphones,dictaphone,0,0,Dictaphones,5
+17,DIVERS,non-classe,0,0,DIVERS,33
+389,Destructeurs papiers,destructeurs-papiers,17,1,DIVERS > Destructeurs papiers,2
+1270,DRONES,drones,0,0,DRONES,7
+109,Electromenager/TV/Audio,electromenager,0,0,Electromenager/TV/Audio,194
+182,Appareils Music AUDIO/HIFI,audio_hifi,109,1,Electromenager/TV/Audio > Appareils Music AUDIO/HIFI,41
+400,Electroménager,electro-menager,109,1,Electromenager/TV/Audio > Electroménager,83
+181,Télévisions TV/Ecrans Plats,television,109,1,Electromenager/TV/Audio > Télévisions TV/Ecrans Plats,68
+1230,Ecran TV Skill Tech,ecran-tv-skill-tech,181,2,Electromenager/TV/Audio > Télévisions TV/Ecrans Plats > Ecran TV Skill Tech,13
+1383,Téléviseur HISENSE,televiseur-hisense,181,2,Electromenager/TV/Audio > Télévisions TV/Ecrans Plats > Téléviseur HISENSE,11
+399,Téléviseurs LG,televiseurlg,181,2,Electromenager/TV/Audio > Télévisions TV/Ecrans Plats > Téléviseurs LG,32
+1356,Gadgets Smart,gadgets-smart,0,0,Gadgets Smart,44
+1338,Masseur Smart,masseur-smart,1356,1,Gadgets Smart > Masseur Smart,18
+1350,microphone,microphone,1356,1,Gadgets Smart > microphone,13
+720,Imprimantes &amp; Scanner,imprimantes-scanner,0,0,Imprimantes &amp; Scanner,288
+326,.Scanners,scanners,720,1,Imprimantes &amp; Scanner > .Scanners,30
+328,Étiqueteuses,etiqueteuses,720,1,Imprimantes &amp; Scanner > Étiqueteuses,18
+71,Imprimantes/Copieurs,imprimante,720,1,Imprimantes &amp; Scanner > Imprimantes/Copieurs,239
+427,Autres Imprimantes,autres-imprimantes,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Autres Imprimantes,2
+437,Imprimante PVC Evolis,imprimante-pvc-evolis,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimante PVC Evolis,8
+122,Imprimantes CANON,imprimante_canon,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes CANON,68
+1107,Canon Jet D&#8217;encre/ Ecotank,canon-jet-dencre-ecotank,122,3,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes CANON > Canon Jet D&#8217;encre/ Ecotank,26
+1104,Canon Laser Couleur,canon-laser-couleur,122,3,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes CANON > Canon Laser Couleur,8
+1105,Canon Laser Monochrome(N/B),canon-laser-monochromen-b,122,3,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes CANON > Canon Laser Monochrome(N/B),14
+1106,Copieur Canon Photocopieuse,copieur-canon-photocopieuse,122,3,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes CANON > Copieur Canon Photocopieuse,3
+133,Imprimantes EPSON,imprimante_epson,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes EPSON,28
+123,Imprimantes HP,imprimante_hp,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes HP,94
+1103,HP Jet d&#8217;encre/ EcoTank,hp-jet-dencre-ecotank,123,3,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes HP > HP Jet d&#8217;encre/ EcoTank,24
+1101,HP Laser Couleur,hp-laser-couleur,123,3,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes HP > HP Laser Couleur,19
+1102,HP Laser Monochrome (N/B),hp-laser-monochrome-n-b,123,3,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes HP > HP Laser Monochrome (N/B),33
+499,Imprimantes mobiles,imprimantes-mobiles,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes mobiles,4
+125,Imprimantes RICOH,imprimante_ricoh,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes RICOH,15
+1092,Imprimantes Thermiques,imprimantes-thermiques,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes Thermiques,10
+127,Imprimantes ZEBRA,imprimante_zebra,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Imprimantes ZEBRA,9
+1235,inverseur,inverseur-2,0,0,inverseur,3
+331,JEUX VIDEOS ET CONSOLES,jeux-videos-et-consoles,0,0,JEUX VIDEOS ET CONSOLES,13
+1239,Lampe Solaire,lampe-solaire,0,0,Lampe Solaire,2
+397,LOGITECH,logitech,0,0,LOGITECH,12
+724,VideoConference,video-conference,397,1,LOGITECH > VideoConference,4
+66,Materiels de Bureautique,materiel_bureautique,0,0,Materiels de Bureautique,8
+350,Coupe papier,coupe-papier,66,1,Materiels de Bureautique > Coupe papier,6
+329,Nos Services,services,0,0,Nos Services,32
+355,Occasion,occasion,0,0,Occasion,10
+89,Onduleurs &amp; Batteries,onduleur_batterie,0,0,Onduleurs &amp; Batteries,185
+292,Batteries Onduleurs,batteries-onduleurs,89,1,Onduleurs &amp; Batteries > Batteries Onduleurs,20
+1370,Onduleur HIKVION,onduleur-hikvion,292,2,Onduleurs &amp; Batteries > Batteries Onduleurs > Onduleur HIKVION,4
+1386,MINI UPS,mini-ups,89,1,Onduleurs &amp; Batteries > MINI UPS,21
+1058,OLA,ola,89,1,Onduleurs &amp; Batteries > OLA,1
+443,Onduleur ECUS,onduleur-ecus,89,1,Onduleurs &amp; Batteries > Onduleur ECUS,4
+369,Onduleur PREMAX,onduleur-premax,89,1,Onduleurs &amp; Batteries > Onduleur PREMAX,9
+426,Onduleur SALICRU,onduleur-salicru-onduleur_batterie,89,1,Onduleurs &amp; Batteries > Onduleur SALICRU,16
+1038,Onduleur SUKAM,onduleur-sukam,89,1,Onduleurs &amp; Batteries > Onduleur SUKAM,3
+367,Onduleurs ANC,onduleur-anc,89,1,Onduleurs &amp; Batteries > Onduleurs ANC,7
+134,onduleurs APC,onduleur_apc,89,1,Onduleurs &amp; Batteries > onduleurs APC,44
+137,Onduleurs EATON,onduleur_eaton,89,1,Onduleurs &amp; Batteries > Onduleurs EATON,5
+492,Onduleurs EURONET,euronet-onduleurs,89,1,Onduleurs &amp; Batteries > Onduleurs EURONET,6
+139,Onduleurs LIGHTWAVE,onduleur_lightwave,89,1,Onduleurs &amp; Batteries > Onduleurs LIGHTWAVE,13
+138,Onduleurs MERCURY,onduleur_mercury,89,1,Onduleurs &amp; Batteries > Onduleurs MERCURY,7
+141,Onduleurs NITRAM,onduleur_nitram,89,1,Onduleurs &amp; Batteries > Onduleurs NITRAM,1
+291,Onduleurs Tripp Lite,onduleurs-tripp-lite,89,1,Onduleurs &amp; Batteries > Onduleurs Tripp Lite,1
+1269,outils,outils,0,0,outils,27
+1328,PROJECTEURS,projecteurs,0,0,PROJECTEURS,11
+1330,projecteur SMART,projecteur-smart,1328,1,PROJECTEURS > projecteur SMART,10
+1226,rallonge,rallonge,0,0,rallonge,3
+179,Régulateurs de Tension,regulateur_tension,0,0,Régulateurs de Tension,66
+1241,Regulateur de tension mural yaki,regulateur-de-tension-mural-yaki,179,1,Régulateurs de Tension > Regulateur de tension mural yaki,2
+1236,Regulateur de tension YAKI,regulateur-de-tension-yaki,179,1,Régulateurs de Tension > Regulateur de tension YAKI,4
+1232,Régulateurs de tension ANDELI,regulateur-de-tension-andeli,179,1,Régulateurs de Tension > Régulateurs de tension ANDELI,9
+467,Régulateurs de tension Delta,regulateur-delta,179,1,Régulateurs de Tension > Régulateurs de tension Delta,20
+1039,Regulateurs de Tension Euronet,regulateurs-euronet,179,1,Régulateurs de Tension > Regulateurs de Tension Euronet,3
+1274,Regulateurs de Tension Lightwave,regulateurs-de-tension-lightwave,179,1,Régulateurs de Tension > Regulateurs de Tension Lightwave,14
+63,Réseaux et Télecommunication,reseau-telecom,0,0,Réseaux et Télecommunication,849
+148,.Baies/Panneaux/ Plateau,baie_brassage,63,1,Réseaux et Télecommunication > .Baies/Panneaux/ Plateau,47
+106,.Téléphonie,telephonie,63,1,Réseaux et Télecommunication > .Téléphonie,128
+293,Autocom PBX,autocom_pbx,106,2,Réseaux et Télecommunication > .Téléphonie > Autocom PBX,32
+731,Passerelle Gateway,passerelle-telephonie,106,2,Réseaux et Télecommunication > .Téléphonie > Passerelle Gateway,14
+1311,telephone fanvil,telephone-fanvil,106,2,Réseaux et Télecommunication > .Téléphonie > telephone fanvil,4
+733,Téléphones CISCO,telephones-cisco,106,2,Réseaux et Télecommunication > .Téléphonie > Téléphones CISCO,1
+294,Téléphones GrandStream,telephone_grandstream,106,2,Réseaux et Télecommunication > .Téléphonie > Téléphones GrandStream,26
+295,Telephones IP Mobiles,telephone_mobile,106,2,Réseaux et Télecommunication > .Téléphonie > Telephones IP Mobiles,1
+323,Téléphones Panasonic,telephones-panasonic,106,2,Réseaux et Télecommunication > .Téléphonie > Téléphones Panasonic,21
+732,Téléphones Yeaklink,telephones-yeaklink,106,2,Réseaux et Télecommunication > .Téléphonie > Téléphones Yeaklink,13
+435,Amplificateur de Signal,amplificateur-de-signal,63,1,Réseaux et Télecommunication > Amplificateur de Signal,20
+87,Câblage/Testeurs/ Accessoires Réseaux,cablage_lan,63,1,Réseaux et Télecommunication > Câblage/Testeurs/ Accessoires Réseaux,146
+734,Câbles Réseaux,cables-reseaux,87,2,Réseaux et Télecommunication > Câblage/Testeurs/ Accessoires Réseaux > Câbles Réseaux,47
+377,Connecteurs/Prises/Coupleurs,connecteurs,87,2,Réseaux et Télecommunication > Câblage/Testeurs/ Accessoires Réseaux > Connecteurs/Prises/Coupleurs,27
+735,Panneaux/plateaux/Accessoires,panneaux-plateaux-accessoires,87,2,Réseaux et Télecommunication > Câblage/Testeurs/ Accessoires Réseaux > Panneaux/plateaux/Accessoires,12
+495,Pinces a Sertir,pince-a-sertir,87,2,Réseaux et Télecommunication > Câblage/Testeurs/ Accessoires Réseaux > Pinces a Sertir,6
+739,Testeurs,testeurs,87,2,Réseaux et Télecommunication > Câblage/Testeurs/ Accessoires Réseaux > Testeurs,14
+88,Fibre Optique,fibre_optique,63,1,Réseaux et Télecommunication > Fibre Optique,39
+1218,Module SFP,module-sfp,88,2,Réseaux et Télecommunication > Fibre Optique > Module SFP,5
+488,modem,modem,63,1,Réseaux et Télecommunication > modem,15
+82,Routeurs/AP Wifi/ Antennes Radio,routeur-ap,63,1,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio,302
+430,Acces Point Grandstream,acces-grandstream,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Acces Point Grandstream,12
+162,Radio sans fil UBIQUITI,wireless_ubiquiti,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Radio sans fil UBIQUITI,37
+1372,Routeur Wavlink,routeur-wavlink,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeur Wavlink,1
+149,Routeurs/AP Cisco,routeur_cisco,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP Cisco,12
+743,Routeurs/AP COMMANDO,routeurs-ap-commando,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP COMMANDO,25
+150,Routeurs/AP D-LINK,routeur_dlink,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP D-LINK,15
+153,Routeurs/AP HUAWEI,routeur_huawei,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP HUAWEI,5
+221,Routeurs/AP LINKSYS,routeurs-linksys,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP LINKSYS,4
+451,Routeurs/AP TENDA,routeur-tenda,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP TENDA,15
+151,Routeurs/AP TP-LINK,routeur_tplink,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP TP-LINK,74
+144,Routeurs/AP/Antennes Mikrotik,mikrotik,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP/Antennes Mikrotik,54
+83,Switchs,switch,63,1,Réseaux et Télecommunication > Switchs,147
+470,NETGEAR,netgear-switch,83,2,Réseaux et Télecommunication > Switchs > NETGEAR,4
+471,switch DAHUA,switch-dahua,83,2,Réseaux et Télecommunication > Switchs > switch DAHUA,2
+992,Switch HIKVISION,switch-hikvision,83,2,Réseaux et Télecommunication > Switchs > Switch HIKVISION,8
+742,Switch Mikrotik,switch-mikrotik,83,2,Réseaux et Télecommunication > Switchs > Switch Mikrotik,8
+154,Switchs CISCO,switch_cisco,83,2,Réseaux et Télecommunication > Switchs > Switchs CISCO,32
+155,Switchs D-LINK,switch_dlink,83,2,Réseaux et Télecommunication > Switchs > Switchs D-LINK,33
+156,Switchs TP-LINK,switch_tplink,83,2,Réseaux et Télecommunication > Switchs > Switchs TP-LINK,32
+744,Switchs UBIQUITI,switchs-ubiquiti,83,2,Réseaux et Télecommunication > Switchs > Switchs UBIQUITI,11
+90,UTM/Firewall/QoS,utm,63,1,Réseaux et Télecommunication > UTM/Firewall/QoS,11
+468,Fortigate,fortigate,90,2,Réseaux et Télecommunication > UTM/Firewall/QoS > Fortigate,10
+62,Securité Electronique/Biometrie,securite_electronique,0,0,Securité Electronique/Biometrie,751
+75,.Caméras de Surveillance,camera,62,1,Securité Electronique/Biometrie > .Caméras de Surveillance,442
+324,Alimentation Caméras,alimentation-camera,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Alimentation Caméras,9
+176,Autres Cameras,autre_camera,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Autres Cameras,20
+503,Camera Espion,camera-espion,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Camera Espion,1
+1254,Camera tenda,camera-tenda,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Camera tenda,3
+310,Cameras CP Plus,cameras-cp-plus,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras CP Plus,1
+165,Cameras D-LINK,camera_dlink,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras D-LINK,1
+279,Cameras DAHUA,cameras-dahua,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras DAHUA,59
+444,Caméras EURONET,camera-euronrt,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Caméras EURONET,1
+167,Cameras HIKVISION,camera_hikvision,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras HIKVISION,99
+338,Cameras Multistar,cameras-multistar,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras Multistar,16
+168,Cameras PREMAX,camera_premax,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras PREMAX,17
+494,Cameras Smart Autonome,camera-smart,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras Smart Autonome,33
+392,Cameras Solaires,cameras-solair,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras Solaires,14
+169,Cameras UNIVIEW UNV,camera_uniview,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras UNIVIEW UNV,12
+1057,Kit Caméras,kit-cameras,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Kit Caméras,5
+164,NVR/DVR pour Cameras,nvr_dvr,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > NVR/DVR pour Cameras,117
+457,DVR Dahua,dvr-dahua,164,3,Securité Electronique/Biometrie > .Caméras de Surveillance > NVR/DVR pour Cameras > DVR Dahua,14
+459,DVR HIKVISION,dvr-hikvision,164,3,Securité Electronique/Biometrie > .Caméras de Surveillance > NVR/DVR pour Cameras > DVR HIKVISION,21
+458,NVR DAHUA,nvr-dahua,164,3,Securité Electronique/Biometrie > .Caméras de Surveillance > NVR/DVR pour Cameras > NVR DAHUA,9
+460,NVR HIKVISION,nvr-hikvision,164,3,Securité Electronique/Biometrie > .Caméras de Surveillance > NVR/DVR pour Cameras > NVR HIKVISION,37
+462,NVR TIANDY,nvr-tiandy,164,3,Securité Electronique/Biometrie > .Caméras de Surveillance > NVR/DVR pour Cameras > NVR TIANDY,4
+461,NVR UNIVIEW UNV,nvr_unv,164,3,Securité Electronique/Biometrie > .Caméras de Surveillance > NVR/DVR pour Cameras > NVR UNIVIEW UNV,2
+1196,accessoires de sécurité électronique,accessoires-de-securite-electronique-securite_electronique,62,1,Securité Electronique/Biometrie > accessoires de sécurité électronique,3
+301,Accessoires Securité Electroniques,accessoires-securite-electroniques,62,1,Securité Electronique/Biometrie > Accessoires Securité Electroniques,35
+365,Bras de rappel porte,bras-de-rapel-porte,301,2,Securité Electronique/Biometrie > Accessoires Securité Electroniques > Bras de rappel porte,2
+404,détecteur de métaux,detecteur-de-metaux,301,2,Securité Electronique/Biometrie > Accessoires Securité Electroniques > détecteur de métaux,5
+357,Detecteurs de mouvement,dtecteur-de-mouvement,301,2,Securité Electronique/Biometrie > Accessoires Securité Electroniques > Detecteurs de mouvement,5
+1325,Alarme smart autonome,alarme-smart-autonome,62,1,Securité Electronique/Biometrie > Alarme smart autonome,16
+718,Alarmes,alarmes,62,1,Securité Electronique/Biometrie > Alarmes,74
+74,Alarme Anti Incendie,anti_incendie,718,2,Securité Electronique/Biometrie > Alarmes > Alarme Anti Incendie,39
+73,Alarme Anti Intrusion,anti_intrusion,718,2,Securité Electronique/Biometrie > Alarmes > Alarme Anti Intrusion,35
+1042,Pyronix,pyronix,718,2,Securité Electronique/Biometrie > Alarmes > Pyronix,3
+77,GPS Garmin,gps-garmin,62,1,Securité Electronique/Biometrie > GPS Garmin,28
+736,GPS Tracker,gps-tracker,62,1,Securité Electronique/Biometrie > GPS Tracker,12
+76,Interphones,interphone,62,1,Securité Electronique/Biometrie > Interphones,36
+78,Système Contrôle Accès/presence,controle_acces,62,1,Securité Electronique/Biometrie > Système Contrôle Accès/presence,108
+259,Autres lecteurs/pointeuses,autre_lecteur,78,2,Securité Electronique/Biometrie > Système Contrôle Accès/presence > Autres lecteurs/pointeuses,18
+252,Gâches/Ventouses,gaches-ventouses,78,2,Securité Electronique/Biometrie > Système Contrôle Accès/presence > Gâches/Ventouses,6
+174,Lecteurs/pointeuses HIKVISION,lecteur_hikvision,78,2,Securité Electronique/Biometrie > Système Contrôle Accès/presence > Lecteurs/pointeuses HIKVISION,22
+175,Lecteurs/pointeuses IPBio,lecteur_ipbio,78,2,Securité Electronique/Biometrie > Système Contrôle Accès/presence > Lecteurs/pointeuses IPBio,10
+173,Lecteurs/pointeuses SUPREMA,lecteur_suprema,78,2,Securité Electronique/Biometrie > Système Contrôle Accès/presence > Lecteurs/pointeuses SUPREMA,4
+172,Lecteurs/pointeuses ZKTeco,lecteur_zkteco,78,2,Securité Electronique/Biometrie > Système Contrôle Accès/presence > Lecteurs/pointeuses ZKTeco,44
+502,Serrure Electrique intelligente,serrure-electrique-intelligente,78,2,Securité Electronique/Biometrie > Système Contrôle Accès/presence > Serrure Electrique intelligente,6
+737,Sérigraphie,serigraphie,0,0,Sérigraphie,8
+1224,Smartphones et Tablettes,smartphones-et-tablettes,0,0,Smartphones et Tablettes,27
+428,Stockages/disques Dur,stockages,0,0,Stockages/disques Dur,178
+358,Boitiers disque dur,boitier-disque-dur,428,1,Stockages/disques Dur > Boitiers disque dur,7
+450,Cartes mémoires,carte-memoire,428,1,Stockages/disques Dur > Cartes mémoires,7
+359,Clés USB Pendrive,cle-usb,428,1,Stockages/disques Dur > Clés USB Pendrive,9
+100,Disques Dur Externe,disque_dur_externe,428,1,Stockages/disques Dur > Disques Dur Externe,41
+101,Disques Dur sata 2.5 Laptop et SSD,disque_dur_laptop,428,1,Stockages/disques Dur > Disques Dur sata 2.5 Laptop et SSD,28
+102,Disques Dur sata 3.5 Desktop et Camera,disque_dur_desktop,428,1,Stockages/disques Dur > Disques Dur sata 3.5 Desktop et Camera,27
+381,Disques Dur serveur et SAS,disques-dur-sas-serveur,428,1,Stockages/disques Dur > Disques Dur serveur et SAS,20
+91,Stockage NAS,nas,428,1,Stockages/disques Dur > Stockage NAS,34
+177,Nas QNAP,nas_qnap,91,2,Stockages/disques Dur > Stockage NAS > Nas QNAP,17
+178,Nas Synology,nas_synology,91,2,Stockages/disques Dur > Stockage NAS > Nas Synology,10
+1228,"Support Ecran, Laptop, TV, Projecteur",support-ecran-laptop,0,0,"Support Ecran, Laptop, TV, Projecteur",28
+128,Systèmes/Logiciels,systeme_logiciel,0,0,Systèmes/Logiciels,39
+130,Antivirus,antivirus,128,1,Systèmes/Logiciels > Antivirus,14
+132,Autres logiciels,autre_logiciel,128,1,Systèmes/Logiciels > Autres logiciels,13
+129,Système d&#8217;Exploitation Windows,systeme_windows,128,1,Systèmes/Logiciels > Système d&#8217;Exploitation Windows,25
+719,Telephones Mobile &amp; Tablettes,telephones-mobile-tablettes,0,0,Telephones Mobile &amp; Tablettes,77
+446,.Téléphones Mobiles,telephones-mobile,719,1,Telephones Mobile &amp; Tablettes > .Téléphones Mobiles,37
+362,telephone huawei,telephone-huawei,446,2,Telephones Mobile &amp; Tablettes > .Téléphones Mobiles > telephone huawei,1
+464,Téléphones INFINIX,telephones-infinix,446,2,Telephones Mobile &amp; Tablettes > .Téléphones Mobiles > Téléphones INFINIX,3
+465,Téléphones ITEL,telephones-itel,446,2,Telephones Mobile &amp; Tablettes > .Téléphones Mobiles > Téléphones ITEL,1
+463,Téléphones TECNO,telephones-tecno,446,2,Telephones Mobile &amp; Tablettes > .Téléphones Mobiles > Téléphones TECNO,28
+1231,Téléphones XIAOMI,telephones-xiaomi,446,2,Telephones Mobile &amp; Tablettes > .Téléphones Mobiles > Téléphones XIAOMI,3
+405,Accessoires ORAIMO,produits-oraimo,719,1,Telephones Mobile &amp; Tablettes > Accessoires ORAIMO,13
+351,Chargeurs Oraimo,chargeur-oraimo,405,2,Telephones Mobile &amp; Tablettes > Accessoires ORAIMO > Chargeurs Oraimo,4
+352,Ecouteurs Oraimo,ecouteur-oraimo,405,2,Telephones Mobile &amp; Tablettes > Accessoires ORAIMO > Ecouteurs Oraimo,4
+353,power bank oraimo,power-bank-oraimo,405,2,Telephones Mobile &amp; Tablettes > Accessoires ORAIMO > power bank oraimo,4
+1357,Accessoires Téléphones et Tablettes,accessoires-telephones-et-tablettes,719,1,Telephones Mobile &amp; Tablettes > Accessoires Téléphones et Tablettes,4
+403,tablette pour enfant,tablette-pour-enfant,719,1,Telephones Mobile &amp; Tablettes > tablette pour enfant,10
+147,Tablettes,tablette,719,1,Telephones Mobile &amp; Tablettes > Tablettes,16
+107,Téléphones Fixes GSM,telephone_fixe_gsm,719,1,Telephones Mobile &amp; Tablettes > Téléphones Fixes GSM,3
+1223,Tmartphones et Tablettes,tmartphones-et-tablettes,0,0,Tmartphones et Tablettes,1
+1346,TRADUCTEUR SMART,traducteur-smart,0,0,TRADUCTEUR SMART,1
+142,Vidéoprojecteurs,videoprojecteur,0,0,Vidéoprojecteurs,52
