@@ -83,7 +83,7 @@ export const UNIVERSE_DEFINITIONS: readonly UniverseDefinition[] = [
     slug: 'onduleurs-energie',
     name: 'Onduleurs, Régulateurs & Énergie',
     shortName: 'Énergie',
-    tagline: 'Onduleurs, régulateurs, batteries et solaire — pour un site qui ne tombe pas.',
+    tagline: 'Onduleurs, régulateurs, batteries et solaire, pour un site qui ne tombe pas.',
     categoryIds: [89, 179, 382, 1240, 456, 1043, 1238, 1235, 1226, 1239, 402],
   },
   {

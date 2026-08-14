@@ -10,37 +10,111 @@
 
 :root {
   /* --- Ground -------------------------------------------------------------
-     Cool paper with a faint bias toward the accent, so the neutral reads as
-     chosen rather than inherited. Deliberately not the warm cream every
-     premium storefront defaults to. */
-  --paper: #edefeb; /* the page ground, and the only tinted surface */
-  --space: #e3e6e1; /* chips, empty states, quiet fills */
-  --space-2: #dadfd8;
-  /* Every surface a photograph touches is white, because every photograph in
-     the library was shot on white. Tinting it would put a visible rectangle
-     around 4,215 products. */
+     The page is white, and so is every surface a photograph touches. That is
+     not a style preference, it is what the material demands: all 4,215
+     packshots in this library were shot on white, so any tint behind one draws
+     a rectangle around the product. With one ground everywhere, the photograph
+     has no edge at all.
+     Structure is then carried by hairlines and by space, which is also the more
+     honest register for a catalogue of racks, switches and cabling. */
+  --paper: #ffffff;
+  --space: #f1f3ef; /* spec chips, empty states, quiet fills */
+  --space-2: #e8ebe5;
+  /* Kept as its own token even though it equals --paper today: a well is a
+     role, and the day one needs to lift off the page it changes here and
+     nowhere else. */
   --surface: #ffffff;
+  /* Ink for anything printed ON a packshot's surface, which is white in both
+     themes. It is the one colour in the system that must NOT flip: a discount
+     stamp built from --ink and --paper reads black-on-white in the light theme
+     and light-on-white in the dark one, where it disappears. */
+  --on-surface: #141715;
 
   /* --- Ink ----------------------------------------------------------------
-     Near-black with a green cast, never #000. Contrast on --paper:
-     ink 15.8:1, ink-2 6.4:1, ink-3 4.2:1 (metadata only, never body copy). */
+     Near-black with a green cast, never #000. Measured on white:
+     ink 18.1:1, ink-2 6.7:1, ink-3 5.5:1. ink-3 was #7f847e and measured
+     4.1:1, which failed AA on every reference count and stock label on the
+     page; it is darkened to clear 4.5:1 with room to spare. */
   --ink: #141715;
   --ink-2: #585d59;
-  --ink-3: #7f847e;
+  --ink-3: #656a64;
 
-  /* --- Accent -------------------------------------------------------------
-     The shop's existing mark is a green hexagon, and that green is stamped
-     into thousands of product photographs we cannot fully remove. Replacing
-     the hue would put the site permanently at odds with its own imagery, so
-     the brand green is kept and matured: deep pine instead of leaf green.
-     7.9:1 on paper, which passes for body text, not just for large type. */
-  --accent: #0e5c43;
-  --accent-ink: #0a4a36;
-  --accent-wash: #dbe7e1;
+  /* --- Green --------------------------------------------------------------
+     THE LOGO'S OWN GREEN. #009d17, the value the brand uses in the mobile app.
+     Sampling the NOW TECH mark in the supplied artwork returns #009d18, one unit
+     away, which is JPEG rounding; the brand's own number wins. Hue 129,
+     saturation 100%, lightness 31%. It is also the green stamped into thousands
+     of product photographs, so the site and its own imagery finally agree.
+
+     An earlier build matured it into a deep pine (#0e5c43, hue 158) to buy
+     contrast. That was a hue away from the brand, and it read as a different
+     company's green sitting next to the mark.
+
+     THE SCALE IS THE HUE, DARKENED, NOT A DIFFERENT COLOUR. Every step below is
+     hue 129 at full saturation; only lightness moves. Measured on white:
+
+       --brand      #009d17   3.60:1   the mark itself. Fills and large type
+                                       only, never body copy: it is the logo's
+                                       lightness and the logo was not drawn to
+                                       be read at 13px.
+       --accent     #008013   5.13:1   links, labels, controls, small text
+       --accent-ink #00610f   7.73:1   the hover of the above
+
+     So the brand green appears at full strength wherever it is a shape (the
+     wordmark lozenge, the plate behind a photograph, the discount stamp) and
+     one stop down wherever it is a word. */
+  --brand: #009d17;
+  --accent: #008013;
+  --accent-ink: #00610f;
+  --accent-wash: #d6f5da;
+
+  /* --- Secondary ----------------------------------------------------------
+     #f89a20, the brand's own orange, from the same sheet as the green. It has
+     exactly one job on this site and it is not decoration: it marks a price
+     that has moved.
+
+     That job needs a colour the green cannot do. Green is the shop, and the
+     shop is on every link, every label, every control and behind every
+     photograph; a discount stamp in the same green is one more piece of
+     furniture. In orange it is the only warm thing on the page, so the eye
+     finds the 513 marked-down products without reading a single word.
+
+     It is a ground, never ink: white on it measures 2.18:1 and fails outright.
+     The stamp therefore prints --ink on it, which measures 8.28:1. Where the
+     orange has to carry a word on white, --secondary-ink is the same hue taken
+     down to 4.8:1. */
+  --secondary: #f89a20;
+  --secondary-ink: #a86105;
+
+  /* --- Rail ---------------------------------------------------------------
+     The one dark surface, and it appears exactly twice: the department bar
+     under the masthead and the footer. Those two bands close the page top and
+     bottom, which is what lets everything between them stay white without the
+     layout losing its edges. Deeper than --accent on purpose, so white sits at
+     It is the brand green itself, taken down by exactly as much as legibility
+     costs and no further. #009d17 carries white at 3.60:1, which a 13px nav link
+     fails; #008a15 carries it at 4.52:1 and clears AA. Four points of lightness
+     is what separates a bar that reads as the logo from one that does not, and
+     the hover takes it back to #009d17 exactly.
+
+     The previous value was #055111, which cleared white at 9.6:1 and read as a
+     forest, not as this brand. Contrast bought at that price is a different
+     company's colour. */
+  --rail: #008a15;
+  --rail-ink: #ffffff;
+  --rail-ink-2: #d3ecd6;
+  --rail-rule: rgb(255 255 255 / 0.22);
+  --rail-hover: #009d17;
+  /* --accent is unreadable on the rail: deep pine on deep pine. The rail gets
+     its own, and it is the same mint in both themes because the rail is the one
+     surface whose lightness barely moves between them. */
+  --rail-accent: #74e785;
 
   /* --- Structure ---------------------------------------------------------- */
-  --rule: #d7dad4;
-  --rule-2: #c3c7c0;
+  /* On a white page the hairline is the only thing drawing structure, so it is
+     a touch darker than a decorative rule would be. */
+  --rule: #e2e5e0;
+  --rule-2: #ccd0c9;
 
   /* --- Semantic -----------------------------------------------------------
      Exactly one state colour, and it is spent on the only scarce, honest,
@@ -65,9 +139,92 @@
   --t-slow: 320ms;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* --- Layout -------------------------------------------------------------- */
-  --shell: 1320px;
-  --gutter: 1.125rem;
+  /* --- Type scale ---------------------------------------------------------
+     Six steps, and the page uses only these. Neighbours a single pixel apart
+     mean nothing reads as a level, so everything reads as the same level. Wide
+     gaps are what make a hierarchy visible without borders.
+
+     The scale is set fine on purpose. Air, not size, is what carries this page:
+     the bands between sections are up to 160 pixels and the grids are separated
+     by space alone, so a heading does not also have to be 50 pixels tall to read
+     as a heading. Type that large next to that much space reads as a poster
+     rather than as a shop, and it pushes the merchandise off the screen.
+
+     Body sits at 15px with generous leading, section titles top out at 32px,
+     and the ladder between the six steps is wide enough that each one is
+     obviously a different level. Weight and space do the ranking; scale only
+     confirms it. */
+  /* `display` is spent in one place, the opening headline, and it is sized to
+     the column it lives in rather than to the page. Measured: at 44px in Poppins
+     a twenty-character line wants 500 pixels, the column gave it 440, and every
+     one of the twelve headlines came out on four lines instead of the two they
+     are written as. The column is widened and the ceiling comes down to 40, so
+     twenty-four characters fit on one line at every size from 1280 up. */
+  --t-display: clamp(1.75rem, 2.8vw, 2.5rem);
+  --t-title: clamp(1.5rem, 2.2vw, 2rem);
+  --t-sub: clamp(1.125rem, 1.3vw, 1.25rem);
+  --t-lead: 1.0625rem;
+  --t-body: 0.9375rem;
+  --t-small: 0.8125rem;
+  --t-micro: 0.75rem;
+
+  /* --- Space scale --------------------------------------------------------
+     Named by the job, not by the number. `band` is the silence between two
+     major sections.
+
+     The page carries a marketplace structure and a gallery rhythm, and holding
+     both at once is the whole design. The structure is what a customer needs to
+     find a switch in a catalogue of 4 254; the rhythm is what stops that
+     structure reading as a price list. So the sections stay in the dense order a
+     shop uses, and the silence between them is large enough that each arrives
+     alone.
+
+     `stack` is the distance inside a section, between its head and its
+     merchandise. `tight` binds a label to the thing it labels. Nothing on this
+     site uses a vertical value that is not one of the three.
+
+     IT IS NAMED `stack` AND NOT `block`, WHICH IS NOT A PREFERENCE. Tailwind
+     builds a utility from every `--spacing-*` key against every spacing
+     namespace, and one of those namespaces is `inline-`. A key called `block`
+     therefore generates `.inline-block { inline-size: var(--spacing-block) }`,
+     which is emitted after the display utility of the same name and wins: every
+     `inline-block` on the site silently became a 57-pixel-wide inline-size and
+     no display change at all. Found by measuring a 6px status dot that rendered
+     57.59 x 6. Any key added here must be checked against the utility names
+     Tailwind already owns. */
+  --s-band: clamp(6rem, 8.5vw, 10rem);
+  --s-stack: clamp(2.5rem, 4vw, 4rem);
+  --s-tight: 1rem;
+
+  /* --- Layout -------------------------------------------------------------
+     The shell caps the CONTENT, not itself, and the gutter is a share of the
+     viewport. That distinction is the whole fix.
+
+     Capping the shell and padding it from inside looks equivalent and is not.
+     Once the cap bites, the leftover viewport turns into centring margin that
+     stacks on top of the gutter, so the side space jumps the moment the screen
+     crosses the cap: at 1440 the page showed 66px of margin and at 1680 it
+     showed 177, a 2.7x step across one common resolution change. The content
+     measure held still and the framing did not, which reads as the layout
+     losing its composure rather than as a bigger screen.
+
+     Written as `content + 2 x gutter`, the shell only reaches its cap when the
+     screen is genuinely wider than the design needs. Below that the gutter is
+     7.5% of the viewport at every size, so the framing is identical at 1440 and
+     at 1680 and the content simply grows with the screen:
+
+       390   gutter 29    content 332
+       768   gutter 58    content 652
+       1024  gutter 77    content 870
+       1280  gutter 96    content 1088
+       1440  gutter 108   content 1224      7.5% margin
+       1680  gutter 126   content 1428      7.5% margin
+       1920  gutter 144   content 1460      cap reached, margin grows
+
+     Nothing on the page is measured in ch against this, so no reading measure
+     moves when the content does. */
+  --shell: 1460px;
+  --gutter: clamp(1.25rem, 7.5vw, 9rem);
 
   /* --- Z scale, documented so it is never invented at the call site --------
      The department nav scrolls under the sticky header, so the header outranks
@@ -75,64 +232,64 @@
   --z-base: 0;
   --z-sticky: 20;
   --z-header: 40;
+  /* Above the page and the sticky masthead, below the basket: when the drawer
+     is open it owns the screen, and a chat launcher floating over it would be a
+     second thing asking for the same attention. */
+  --z-assistant: 60;
   --z-drawer: 70;
+
+  /* --- Panel -------------------------------------------------------------
+     A dropdown separates itself from the page by a shadow on white and cannot
+     in the dark, where the panel and the page are the same colour and a shadow
+     falls on nothing. The role is "detach this panel"; the means changes with
+     the theme, so both live here rather than in the component. */
+  --shadow-panel: 0 28px 56px -36px rgb(20 23 21 / 0.45);
+  --rule-panel: var(--rule);
+
+  /* Declared so the browser paints its own surfaces to match: scrollbars inside
+     the department panel, the native dropdown of the search scope, form
+     autofill. Without it every one of those stays light on a dark page. */
+  color-scheme: light;
 }
 
-@media (min-width: 768px) {
-  :root {
-    --gutter: 1.75rem;
-  }
-}
 
-/* The page is light-first. Dark is honoured from the system preference and can
-   be forced either way by an explicit data-theme, so all three states resolve. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --paper: #101210;
-    --space: #1c201c;
-    --space-2: #232823;
-    /* Pure white in dark mode too. The packshots are shot on #ffffff, so an
-       off-white well puts a visible grey rectangle around every product. */
-    --surface: #ffffff;
-    --ink: #e9ebe8;
-    --ink-2: #a2a8a3;
-    --ink-3: #848a85;
-    --accent: #5cbf98;
-    --accent-ink: #7fd3b1;
-    --accent-wash: #16302a;
-    --rule: #2a2e2b;
-    --rule-2: #3b403c;
-    --warn: #d9924f;
-  }
-}
+/* THE PAGE IS LIGHT, AND ONLY LIGHT.
 
-:root[data-theme='dark'] {
-  --paper: #101210;
-  --space: #1c201c;
-  --space-2: #232823;
-  --surface: #ffffff;
-  --ink: #e9ebe8;
-  --ink-2: #a2a8a3;
-  --ink-3: #848a85;
-  --accent: #5cbf98;
-  --accent-ink: #7fd3b1;
-  --accent-wash: #16302a;
-  --rule: #2a2e2b;
-  --rule-2: #3b403c;
-  --warn: #d9924f;
-}
+   The dark theme is gone, on the client's decision. What it cost to keep was
+   not the tokens, it was the exceptions: every packshot in this library is shot
+   on white, so every surface a photograph touches had to stay white in both
+   themes, which meant a white well on a near-black page, a discount stamp that
+   could not use the page's ink, a rail accent that had to hold on two grounds,
+   and a search field that could not be filled with the page's own colour. Half
+   the awkward decisions in this file existed to serve a theme nobody asked for.
+
+   `color-scheme: light` stays declared in :root above. It is what stops the
+   browser painting its own surfaces dark, the native scrollbars and form
+   autofill, when the reader's system is set to dark. Without it the page is
+   light and its scrollbars are not.
+   ========================================================================= */
 
 @theme inline {
   --color-paper: var(--paper);
   --color-space: var(--space);
   --color-space-2: var(--space-2);
   --color-surface: var(--surface);
+  --color-on-surface: var(--on-surface);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
+  --color-brand: var(--brand);
+  --color-secondary: var(--secondary);
+  --color-secondary-ink: var(--secondary-ink);
   --color-accent-wash: var(--accent-wash);
+  --color-rail: var(--rail);
+  --color-rail-ink: var(--rail-ink);
+  --color-rail-ink-2: var(--rail-ink-2);
+  --color-rail-rule: var(--rail-rule);
+  --color-rail-hover: var(--rail-hover);
+  --color-rail-accent: var(--rail-accent);
   --color-rule: var(--rule);
   --color-rule-2: var(--rule-2);
   --color-warn: var(--warn);
@@ -140,8 +297,20 @@
   --radius-space: var(--r-space);
   --radius-well: var(--r-well);
   --radius-control: var(--r-control);
+  --radius-pill: var(--r-pill);
 
-  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --text-display: var(--t-display);
+  --text-title: var(--t-title);
+  --text-sub: var(--t-sub);
+  --text-lead: var(--t-lead);
+  --text-body: var(--t-body);
+  --text-small: var(--t-small);
+  --text-micro: var(--t-micro);
+
+  --spacing-band: var(--s-band);
+  --spacing-stack: var(--s-stack);
+
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   --ease-brand: cubic-bezier(0.16, 1, 0.3, 1);
@@ -167,7 +336,7 @@ body {
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-family: var(--font-poppins), system-ui, sans-serif;
   font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -185,6 +354,31 @@ body {
   border-radius: 2px;
 }
 
+/* The search field states its own focus.
+
+   The document ring is drawn 3px outside the element it belongs to, and the
+   element here is the input inside a 48px frame: the ring lands outside that
+   frame and the whole control reads as having grown when it takes focus. The
+   frame answers instead, turning accent and doubling inward, which is a
+   two-pixel indicator at 7.9:1 that changes no geometry at all. */
+.field:focus-within {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.field :where(input, select):focus-visible {
+  outline: none;
+}
+
+/* On the rail the accent is deep pine on deep pine, so the ring was drawn and
+   invisible: a keyboard pass through the department bar and the footer looked
+   like focus had been removed. Anything on that surface switches to the rail's
+   own accent, and the offset drops to 2px because these controls sit tight
+   against one another. */
+.on-rail :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: var(--rail-accent);
+  outline-offset: 2px;
+}
+
 /* ============================================================================
    TYPOGRAPHY PRIMITIVES
    ========================================================================= */
@@ -197,33 +391,627 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Reserved for labels that are the only text in their group: a footer column
+   head, a form legend. Never stacked above a heading as a kicker. */
 .t-label {
-  font-size: 0.6875rem;
+  font-size: var(--t-micro);
   font-weight: 600;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 /* ============================================================================
-   MOTION
-   Authored opt-in: animation lives inside a no-preference query, so calm is the
-   default build and anything added later inherits the guard for free.
+   MOTION — LE TRACÉ
+
+   One idea, and every moving thing on the site is a case of it: the page draws
+   itself the way a workshop drawing is drawn. The datum line is struck first,
+   the part is uncovered against it, then the dimensions are written alongside.
+   Nothing appears, nothing bounces, nothing is lifted on a shadow.
+
+   THE ORDER IS THE POINT. A section does not animate as one block; its parts
+   arrive in the order a reader needs them, and the offsets below are what make
+   that legible: the rule at 0, the heading at 90ms rising from behind that
+   rule, the sentence at 170ms resolving out of blur, the merchandise from
+   240ms, uncovered cell by cell. Four gestures spaced 80ms apart read as one
+   composed movement; the same four fired together read as a page settling.
+
+   BLUR IS DOING WORK, NOT DECORATION. A paragraph that fades in is a paragraph
+   the page has no opinion about. Resolving it from a 6px blur is how a lens
+   finds focus, and at this type size it is the difference between text that
+   appears and text that becomes readable. It costs one composited filter on an
+   element that animates once.
+
+   THE WAVE IS CAPPED. A ten-cell grid staggered without a cap becomes a
+   progress bar, and the reader waits for it. Six steps of 42ms is 250ms from
+   first cell to last, which reads as one gesture crossing the grid.
+
+   THE HOVER LANGUAGE IS THE SAME LANGUAGE. A rule drawn across a label, an
+   underline drawn from the leading edge, a bar drawn down the side of a rail
+   row: the interface answers a pointer the way it introduced itself. The only
+   translation anywhere is 4px, and it is always on a picture, never on a panel.
+
+   FAILURE MODES. The entrance states are gated on `scripting: enabled`, so with
+   JavaScript off nothing is ever hidden and the page simply renders. Under
+   `prefers-reduced-motion` every duration collapses and every hidden state is
+   dropped, leaving colour transitions only. Nothing here animates a property
+   that triggers layout.
    ========================================================================= */
 
-@media (prefers-reduced-motion: no-preference) {
-  .reveal {
-    opacity: 0;
-    transform: translateY(14px);
-    transition:
-      opacity var(--t-slow) var(--ease),
-      transform var(--t-slow) var(--ease);
-    /* Rows arrive as bands rather than as a diagonal ripple, and the whole
-       wave is capped so a 40-item grid never reads as a loading bar. */
-    transition-delay: calc(min(var(--reveal-index, 0), 5) * 45ms);
+:root {
+  --e-rule: 560ms; /* a hairline drawing itself */
+  --e-line: 660ms; /* a line of type rising from behind its baseline */
+  --e-text: 500ms; /* a sentence resolving out of blur */
+  --e-media: 720ms; /* a shutter opening on a photograph */
+  --e-item: 460ms; /* a chip, a pill, a small object */
+  --e-switch: 620ms; /* one card in the opening deck replacing another */
+  --e-bounce: 760ms; /* a band of banners arriving at its next page */
+
+  /* Decelerating and never overshooting: this shop sells rack rails, and a
+     rack rail does not spring. */
+  --ease-draw: cubic-bezier(0.22, 1, 0.28, 1);
+  /* Fast off the mark, long settle: a shutter has weight. */
+  --ease-shutter: cubic-bezier(0.66, 0, 0.2, 1);
+  --ease-press: cubic-bezier(0.3, 0, 0.2, 1);
+  /* The banner band is the one overshoot on the site, and it is a briefed
+     exception rather than a habit: everything else here decelerates and stops
+     exactly, which is right for a rack rail and wrong for a poster. The control
+     point is held at 1.12, roughly three per cent past the mark and back, so the
+     page lands with weight rather than springing. The mechanical design check
+     flags any bounce on sight; this one is answered here, not silenced. */
+  --ease-bounce: cubic-bezier(0.32, 1.12, 0.5, 1);
+}
+
+/* --- Entrances ------------------------------------------------------------
+   `.enter` marks the observed container; the document-level observer stamps
+   `data-enter="in"` on it once. The roles below are what actually move. */
+
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .enter {
+    --wave: calc(min(var(--enter-index, 0), 6) * 42ms);
   }
 
-  .reveal[data-shown='true'] {
+  /* 1. The datum. A hairline struck from the leading edge. */
+  .enter .e-rule {
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--e-rule) var(--ease-draw) var(--wave);
+  }
+  .enter[data-enter='in'] .e-rule {
+    transform: none;
+  }
+
+  /* 2. The heading. Each line rises from behind its own baseline, inside the
+        mask its wrapper provides. */
+  .enter .e-line {
+    display: block;
+    transform: translateY(106%);
+    transition: transform var(--e-line) var(--ease-shutter) calc(var(--wave) + 90ms);
+  }
+  .enter[data-enter='in'] .e-line {
+    transform: none;
+  }
+
+  /* 3. The sentence, resolving. */
+  .enter .e-text {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(8px);
+    transition:
+      opacity var(--e-text) var(--ease-draw) calc(var(--wave) + 170ms),
+      filter var(--e-text) var(--ease-draw) calc(var(--wave) + 170ms),
+      transform var(--e-text) var(--ease-draw) calc(var(--wave) + 170ms);
+  }
+  .enter[data-enter='in'] .e-text {
     opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  /* 4. The part, uncovered by a shutter travelling up from the surface it
+        stands on, and settling the last 3% of its scale as it lands. */
+  .enter .e-media {
+    clip-path: inset(100% 0 0 0);
+    transform: scale(1.03);
+    transition:
+      clip-path var(--e-media) var(--ease-shutter) calc(var(--wave) + 240ms),
+      transform var(--e-media) var(--ease-draw) calc(var(--wave) + 240ms);
+  }
+  .enter[data-enter='in'] .e-media {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+
+  /* 5. Small objects: a spec chip, a filter pill, a brand cell. */
+  .enter .e-item,
+  .enter.e-item {
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity var(--e-item) var(--ease-draw) calc(var(--wave) + 240ms),
+      transform var(--e-item) var(--ease-draw) calc(var(--wave) + 240ms);
+  }
+  .enter[data-enter='in'] .e-item,
+  .enter.e-item[data-enter='in'] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   The sheen.
+
+   A band of light crossing a block once, just after it has finished arriving.
+   Taken from the Djulah client app, where a `LinearGradient` of
+   base -> highlight -> base at stops 0.3 / 0.5 / 0.7 is dragged across twice the
+   element's width. The same gradient and the same travel are used here, with two
+   differences that matter.
+
+   IT FIRES ONCE, NOT FOREVER. In Djulah the sweep is a loading skeleton and has
+   to repeat, because it is standing in for content that has not arrived. Here
+   the content has arrived, and the light is the last beat of its arrival: a
+   loop would turn twelve product cards into twelve things still loading.
+
+   IT CROSSES THE PICTURE, NOT THE BLOCK. In Djulah the sweep runs over the image
+   tile and stops there; the text under it is never lit. Same here: the light
+   travels the photographic well and leaves the name, the specs and the price
+   alone. A band of light passing over a price is a different and much stranger
+   idea than a reflection moving across a print.
+
+   IT IS DJULAH'S LIGHT, NOT A COLOUR. The gradient is that component's own two
+   values, #ebebf4 to #f4f4f4 and back, at the same 0.3 / 0.5 / 0.7 stops. It
+   carried a wash of brand green for a while and that was wrong twice over: it
+   made the light green, which no light is, and it put the shop's colour on top
+   of the merchandise, which is the one place on this page the brand has no
+   business being.
+
+   White over white is nothing, and that is the point. The band is invisible over
+   the well's own ground and shows only where it crosses the product, so what
+   travels is a reflection moving over the object rather than a rectangle moving
+   over the card.
+
+   The delay is the card's own entrance delay plus the time that entrance takes:
+   240ms before the shutter starts plus its own 720, so 960 and not a rounder
+   number. It was 620 for a while, which is the end of no gesture at all, and at
+   that value the band crossed the packshot while the shutter was still
+   uncovering it: measured frame by frame, sixteen per cent of the product was
+   still missing when the light was at full strength, on twelve of the eighteen
+   wells on the page. A light passing over a photograph that has not finished
+   arriving reads as a rendering fault, not as a reflection.
+
+   The wave is what makes it follow each block individually rather than crossing
+   the whole grid at once. */
+.sheen {
+  position: relative;
+}
+.sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    rgb(235 235 244 / 0) 30%,
+    rgb(244 244 244 / 0.9) 50%,
+    rgb(235 235 244 / 0) 70%
+  );
+  background-size: 220% 100%;
+  background-position: 130% 0;
+}
+
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .enter[data-enter='in'] .sheen::after,
+  .enter.sheen[data-enter='in']::after {
+    animation: sheen-pass 900ms var(--ease-draw) calc(var(--wave) + 960ms) 1 both;
+  }
+}
+
+@keyframes sheen-pass {
+  0% {
+    opacity: 0;
+    background-position: 130% 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    background-position: -30% 0;
+  }
+}
+
+/* --- The switch -----------------------------------------------------------
+   One card replacing another in the opening deck, when the rail beside it is
+   pointed at a different department.
+
+   Same four gestures as an arrival, same offsets, same order, plus the card's
+   own wipe from the leading edge, which is what makes a replacement read as a
+   replacement rather than as a page arriving twice.
+
+   A horizontal track was tried instead and taken back out: with twelve slides
+   the whole strip travels, so a jump from the second department to the eleventh
+   sweeps nine cards past the reader at speed, and the card they were reading is
+   thrown off screen rather than replaced. Redrawing in place is the quieter and
+   the more accurate description of what actually happened.
+
+   Keyframes and not transitions, because the card is remounted on every change
+   and a remounted element has no previous state to transition from. Everything
+   below is the animation form of the four entrance rules above; if one of them
+   changes, both forms change. */
+
+@keyframes e-card-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes e-line-rise {
+  from {
+    transform: translateY(106%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes e-text-resolve {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+@keyframes e-media-shutter {
+  from {
+    clip-path: inset(100% 0 0 0);
+    transform: scale(1.03);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
+@keyframes e-item-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .switch-in {
+    animation: e-card-wipe var(--e-switch) var(--ease-shutter) both;
+  }
+  .switch-in .e-line {
+    display: block;
+    animation: e-line-rise var(--e-line) var(--ease-shutter) 90ms both;
+  }
+  .switch-in .e-text {
+    animation: e-text-resolve var(--e-text) var(--ease-draw) 170ms both;
+  }
+  .switch-in .e-media {
+    animation: e-media-shutter var(--e-media) var(--ease-shutter) 240ms both;
+  }
+  .switch-in .e-item {
+    animation: e-item-rise-in var(--e-item) var(--ease-draw) 240ms both;
+  }
+}
+
+/* --- The masthead arriving ------------------------------------------------
+   The one saturated band on the page is painted across it on load, from the
+   leading edge, in the same gesture every rule on the site uses. It is the only
+   entrance that is not tied to scrolling, because the header is never scrolled
+   to: it is already there when the page opens, and a header that simply exists
+   while everything below it is drawn reads as furniture rather than as part of
+   the same object.
+
+   The links follow it rather than arriving with it, so the eye reads the band
+   first and its contents second, which is the order they matter in. */
+
+@keyframes band-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes band-content {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* `backwards`, never `both`, and that applies to the rows as well as to the
+     band.
+
+     A clip-path left on the band after the animation ends goes on clipping its
+     descendants, and the department panel is one of them: the menu opened
+     correctly and was cropped to the 48px of green it hangs from.
+
+     The rows had the same class of bug for a different reason. `both` keeps an
+     animation in its after-phase forever, so the row goes on having an animated
+     `transform` even once it has settled on none, and an element with an
+     animated transform is a stacking context for as long as that lasts. Both
+     header rows therefore became sealed stacking contexts at z-index auto, and
+     the search-scope listbox, which is z-40 INSIDE its row, could no longer be
+     raised above the green band that comes after it in the document: the menu
+     opened and the "Tous les rayons" button was painted over the top of it.
+
+     `backwards` applies the from-state before the run and leaves nothing behind
+     after it, so the stacking contexts dissolve the moment the entrance ends. */
+  .band-in {
+    animation: band-draw 760ms var(--ease-shutter) backwards;
+  }
+  .band-in > * {
+    animation: band-content 420ms var(--ease-draw) 300ms backwards;
+  }
+  .masthead-in > * {
+    animation: band-content 460ms var(--ease-draw) backwards;
+  }
+  .masthead-in > *:nth-child(2) {
+    animation-delay: 70ms;
+  }
+  .masthead-in > *:nth-child(3) {
+    animation-delay: 130ms;
+  }
+}
+
+/* --- Pointer --------------------------------------------------------------
+   The measure: a tick under a label that is drawn across the whole label when
+   the pointer arrives, the way a dimension line is drawn across a part.
+
+   Two rules, not one growing rule. The tick is always struck; the remainder is
+   a second rule pinned from the tick's end to the label's edge, scaled to
+   nothing until asked. Animating `width` from 2.25rem to 100% produced the same
+   picture and relaid out the element on every frame of every hover, on a page
+   that can hold forty of these at once. */
+
+.measure {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.35em;
+}
+.measure::before,
+.measure::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  height: 1.5px;
+  background: currentColor;
+}
+.measure::before {
+  inset-inline-start: 0;
+  width: 2.25rem;
+}
+.measure::after {
+  inset-inline-start: 2.25rem;
+  inset-inline-end: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--e-rule) var(--ease-draw);
+}
+.group:hover .measure::after,
+.group:focus-visible .measure::after {
+  transform: none;
+}
+
+/* An underline drawn from the leading edge, for a link inside a card. */
+.draw-under {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size var(--e-rule) var(--ease-draw);
+}
+.group:hover .draw-under,
+.draw-under:hover,
+.draw-under:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* ----------------------------------------------------------------------------
+   The plate.
+
+   A coloured board behind a product's well that turns two degrees when the card
+   is pointed at, so the photograph reads as a print resting on it rather than as
+   a picture in a box. The technique is borrowed, with its numbers, from the news
+   cards on carfad-website.
+
+   Four degrees and the full accent, not two degrees and a wash. The reference
+   this is taken from turns a 160px plate; ours is behind a 250px well, and at
+   two degrees on a pale green the corners that emerged were eight pixels of a
+   colour three per cent off white, which is to say nothing at all. Four degrees
+   puts seventeen pixels of deep pine at each corner and the effect finally reads
+   as what it is: a print resting on a board.
+
+   The board can be that saturated because only one is ever turned. It is a
+   hover, so the grid shows twelve white wells and, under the pointer, one green.
+
+   It is animation and not transition on purpose, so the return is animated too;
+   a transition on `transform` would snap back the moment the pointer left.
+
+   The well itself must stay opaque, which it already is: every packshot sits on
+   --surface, so the plate is only ever visible at the four corners it exposes. */
+.plate {
+  position: relative;
+}
+.plate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--r-well);
+  background: var(--brand);
+  animation: plate-return 260ms ease-in forwards;
+}
+.plate > * {
+  position: relative;
+  z-index: 1;
+}
+.group:hover .plate::after,
+.group:focus-within .plate::after {
+  animation: plate-turn 260ms ease-in forwards;
+}
+
+@keyframes plate-turn {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-4deg);
+  }
+}
+@keyframes plate-return {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* A link on the dark band, answering with the same drawn line. The bar sits on
+   the row's own baseline rather than under the text, so twelve links of
+   different lengths all draw the same shape. */
+.rail-link {
+  position: relative;
+}
+.rail-link::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--rail-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-base) var(--ease-draw);
+}
+.rail-link:hover::after,
+.rail-link:focus-visible::after,
+.rail-link[aria-current='page']::after {
+  transform: none;
+}
+
+/* ----------------------------------------------------------------------------
+   The button.
+
+   Every other hover on this site is a line being drawn from the edge the reader
+   came from: the measure under a label, the underline under a link, the rule
+   above a photograph. The buttons were the one exception, swapping one flat
+   green for a slightly darker one, which is what a button does when nobody
+   decided anything about it.
+
+   They now answer in the same language. A second fill is laid over the first and
+   scaled from nothing along the leading edge, so the darker green is drawn
+   across the button rather than switched on. The label and its arrow ride above
+   it, the arrow travels four pixels, and the whole thing is one composited
+   transform.
+
+   Focus gets it too, not only hover: a reader on a keyboard should see the same
+   answer a reader on a mouse gets, and `:focus-visible` is the only way they
+   ever will.
+
+   `:active` still presses. That is `.press`, and it is separate on purpose: the
+   draw says "this is the one", the press says "I heard you". */
+.fill {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--fill-to, var(--accent-ink));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--e-rule) var(--ease-draw);
+}
+.fill:hover::before,
+.fill:focus-visible::before {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill::before {
+    transition: none;
+  }
+}
+
+/* A picture answering a pointer. The only translation in the system, and it is
+   never applied to a panel: 4px on a photograph reads as attention, 4px on a
+   card reads as a card lifting, which is a stock effect this page refuses. */
+.lift {
+  transition:
+    transform var(--t-base) var(--ease-draw);
+}
+.group:hover .lift {
+  transform: translateY(-4px) scale(1.015);
+}
+
+/* An arrow that travels when its own link is pointed at. */
+.travel {
+  transition: transform var(--t-base) var(--ease-draw);
+}
+.group:hover .travel {
+  transform: translateX(4px);
+}
+
+/* Every control acknowledges a press. Physical, tiny, and on transform only. */
+.press {
+  transition: transform var(--t-fast) var(--ease-press);
+}
+.press:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .measure::after {
+    transform: none;
+  }
+  .draw-under {
+    background-size: 100% 1px;
+  }
+  .lift,
+  .travel,
+  .press,
+  .plate::after,
+  .switch-in,
+  .switch-in .e-line,
+  .switch-in .e-text,
+  .switch-in .e-media,
+  .switch-in .e-item {
+    transition: none;
+    animation: none;
+    transform: none;
+  }
+  .group:hover .lift,
+  .group:hover .travel,
+  .press:active {
     transform: none;
   }
 }
@@ -234,7 +1022,7 @@ body {
 
 .shell {
   width: 100%;
-  max-width: var(--shell);
+  max-width: calc(var(--shell) + 2 * var(--gutter));
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
@@ -255,3 +1043,43 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ----------------------------------------------------------------------------
+   A manufacturer's mark.
+
+   The SVG is a mask rather than an image, so one file covers ink at rest, the
+   brand's own colour on hover, and both themes, with no second asset and no
+   filter. Height is fixed and width is free: these marks range from a square
+   (Seagate) to a long horizontal (Panasonic), and normalising the height is what
+   makes a row of them sit on one optical line. */
+.brand-mark {
+  display: block;
+  width: 100%;
+  height: 2rem;
+  background-color: var(--ink-2);
+  mask-image: var(--mark-src);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  transition:
+    background-color var(--t-base) var(--ease-draw),
+    transform var(--t-base) var(--ease-draw);
+}
+.group:hover .brand-mark {
+  background-color: var(--mark-hover, var(--ink));
+  transform: scale(1.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .brand-mark {
+    transform: none;
+  }
+}
+
+.clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+

@@ -1,30 +1,55 @@
 import Link from 'next/link'
 
-import type { Brand } from '@/types/catalog'
+import { formatCount } from '@/lib/format'
+import type { BrandTile } from '@/lib/catalog'
 
 /**
- * The brand row.
+ * The brand wall, in real marks.
  *
- * Brand is real navigation here, not a logo wall. The export has no brand
- * taxonomy at all — the column is filled on 14 rows out of 7,116 — so these 102
- * names were recovered at ingest by reading category paths and product titles.
- * That recovery is what makes it possible to compare an HP laptop against a
- * Dell one in a single list, which the current site cannot do.
+ * Brand is navigation here, not social proof. The export has no brand taxonomy
+ * at all, the column is filled on 14 rows out of 7 116, so these names were
+ * recovered at ingest by reading category paths and product titles. That
+ * recovery is what makes it possible to compare an HP laptop against a Dell one
+ * in a single list, which the current site cannot do, and it is why each mark
+ * carries its own count: the number is the promise that the door opens onto
+ * something.
  *
- * Set as type rather than as logos: we do not hold licensed marks for a hundred
- * manufacturers, and inventing them would be worse than naming them.
+ * HOW A LOGO IS PAINTED. The SVG is a mask, not an image. `mask-image` with
+ * `background-color` means one file serves every state and both themes: the
+ * mark is the page's own ink at rest, so twelve manufacturers do not turn the
+ * section into a paint chart, and it takes its own colour when a pointer
+ * arrives. Colour becomes the answer to a gesture rather than the default,
+ * which is the only way a wall of twelve logos stays quiet.
+ *
+ * The files are ours, downloaded once by `scripts/fetch-brand-marks.mjs` and
+ * served from our own origin: twelve CDN requests on the critical path is not a
+ * trade this audience can afford.
  */
-export function BrandRail({ brands }: { brands: readonly Brand[] }) {
+export function BrandRail({ brands }: { brands: readonly BrandTile[] }) {
   return (
-    <div className="flex flex-wrap gap-2.5">
-      {brands.map((brand) => (
+    <div className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-3 lg:grid-cols-6">
+      {brands.map((brand, index) => (
         <Link
           key={brand.slug}
           href={`/marque/${brand.slug}`}
-          className="rounded-[999px] border border-rule px-4 py-2 text-[0.84375rem] text-ink-2 transition-colors duration-[var(--t-fast)] ease-brand hover:border-ink hover:text-ink"
+          style={
+            {
+              '--enter-index': index,
+              '--mark-hover': brand.hover,
+              '--mark-src': `url(/brands/${brand.file}.svg)`,
+            } as React.CSSProperties
+          }
+          className="group enter e-item flex flex-col items-center gap-3.5"
         >
-          {brand.name}
-          <span className="t-num ml-1.5 text-xs text-ink-3">{brand.productCount}</span>
+          <span aria-hidden className="brand-mark" />
+          <span className="flex flex-col items-center gap-1 text-center">
+            <span className="text-micro font-semibold tracking-[0.02em] text-ink-2 transition-colors duration-[var(--t-fast)] group-hover:text-ink">
+              {brand.name}
+            </span>
+            <span className="t-num text-micro text-ink-3">
+              {formatCount(brand.productCount, 'réf.', 'réf.')}
+            </span>
+          </span>
         </Link>
       ))}
     </div>

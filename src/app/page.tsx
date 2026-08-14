@@ -1,43 +1,71 @@
-import { DepartmentGrid } from '@/components/catalog/DepartmentGrid'
+import { BannerStage } from '@/components/home/BannerStage'
 import { BrandRail } from '@/components/home/BrandRail'
-import { Opening } from '@/components/home/Opening'
-import { RecentBySubcategory, type RecentBlock } from '@/components/home/RecentBySubcategory'
+import { CounterTour } from '@/components/home/CounterTour'
+import { HeroDeck } from '@/components/home/HeroDeck'
+import { PromoBand } from '@/components/home/PromoBand'
+import { RecentColumns, type RecentColumn } from '@/components/home/RecentColumns'
+import { Selections } from '@/components/home/Selections'
 import { ServiceStrip } from '@/components/home/ServiceStrip'
+import { ShowroomBand } from '@/components/home/ShowroomBand'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import {
-  getBrands,
-  getCategoryById,
-  getDepartmentTiles,
+  getBrandTiles,
+  getCounterTour,
+  getDepartmentPicture,
+  getHeroPanels,
+  getFamilyCount,
   getMeta,
+  getPromoPanels,
   getRecentBySubcategory,
+  getSelections,
   summarise,
 } from '@/lib/catalog'
+import { formatAmount } from '@/lib/format'
 
 /**
  * The homepage.
  *
  * It orchestrates and does not render: every visual decision lives in a section
  * component, and every fact comes from the catalog rather than from this file.
- * The sequence answers, in order, the four questions a first-time visitor
- * actually has. What is this shop. Where do I start. Can I trust you. What is
- * new.
+ *
+ * THE SHAPE. The designer's banners open the page, on a loop, saying nothing the
+ * artwork does not already say. Then a rail of twelve departments driving the
+ * card beside it, two banners for the two departments nobody needs arguing for,
+ * then
+ * merchandise in decreasing order of how much the shop chose it: four filters a
+ * customer would have applied themselves, a deliberate pass over the six
+ * departments the top of the page cannot reach, and last the families where
+ * stock genuinely moved this month. The operating facts and the three counters
+ * interrupt that twice, at the two points where a reader has seen enough to
+ * start asking how any of it would reach them.
+ *
+ * WHAT IS NOT HERE. No star ratings, because the catalog holds no reviews. No
+ * "best seller" shelf, because the export carries no order history. No
+ * countdown, because nothing here is genuinely expiring. Every list on this page
+ * is a query a customer could run themselves, and each one says which.
  */
 export default function HomePage() {
   const meta = getMeta()
-  const tiles = getDepartmentTiles()
-  const brandCount = getBrands().length
-  // Only brands with real depth earn a chip: a one-product brand is a filter
-  // that returns a dead end.
-  const brands = getBrands(8).slice(0, 22)
+  const familyCount = getFamilyCount()
+  const panels = getHeroPanels()
+  const promos = getPromoPanels()
+  // Twelve, not ten: the grid runs 2, 3 and 4 columns, and twelve is the only
+  // count under fifteen that fills whole rows at all three. Ten left two empty
+  // cells, 613 by 474 pixels each, on every screen between 768 and 1279.
+  const selections = getSelections(12)
+  const picks = getCounterTour()
 
-  const blocks: RecentBlock[] = getRecentBySubcategory({
-    blocks: 4,
+  // Twelve marks, two rows of six, ranked by catalogue depth. The wall shows
+  // only manufacturers we hold a mark for; the other 89 are one link away.
+  const brands = getBrandTiles(12)
+
+  const columns: RecentColumn[] = getRecentBySubcategory({
+    blocks: 3,
     productsPerBlock: 4,
     minProducts: 8,
   }).map((block) => ({
     categoryName: block.category.name,
     categorySlug: block.category.slug,
-    parentName: getCategoryById(block.category.parentId ?? -1)?.name ?? block.root.name,
     departmentName: block.universe.name,
     totalCount: block.category.totalCount,
     newestAt: block.products[0]?.addedAt ?? null,
@@ -46,37 +74,59 @@ export default function HomePage() {
 
   return (
     <>
-      <Opening productCount={meta.productCount} brandCount={brandCount} />
+      {/* Full bleed and flush to the masthead: the artwork is the first thing,
+          and a gutter around it would frame someone else's composition. */}
+      <BannerStage />
 
-      <section className="shell pt-5.5">
-        <SectionHeader
-          title="Explorer par rayon"
-          context="Douze rayons couvrent l’ensemble du catalogue. Chacun ouvre sur ses familles, puis sur ses produits."
-          action={{ href: '/catalogue', label: `Index des ${meta.categoryCount} familles` }}
-        />
-        <DepartmentGrid tiles={tiles} />
+      {/* `block`, not `band`. The stage and the rail are one opening seen in
+          two parts, and a full band between them reads as the page having
+          already moved on from the artwork. */}
+      <section className="shell mt-stack">
+        <HeroDeck panels={panels} />
+
+        <div className="mt-stack">
+          <PromoBand panels={promos} />
+        </div>
       </section>
 
-      <div className="mt-14">
+      <section className="shell mt-band">
+        <Selections selections={selections} />
+      </section>
+
+      <div className="mt-band">
         <ServiceStrip />
       </div>
 
-      <section className="shell pt-14">
+      <section className="shell mt-band">
         <SectionHeader
-          title="Derniers arrivages"
-          context="Les familles où du stock est entré le plus récemment, une par rayon."
-          action={{ href: '/catalogue?tri=recent', label: 'Tout voir' }}
+          title="Le tour du magasin"
+          context="Un article en stock dans chacun des six rayons que le haut de cette page ne traverse pas."
+          action={{ href: '/catalogue', label: `Les ${familyCount} familles` }}
         />
-        <RecentBySubcategory blocks={blocks} />
+        <CounterTour picks={picks} reconditioned={getDepartmentPicture('services')} />
       </section>
 
-      <section className="shell pt-14">
+      <section className="shell mt-band">
+        <SectionHeader
+          title="Derniers arrivages"
+          context="Les trois familles où du stock est entré le plus récemment, une par rayon."
+          action={{ href: '/catalogue?tri=recent', label: 'Tout voir' }}
+        />
+        <RecentColumns columns={columns} />
+      </section>
+
+      <section className="shell mt-band">
         <SectionHeader
           title="Marques distribuées"
+          context={`${formatAmount(meta.productCount)} références réparties sur une centaine de marques, retrouvées ligne par ligne dans le catalogue.`}
           action={{ href: '/marques', label: 'Toutes les marques' }}
         />
         <BrandRail brands={brands} />
       </section>
+
+      <div className="mt-band">
+        <ShowroomBand />
+      </div>
     </>
   )
 }

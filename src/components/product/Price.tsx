@@ -15,25 +15,25 @@ export function Price({
   value,
   listPrice,
   discountPct,
-  size = 'md',
 }: {
   value: number
   listPrice?: number | null
   discountPct?: number | null
-  size?: 'md' | 'lg'
 }) {
   const anchored = listPrice && discountPct && discountPct >= ANCHOR_THRESHOLD
 
   return (
-    <span className="flex items-baseline gap-2">
+    // Stacked, not inline. Side by side, "200 000 FCFA 105 000 FCFA" is 24
+    // characters of tabular mono in a cell 200 pixels wide, and it wraps into a
+    // shape where the eye cannot tell which of the two numbers is the price.
+    // Above and below, the anchor is unmistakably the smaller, struck one.
+    <span className="block">
       {anchored ? (
-        <span className="t-num text-xs text-ink-3 line-through">{formatPrice(listPrice)}</span>
+        <span className="t-num block text-micro text-ink-3 line-through">
+          {formatPrice(listPrice)}
+        </span>
       ) : null}
-      <span
-        className={`t-num font-bold tracking-[-0.015em] ${
-          size === 'lg' ? 'text-[1.75rem]' : 'text-[0.96875rem]'
-        }`}
-      >
+      <span className="t-num block text-body font-bold tracking-[-0.015em]">
         {formatPrice(value)}
       </span>
     </span>
@@ -41,15 +41,16 @@ export function Price({
 }
 
 /**
- * Availability is typography, not a badge.
+ * Availability is typography, not a badge, and it only speaks when it has
+ * something to say.
  *
- * Out of stock is the one scarce fact in the dataset (338 of 4,256), so it is
- * the one thing that gets the warning colour. In stock is simply stated.
+ * 3 916 of 4 254 products are in stock, so an "En stock" line renders on 92% of
+ * every grid: it costs a line in each cell, it competes with the price for the
+ * same corner, and it tells a customer what they already assumed. The 338 that
+ * are not are the scarce, decision-relevant fact, and they are the only ones
+ * that get a word, in the one warning colour the palette holds.
  */
 export function StockLabel({ inStock }: { inStock: boolean }) {
-  return (
-    <span className={`text-[0.71875rem] ${inStock ? 'text-ink-3' : 'text-warn'}`}>
-      {inStock ? 'En stock' : 'Sur commande'}
-    </span>
-  )
+  if (inStock) return null
+  return <span className="text-micro whitespace-nowrap text-warn">Sur commande</span>
 }

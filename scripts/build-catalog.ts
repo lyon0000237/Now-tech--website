@@ -16,6 +16,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { SUPPRESSED_PRODUCTS } from '../src/constants/suppressed.ts'
 import { UNIVERSE_DEFINITIONS, FALLBACK_UNIVERSE_ID } from '../src/constants/universes.ts'
 import type {
   Brand,
@@ -548,9 +549,16 @@ function build(): Catalog {
   }
 
   const productDrafts = new Map<number, ProductDraft>()
+  let suppressed = 0
   for (const row of productRows) {
     const id = Number(row.product_id)
     if (!Number.isFinite(id)) continue
+    // Withheld here rather than at render time, so every category count and
+    // every universe total below is computed without them and stays truthful.
+    if (SUPPRESSED_PRODUCTS.has(id)) {
+      if (!productDrafts.has(id)) suppressed++
+      continue
+    }
     let draft = productDrafts.get(id)
     if (!draft) {
       draft = { id, rawName: row.product_name, row, images: [] }
@@ -564,7 +572,7 @@ function build(): Catalog {
     }
   }
 
-  note(`unique products: ${productDrafts.size}`)
+  note(`unique products: ${productDrafts.size} (${suppressed} withheld, see constants/suppressed.ts)`)
 
   const usedProductSlugs = new Map<string, number>()
   const products: Product[] = []

@@ -35,3 +35,17 @@ next-env.d.ts
 
 # visual QA output
 /qa/shots/
+
+# throwaway inspection scripts (qa/capture.mjs and qa/audit.mjs are the kept ones)
+/qa/_*.mjs
+
+# The designer's source artwork, kept on disk and out of the repository.
+# `public/branding/banner-*.jpg` are the five pieces the site actually serves;
+# the originals they were copied from, plus three files that are not banners,
+# all arrived as `.jpeg` and are 30 MB of duplicates nothing reads.
+#
+# Matched on the EXTENSION and not on the name. `Banner*` looked like the
+# obvious rule and silently excluded the five served files as well: git honours
+# core.ignorecase on macOS, so the pattern matched `banner-1-cuisine.jpg` too
+# and the site would have been pushed without a single banner in it.
+/public/branding/*.jpeg

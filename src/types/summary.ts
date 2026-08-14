@@ -21,11 +21,35 @@ export interface ProductSummary {
   readonly brand: string | null
   /** Supplier photograph, or `null` for the 41 products never shot. */
   readonly image: string | null
+  /**
+   * A second angle, where the supplier shot one. 1,354 products have it, and on
+   * a catalogue of near-identical black boxes a second view is information
+   * rather than decoration, which is what earns it a hover.
+   */
+  readonly imageAlt: string | null
   /** At most three parsed technical facts, e.g. `["16 Go RAM", "512 Go SSD"]`. */
   readonly specs: readonly string[]
   /** Leaf category, denormalised so cards show provenance without a lookup. */
   readonly categoryName: string
-  readonly categorySlug: string
+}
+
+/**
+ * A department reduced to what the catalog map in the masthead renders.
+ *
+ * It used to serve the hero rail as well; that rail now takes `HeroPanel`,
+ * since it needs the card behind each row and not just the row.
+ */
+export interface DepartmentNav {
+  readonly id: UniverseId
+  readonly name: string
+  readonly shortName: string
+  readonly slug: string
+  readonly totalCount: number
+  readonly families: readonly {
+    readonly name: string
+    readonly slug: string
+    readonly count: number
+  }[]
 }
 
 /** A category reduced to what navigation and tiles render. */

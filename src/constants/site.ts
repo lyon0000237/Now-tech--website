@@ -27,7 +27,46 @@ export const SHOWROOMS: readonly Showroom[] = [
   { city: 'Yaoundé', district: 'Centre-ville', directions: 'Avenue Kennedy' },
 ]
 
+/**
+ * The three counters on one line.
+ *
+ * Shared, because the utility strip and the service band were each formatting
+ * their own version of the same fact and had drifted: one said "Akwa,
+ * Bonapriso, Centre-ville" and the other "Akwa, Bonapriso, Yaoundé", eighty
+ * pixels apart on the same screen. A reader cannot tell whether that is two
+ * shops or one shop described twice.
+ */
+export const PICKUP_LINE = 'Akwa, Bonapriso, Yaoundé'
+
 export const PHONES: readonly string[] = ['+237 695 54 90 58', '+237 673 55 05 51']
+
+/** `tel:` and `wa.me` both want the number with no spaces and no plus. */
+export function dialable(phone: string): string {
+  return phone.replace(/[^\d]/g, '')
+}
+
+/**
+ * WhatsApp is not a nice-to-have here.
+ *
+ * It is how a Cameroonian buyer sends a photograph of the broken part, asks
+ * whether the reference is really in stock, and receives the proforma. Treating
+ * it as a secondary channel behind an email form would be reading this market
+ * through a European one.
+ */
+export const WHATSAPP = PHONES[0]
+
+/**
+ * Named on the page rather than drawn as card marks. Two of the four are mobile
+ * money wallets with no payment-network artwork we hold a licence for, and a row
+ * of Visa and Mastercard logos would misstate what this shop actually accepts.
+ */
+export const PAYMENT_METHODS: readonly string[] = [
+  'Espèces au retrait',
+  'Espèces à la livraison',
+  'MTN Mobile Money',
+  'Orange Money',
+  'Virement bancaire',
+]
 
 /**
  * Delivery is a browse-time constraint, not a checkout detail: home delivery
@@ -37,7 +76,7 @@ export const PHONES: readonly string[] = ['+237 695 54 90 58', '+237 673 55 05 5
 export const DELIVERY_CITIES: readonly string[] = ['Douala', 'Yaoundé']
 
 export const SERVICE_POINTS = [
-  { title: 'Retrait le jour même', detail: 'Akwa, Bonapriso, Yaoundé' },
+  { title: 'Retrait le jour même', detail: PICKUP_LINE },
   { title: 'Livraison 24 à 48 h', detail: 'Douala et Yaoundé, agence de voyage ailleurs' },
   { title: 'Paiement à la livraison', detail: 'Espèces, MTN Mobile Money, Orange Money' },
   { title: 'Garantie constructeur', detail: 'De 1 à 24 mois selon le produit' },

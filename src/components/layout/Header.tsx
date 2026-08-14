@@ -1,68 +1,74 @@
 import Link from 'next/link'
 
+import { IconUser } from '@/components/brand/Icons'
 import { Logo } from '@/components/brand/Logo'
+import { CartButton } from './CartButton'
+import { RayonBar } from './RayonBar'
 import { SearchField } from './SearchField'
-import { getUniverses } from '@/lib/catalog'
-import { DELIVERY_CITIES } from '@/constants/site'
+import { UtilityBar } from './UtilityBar'
+import { getMenuDepartments, getFamilyCount } from '@/lib/catalog'
 
 /**
- * The masthead.
+ * The masthead, in three rows.
  *
- * Three things earn their place on the first row, and they are the three the
- * research says decide whether this market buys: search, the delivery city, and
- * the basket. The city is not a preference toggle. Home delivery and pickup
- * exist in Douala and Yaoundé only; everywhere else ships by intercity travel
- * agency in 8 to 72 hours. That changes what is buyable, when it arrives and
- * how it can be paid for, so it belongs in the masthead and propagates from
- * there.
+ * Counter strip, then the shop and its search, then the departments. That order
+ * is the order the three questions arrive in: who are you, what do you have,
+ * where do I start.
  *
- * The second row is the twelve departments. It is a grouping of the real
- * category tree, never an extra step: each link goes to a real listing.
+ * WHAT PINS AND WHY. Three rows is 144 pixels, and pinning all of them would
+ * spend a fifth of a phone screen on chrome. The header is therefore sticky at a
+ * negative offset equal to its own first row, so that row scrolls out of the way
+ * and the rest stays. The row that leaves is different per breakpoint because
+ * the row worth keeping is: a desktop reader loses the phone numbers and keeps
+ * search and the departments, a phone reader loses the wordmark and keeps search
+ * and the departments. Search survives both, which is the point. No JavaScript
+ * is involved: the offset is a `top` value and the browser does the rest.
+ *
+ * The phone layout is not the desktop one shrunk. On a 390px screen a search
+ * field sharing a row with a wordmark and a basket is left about 110 pixels,
+ * which is a field nobody can read what they typed into, so search takes a row
+ * of its own.
  */
 export function Header() {
-  const universes = getUniverses()
+  const departments = getMenuDepartments(5)
+  const familyCount = getFamilyCount()
+  const scopes = departments.map((department) => ({
+    slug: department.slug,
+    label: department.shortName,
+  }))
 
   return (
-    <header className="sticky top-0 z-[var(--z-header)] border-b border-rule bg-paper">
-      <div className="shell flex h-[62px] items-center gap-3 md:h-[74px] md:gap-[22px]">
+    <header className="sticky top-[-3.5rem] z-[var(--z-header)] bg-paper md:top-[-2.25rem]">
+      <UtilityBar />
+
+      <div className="masthead-in shell flex h-14 items-center gap-6 md:h-[72px] md:gap-10">
         <Logo />
-        <SearchField />
-        <div className="ml-auto flex shrink-0 items-center gap-5 text-sm">
-          <span className="hidden text-ink-2 lg:inline">
-            Livrer à{' '}
-            <b className="border-b border-rule-2 font-semibold text-ink">{DELIVERY_CITIES[0]}</b>
-          </span>
-          <Link href="/panier" className="flex items-center gap-2 font-semibold">
-            Panier
-            <span className="t-num rounded-[999px] bg-accent px-[7px] py-px text-xs text-paper">
-              0
+
+        <div className="hidden min-w-0 flex-1 md:block">
+          <SearchField scopes={scopes} />
+        </div>
+
+        <div className="ml-auto flex shrink-0 items-center gap-1 md:ml-0 md:gap-2">
+          <Link
+            href="/devis"
+            className="hidden items-center gap-2.5 rounded-control px-3 py-2 text-small transition-colors duration-[var(--t-fast)] hover:text-accent lg:flex"
+          >
+            <IconUser className="text-[1.25rem] text-ink-3" />
+            <span className="leading-tight">
+              Mon devis
+              <span className="block text-micro text-ink-3">Liste de matériel</span>
             </span>
           </Link>
+
+          <CartButton />
         </div>
       </div>
 
-      <div className="shell">
-        <nav
-          aria-label="Rayons"
-          className="no-scrollbar flex h-11 items-center gap-[22px] overflow-x-auto border-t border-rule text-[0.84375rem] font-medium text-ink-2"
-        >
-          <Link
-            href="/catalogue"
-            className="whitespace-nowrap border-b-2 border-transparent py-[3px] font-semibold text-ink hover:border-accent"
-          >
-            Tout le catalogue
-          </Link>
-          {universes.map((universe) => (
-            <Link
-              key={universe.id}
-              href={`/rayon/${universe.slug}`}
-              className="whitespace-nowrap border-b-2 border-transparent py-[3px] hover:border-accent hover:text-ink"
-            >
-              {universe.shortName}
-            </Link>
-          ))}
-        </nav>
+      <div className="shell pb-3 md:hidden">
+        <SearchField scopes={scopes} />
       </div>
+
+      <RayonBar departments={departments} familyCount={familyCount} />
     </header>
   )
 }
