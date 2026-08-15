@@ -917,7 +917,18 @@ body {
   z-index: 0;
   border-radius: var(--r-well);
   background: color-mix(in srgb, var(--brand) 55%, var(--paper));
-  animation: plate-return 260ms ease-in forwards;
+  /* A TRANSITION, NOT TWO KEYFRAMES, AND THAT IS A BUG FIX BEFORE IT IS A
+     SIMPLIFICATION. The plate used to declare `animation: plate-return` as its
+     RESTING state and swap to `plate-turn` on hover. An animation declared on an
+     element runs the moment that element exists, so on every load and every
+     refresh the whole grid played the return: twenty-four plates rotating up
+     from -4 degrees to zero, in unison, for something nobody had pointed at.
+     The card's hover was performing itself to an empty room.
+
+     Both keyframes eased identically, so a transition is exactly equivalent in
+     motion and correct at rest: nothing happens until a pointer arrives, and the
+     way back is the way out reversed. */
+  transition: transform 260ms ease-in;
 }
 .plate > * {
   position: relative;
@@ -925,24 +936,7 @@ body {
 }
 .group:hover .plate::after,
 .group:focus-within .plate::after {
-  animation: plate-turn 260ms ease-in forwards;
-}
-
-@keyframes plate-turn {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(-4deg);
-  }
-}
-@keyframes plate-return {
-  from {
-    transform: rotate(-4deg);
-  }
-  to {
-    transform: rotate(0deg);
-  }
+  transform: rotate(-4deg);
 }
 
 /* ----------------------------------------------------------------------------

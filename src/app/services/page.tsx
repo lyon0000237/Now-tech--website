@@ -5,9 +5,9 @@ import { IconPhone } from '@/components/brand/Icons'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Action } from '@/components/ui/Action'
-import { PHONES, WHATSAPP, dialable } from '@/constants/site'
+import { PHONES, PICKUP_LINE, WHATSAPP, dialable } from '@/constants/site'
 import { TRADES, isPrestation, readable, tradeOf } from '@/constants/services'
-import { getServices, getUniverse } from '@/lib/catalog'
+import { getCategoryBySlug, getServices, getUniverse } from '@/lib/catalog'
 import type { ProductSummary } from '@/types/summary'
 import { formatCount, formatPrice } from '@/lib/format'
 
@@ -16,10 +16,9 @@ export const metadata: Metadata = {
   // search result say it too. The h1 below is the one that draws the boundary.
   title: 'Services',
   description:
-    'Les prestations de l’atelier NowTech : vidéosurveillance, réseau et téléphonie IP, ' +
-    'contrôle d’accès, énergie solaire et backup électrique, à Douala et à Yaoundé. ' +
-    'Une prestation se chiffre après un relevé sur site, elle ne se met pas au panier. ' +
-    'Le matériel, lui, est au catalogue.',
+    'Les prestations de l’atelier NowTech : vidéosurveillance, réseau, contrôle d’accès, ' +
+    'onduleurs et solaire. Une prestation se chiffre après un relevé sur site, elle ne se ' +
+    'met pas au panier. Le matériel, lui, est au catalogue.',
 }
 
 /**
@@ -53,7 +52,7 @@ export const metadata: Metadata = {
  * department, and search for the rest".
  *
  * NOT ONE PRESTATION, RATE, DELAY OR GUARANTEE IS INVENTED HERE. Every row is a
- * record from the export and every figure is that record's own price. The three
+ * record from the export and every figure is that record's own price. The
  * sentences this page adds are each already asserted elsewhere in this repository
  * and are quoted rather than rewritten, so they cannot drift:
  *   - what the workshop installs, and that a prestation is quoted after a site
@@ -61,10 +60,27 @@ export const metadata: Metadata = {
  *     what Bod answers on every page of this site;
  *   - that a list of material comes back as a facture proforma: the same file,
  *     the `devis` topic, and `/devis` itself;
- *   - that WhatsApp is where this shop is reached: `constants/site.ts`, and the
+ *   - that nothing is paid online: `constants/site.ts`, `PAYMENT_METHODS`, whose
+ *     five entries are cash, two mobile-money wallets and a bank transfer;
+ *   - where the counters are: the same file, `PICKUP_LINE`, printed verbatim
+ *     rather than retyped, exactly as the utility strip and the service band do;
+ *   - that WhatsApp is where this shop is reached: the same file, and the
  *     showroom band on the homepage.
  * No lead time appears anywhere below. The record names carry the supplier's own
  * "Express" and "Rapide"; the page never turns those into a promise of its own.
+ *
+ * TWO CLAIMS WERE CUT FROM THIS PAGE FOR HAVING NO SOURCE AT ALL, and both read
+ * as harmless until you look for the file that backs them:
+ *   - "les équipes interviennent sur site à Douala et à Yaoundé", in the lead and
+ *     in the meta description. Nothing in this repository says where a technician
+ *     travels. `SHOWROOMS` says where the three counters ARE and `DELIVERY_CITIES`
+ *     says where a parcel goes; neither is a service area, and inventing one on a
+ *     page whose whole point is that it does not invent is the worst place to do
+ *     it. The counters are stated instead, from `PICKUP_LINE`, which is true.
+ *   - "le prix dépend du nombre de points, des distances et de l'état de
+ *     l'existant". Plausible, unsourced, and a price list in disguise: it tells a
+ *     reader that distance is billed. `assistant.ts` says only that the prestation
+ *     is quoted after a site survey, so that is all this page says.
  *
  * The nameless record is dropped. A row with no name is not a service the shop
  * declines to describe, it is a hole in the export.
@@ -90,11 +106,34 @@ function surveyHref(subject?: string): string {
  */
 const byPrice = (a: ProductSummary, b: ProductSummary) => a.price - b.price
 
+/** "les traceurs GPS, les imprimantes EPSON et les portables HP", in French. */
+const listFrench = new Intl.ListFormat('fr-FR', { style: 'long', type: 'conjunction' })
+
 export default function ServicesPage() {
   const rows = getServices().filter((row) => row.name.trim().length > 0)
   const prestations = rows.filter((row) => isPrestation(row.name))
   const material = rows.filter((row) => !isPrestation(row.name))
   const rayon = getUniverse('services')
+
+  /**
+   * THE FAMILIES THAT CARRY THE SUPPLIER'S TERM WITHOUT LIVING UNDER IT, READ
+   * OFF THE RECORDS RATHER THAN TYPED OUT.
+   *
+   * Four of the fourteen pieces of hardware are filed elsewhere as their primary
+   * category: GPS Tracker, Imprimantes EPSON, Laptop HP. This page used to name
+   * those three in prose, which was true on the day it was written and is a
+   * claim about somebody else's data every day after. `categoryName` on the
+   * summary IS the primary category, so the sentence now rebuilds itself: a
+   * re-export that refiles a record changes the sentence, and one that refiles
+   * all of them deletes it.
+   *
+   * The term's own name comes from the catalogue and not from a literal, so the
+   * comparison cannot start matching everything the day someone renames it.
+   */
+  const termName = getCategoryBySlug('nos-services')?.name ?? null
+  const elsewhere = [...new Set(material.map((row) => row.categoryName))]
+    .filter((name) => name !== termName)
+    .sort((a, b) => a.localeCompare(b, 'fr'))
 
   // A heading is drawn only when records fell under it. Five trades is the rule,
   // never the promise: if the export stops carrying camera work, the camera
@@ -108,7 +147,7 @@ export default function ServicesPage() {
     <>
       <PageHeader
         title="Ce que fait l’atelier"
-        lead="L’atelier installe et configure ce qu’il vend : vidéosurveillance, réseau, contrôle d’accès, onduleurs et solaire. Les équipes interviennent sur site à Douala et à Yaoundé. Cette page ne vend rien : une prestation se chiffre après un relevé sur site, elle ne se met pas au panier. Le panier, lui, sert au matériel."
+        lead="L’atelier installe et configure ce qu’il vend : vidéosurveillance, réseau, contrôle d’accès, onduleurs et solaire. Cette page ne vend rien : une prestation se chiffre après un relevé sur site, elle ne se met pas au panier. Le panier, lui, sert au matériel."
         aside={prestations.length > 0 ? formatCount(prestations.length, 'prestation') : undefined}
       />
 
@@ -126,10 +165,20 @@ export default function ServicesPage() {
                 Une prestation ne se met pas au panier
               </h2>
               <p className="e-text mt-4 max-w-[54ch] text-small leading-[1.65] text-pretty text-rail-ink-2">
-                Le prix d’un chantier dépend du nombre de points, des distances et de l’état de
-                l’existant : il se chiffre après un relevé sur site. Vous décrivez le besoin, un
-                technicien passe, le comptoir renvoie une facture proforma. Rien ne se paie en
-                ligne, ici pas plus qu’ailleurs sur ce site.
+                Vous décrivez le besoin, un technicien passe, le comptoir renvoie une facture
+                proforma. Le chiffre vient de ce relevé et de rien d’autre : un chantier ne se
+                devine pas depuis un écran. Rien ne se paie en ligne, ici pas plus qu’ailleurs
+                sur ce site.
+              </p>
+
+              {/* THE OTHER HALF OF "COMMENT JE VOUS FAIS VENIR" IS QUE JE PASSE
+                  VOUS VOIR, and this page was the only one of the three that
+                  hands over a number without saying where the number sits. The
+                  line is `PICKUP_LINE` itself, not a retyping of it: the utility
+                  strip and the service band had each formatted their own version
+                  of these three districts and had already drifted apart once. */}
+              <p className="mt-4 text-small leading-[1.65] text-rail-ink-2">
+                Trois comptoirs, si vous préférez passer : {PICKUP_LINE}.
               </p>
             </div>
 
@@ -140,8 +189,16 @@ export default function ServicesPage() {
             <div className="flex flex-col gap-6 lg:items-start">
               {/* `on-rail` and not the default: --accent on the green band is
                   1.34:1, which is not a button, it is a rumour. The variant
-                  inverts the roles, white ground and rail-coloured label. */}
-              <Action href={surveyHref()} variant="on-rail">
+                  inverts the roles, white ground and rail-coloured label.
+
+                  TARGET AND REL, BECAUSE `Action` RENDERS A BARE `next/link` AND
+                  ADDS NEITHER. The nineteen rows below already open WhatsApp in
+                  a new tab; this control, the biggest one on the page, was
+                  taking the whole tab with it, so the primary action was the one
+                  that lost the reader his place. `/recherche` passes the same
+                  two props to the same component for the same absolute wa.me
+                  URL, and this is now the same control everywhere. */}
+              <Action href={surveyHref()} variant="on-rail" target="_blank" rel="noopener noreferrer">
                 Demander un relevé sur site
               </Action>
 
@@ -274,7 +331,17 @@ export default function ServicesPage() {
         <section className="shell mt-band">
           <SectionHeader
             title="Du matériel porte le même mot"
-            context={`Sous le terme « Nos Services », le fournisseur a rangé deux choses : les ${formatCount(prestations.length, 'prestation')} ci-dessus, et ${formatCount(material.length, 'pièce')} de matériel, des ordinateurs portables, des imprimantes, un drone, un clavier. Ce n’est pas la même chose. Du matériel a un prix ferme, se met au panier, se retire au comptoir ou se fait livrer. Une prestation, non. Le matériel se compare en rayon${rayon ? `, avec l’occasion, dans les ${formatCount(rayon.totalCount, 'référence')} de ${rayon.name}` : ''}.`}
+            /* THE OPENING CLAUSE COUNTS BOTH SIDES, SO IT HAS TO SURVIVE ONE OF
+               THEM BEING EMPTY. Written flat it read "le fournisseur a rangé deux
+               choses : les 0 prestation ci-dessus, et 14 pièces de matériel",
+               pointing at nothing above it, on the one export where this page
+               matters most: the one where the term has stopped carrying labour
+               and is now a hardware bin with a misleading name. */
+            context={`${
+              prestations.length > 0
+                ? `Sous le terme « ${termName ?? 'Nos Services'} », le fournisseur a rangé deux choses : les ${formatCount(prestations.length, 'prestation')} ci-dessus, et ${formatCount(material.length, 'pièce')} de matériel`
+                : `Sous le terme « ${termName ?? 'Nos Services'} », le fournisseur a aussi rangé ${formatCount(material.length, 'pièce')} de matériel`
+            }. Ce n’est pas la même chose. Du matériel a un prix ferme, se met au panier, se retire au comptoir ou se fait livrer. Une prestation, non. Le matériel se compare en rayon${rayon ? `, avec l’occasion, dans les ${formatCount(rayon.totalCount, 'référence')} de ${rayon.name}` : ''}.`}
             aside={
               <Action href="/rayon/services-occasion" variant="secondary">
                 Voir le rayon Services &amp; Occasion
@@ -283,9 +350,9 @@ export default function ServicesPage() {
           />
 
           <p className="max-w-[62ch] text-small leading-[1.65] text-ink-2">
-            Quelques-unes de ces pièces sont classées ailleurs, sous leur vraie famille : les
-            traceurs GPS, les imprimantes EPSON, les portables HP. Le plus court pour les retrouver
-            reste la recherche, par référence ou par modèle.
+            {elsewhere.length > 0
+              ? `Quelques-unes de ces pièces sont classées ailleurs, sous leur vraie famille : ${listFrench.format(elsewhere)}. Le plus court pour les retrouver reste la recherche, par référence ou par modèle.`
+              : 'Le plus court pour retrouver une de ces pièces reste la recherche, par référence ou par modèle.'}
           </p>
           {/* 19.5 pixels tall on a telephone, measured, and it is the last
               control on the page. `min-h-11` gives it a thumb below `sm` and
