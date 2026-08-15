@@ -35,6 +35,15 @@ import { PHONES, dialable } from "@/constants/site";
  *
  * The empty state is a designed screen rather than a message, since it is the
  * one most first-time visitors will actually see.
+ *
+ * EVERY CONTROL IN HERE WAS DRAWN FOR A POINTER AND MEASURED FOR ONE. At 360
+ * the audit read the cross at 36 x 36, the two quantity steppers at 32 x 32
+ * eight pixels apart, "Retirer" at 38 x 18 and the telephone number at 312 x 20:
+ * five targets under the 44 a finger needs, on the one panel where a customer
+ * changes their mind about money. All five are floored below `md` and left
+ * exactly as they were from `md` up, where the aiming is done with a mouse:
+ * measured at 1440 the cross is 36, the steppers 32 and the number 20, before
+ * and after.
  */
 
 /** NENGi's workhorse curve: everything decelerates into place, nothing overshoots. */
@@ -132,7 +141,7 @@ export function CartDrawer() {
                 type="button"
                 onClick={close}
                 aria-label="Fermer le panier"
-                className="press grid size-9 place-items-center rounded-control text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-ink"
+                className="press -mr-2 grid size-11 place-items-center rounded-control text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-ink md:mr-0 md:size-9"
               >
                 <IconClose className="text-[1.25rem]" />
               </button>
@@ -188,7 +197,11 @@ export function CartDrawer() {
                         <Link
                           href={`/produit/${line.slug}`}
                           onClick={close}
-                          className="clamp-2 block text-small leading-[1.4] hover:text-accent"
+                          /* `clamp-2` is `-webkit-box`, so the floor is a
+                             min-height and not a flex centring: the utility
+                             would lose to the unlayered class and the row would
+                             read as centred while being drawn from the top. */
+                          className="clamp-2 block min-h-11 text-small leading-[1.4] hover:text-accent md:min-h-0"
                         >
                           {line.name}
                         </Link>
@@ -196,15 +209,15 @@ export function CartDrawer() {
                           {formatPrice(line.price)}
                         </p>
 
-                        <div className="mt-3 flex items-center gap-4">
+                        <div className="mt-3 flex items-center gap-3 md:gap-4">
                           <div className="flex items-center rounded-control border border-rule">
                             <button
                               type="button"
                               onClick={() => setQty(line.slug, line.qty - 1)}
                               aria-label={`Retirer un ${line.name}`}
-                              className="press grid size-8 place-items-center text-ink-2 hover:text-ink"
+                              className="press grid size-11 place-items-center text-ink-2 hover:text-ink md:size-8"
                             >
-                              <span aria-hidden>–</span>
+                              <span aria-hidden>−</span>
                             </button>
                             <span className="t-num w-7 text-center text-small">
                               {line.qty}
@@ -213,15 +226,19 @@ export function CartDrawer() {
                               type="button"
                               onClick={() => setQty(line.slug, line.qty + 1)}
                               aria-label={`Ajouter un ${line.name}`}
-                              className="press grid size-8 place-items-center text-ink-2 hover:text-ink"
+                              className="press grid size-11 place-items-center text-ink-2 hover:text-ink md:size-8"
                             >
                               <span aria-hidden>+</span>
                             </button>
                           </div>
+                          {/* The padding is what makes the width, since the
+                              word is 38 pixels long and a target is 44. It is
+                              given back as a negative margin so the label still
+                              sits where it was drawn. */}
                           <button
                             type="button"
                             onClick={() => remove(line.slug)}
-                            className="press text-micro text-ink-3 transition-colors duration-[var(--t-fast)] hover:text-warn"
+                            className="press -mr-2 flex min-h-11 items-center px-2 text-micro text-ink-3 transition-colors duration-[var(--t-fast)] hover:text-warn md:mr-0 md:min-h-0 md:px-0"
                           >
                             Retirer
                           </button>
@@ -248,7 +265,7 @@ export function CartDrawer() {
                   </Action>
                   <a
                     href={`tel:${dialable(PHONES[0])}`}
-                    className="t-num mt-4 flex items-center justify-center gap-2.5 text-small text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-ink"
+                    className="t-num mt-2 flex min-h-11 items-center justify-center gap-2.5 text-small text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-ink md:mt-4 md:min-h-0"
                   >
                     <IconPhone className="text-[1rem] text-ink-3" />
                     {PHONES[0]}

@@ -32,8 +32,12 @@ export function CounterTour({
     // At lg the side column was a third of 930px, and a 180px measure is not a
     // column, it is a margin with words in it. The split waits for xl; below it
     // the two tiles sit side by side under the grid, where they have room.
-    <div className="grid gap-x-8 gap-y-14 xl:grid-cols-[2fr_1fr] xl:gap-x-14">
-      <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3">
+    // The vertical gaps are cut below sm. Fourteen and twelve are desktop
+    // measures: on a 360 screen they put 56 and 48 pixels of nothing between
+    // rows that are already stacked one per screen, and the section measured
+    // 1 911 pixels tall. From sm the desktop rhythm returns untouched.
+    <div className="grid gap-x-8 gap-y-10 sm:gap-y-14 xl:grid-cols-[2fr_1fr] xl:gap-x-14">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:gap-y-12 md:grid-cols-3">
         {picks.map((pick, index) => (
           <Link
             key={pick.product.id}
@@ -77,9 +81,13 @@ export function CounterTour({
       {/* Side by side only from md: at 640 the pair split a 544px measure into
           two 188px tiles, which is narrower than the sentence they carry. */}
       <div className="grid content-start gap-6 md:grid-cols-2 xl:grid-cols-1">
+        {/* p-9 is 36 pixels of padding on each side of a 306px screen, which
+            leaves the sentence 234 to sit in. Below sm it is p-6, the same
+            padding the promo banners already take on a phone; from sm the tile
+            is the desktop's again. */}
         <Link
           href="/rayon/services-occasion"
-          className="group enter flex flex-col gap-7 rounded-space bg-space p-9 transition-colors duration-[var(--t-base)] hover:bg-space-2"
+          className="group enter flex flex-col gap-7 rounded-space bg-space p-6 transition-colors duration-[var(--t-base)] hover:bg-space-2 sm:p-9"
         >
           <div>
             <p className="text-sub font-semibold leading-[1.2] tracking-[-0.02em]">
@@ -115,7 +123,7 @@ export function CounterTour({
         {/* The one dark block between the two rails. A proforma is a phone
             conversation in this market, not a form, so the tile hands over the
             number instead of a field. */}
-        <div className="on-rail enter flex flex-col gap-8 rounded-space bg-rail p-9 text-rail-ink">
+        <div className="on-rail enter flex flex-col gap-8 rounded-space bg-rail p-6 text-rail-ink sm:p-9">
           <div>
             <p className="text-sub font-semibold leading-[1.2] tracking-[-0.02em]">
               Une liste à chiffrer ?
@@ -125,13 +133,18 @@ export function CounterTour({
               entreprise, livraison sur site, installation en option.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-x-7 gap-y-4">
-            <Action href="/devis" variant="on-rail" size="sm">
+          {/* The two controls in this tile measured 37 and 19.5 pixels tall.
+              A proforma is a phone conversation in this market, so the number
+              beside the button is not decoration and owes a thumb the same 44
+              pixels the button does. Both take a 44px line box below sm and
+              return to their own height from sm up. */}
+          <div className="flex flex-wrap items-center gap-x-7 gap-y-2 sm:gap-y-4">
+            <Action href="/devis" variant="on-rail" size="sm" className="min-h-11 sm:min-h-0">
               Demander un devis
             </Action>
             <a
               href={`tel:${dialable(PHONES[0])}`}
-              className="t-num flex items-center gap-2.5 text-small text-rail-ink-2 transition-colors duration-[var(--t-fast)] hover:text-rail-ink"
+              className="t-num flex min-h-11 items-center gap-2.5 text-small text-rail-ink-2 transition-colors duration-[var(--t-fast)] hover:text-rail-ink sm:min-h-0"
             >
               <IconPhone className="text-[1rem]" />
               {PHONES[0]}

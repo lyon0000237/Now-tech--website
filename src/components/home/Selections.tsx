@@ -83,7 +83,15 @@ export function Selections({ selections }: { selections: readonly Selection[] })
                   onClick={() => setActiveId(selection.id)}
                   // 44px on a phone, where a thumb is aiming; the desktop pill
                 // keeps its own proportions.
-                className={`press min-h-11 rounded-pill px-5 py-2 text-small transition-colors duration-[var(--t-fast)] md:min-h-0 ${
+                //
+                // THE HORIZONTAL PADDING DROPS BY FOUR PIXELS BELOW sm, AND
+                // FOUR PIXELS IS THE WHOLE STORY. On a 360 screen the measure
+                // is 306 and the last two pills came to 156.2 + 8 + 145.8 =
+                // 310: over by four, so they broke onto a third line and the
+                // set stood 148px tall above the grid. At px-4 the same two
+                // come to 294 and the four tabs sit on two rows, 96px. The
+                // desktop pill is untouched from sm up.
+                className={`press min-h-11 rounded-pill px-4 py-2 text-small transition-colors duration-[var(--t-fast)] sm:px-5 md:min-h-0 ${
                     isActive
                       ? 'bg-accent font-semibold text-paper'
                       : 'border border-rule text-ink-2 hover:border-ink hover:text-ink'
@@ -101,11 +109,14 @@ export function Selections({ selections }: { selections: readonly Selection[] })
         <ProductGrid products={active.products} columns={4} />
       </div>
 
-      <div className="mt-stack flex flex-wrap items-baseline justify-between gap-x-12 gap-y-3 border-t border-rule pt-6">
+      <div className="mt-stack flex flex-wrap items-baseline justify-between gap-x-12 gap-y-1 border-t border-rule pt-6 sm:gap-y-3">
         <p className="text-small text-ink-3">{active.rule}</p>
+        {/* Standing on its own under the rule, this is a control and not a word
+            inside a sentence: 185 by 20 pixels is not a thumb's target. The
+            phone gives it a 44px line box; the desktop link is unchanged. */}
         <Link
           href="/catalogue"
-          className="draw-under text-small font-semibold text-accent hover:text-accent-ink"
+          className="draw-under inline-flex min-h-11 items-center text-small font-semibold text-accent hover:text-accent-ink sm:min-h-0"
         >
           Ouvrir le catalogue complet
         </Link>

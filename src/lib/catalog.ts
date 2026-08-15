@@ -989,7 +989,7 @@ export interface SearchHit {
   readonly categoryName: string
 }
 
-let haystack: { product: Product; text: string }[] | null = null
+let haystack: { product: Product; text: string; padded: string }[] | null = null
 
 /**
  * Free-text search over the catalogue.
@@ -1010,16 +1010,18 @@ export function searchCatalog(query: string, limit = 4): SearchHit[] {
   if (words.length === 0) return []
 
   if (!haystack) {
-    haystack = catalog.products.map((product) => ({
-      product,
-      text: fold(
+    haystack = catalog.products.map((product) => {
+      const text = fold(
         [
           product.name,
           product.brand ?? '',
           categoriesById.get(product.primaryCategoryId)?.name ?? '',
         ].join(' '),
-      ),
-    }))
+      )
+      // Padded once, here, rather than concatenated inside the scan: the scan
+      // runs 4 254 times per keystroke and this runs once per process.
+      return { product, text, padded: ` ${text}` }
+    })
   }
 
   const scored: { product: Product; score: number }[] = []
@@ -1027,7 +1029,16 @@ export function searchCatalog(query: string, limit = 4): SearchHit[] {
     let score = 0
     let matchedAll = true
     for (const word of words) {
-      const at = entry.text.indexOf(word)
+      // AT THE START OF A WORD, NOT ANYWHERE IN THE STRING. Plain indexOf made
+      // this a substring search, and a substring search on a catalogue of
+      // reference numbers is not a search at all: "hp" matched inside
+      // "graphique", "DHP-346", "Sharp" and a Hikvision switch, which came
+      // third for the query "hp" while /marque/hp counted 544 and this counted
+      // 609. Two numbers a customer can see, disagreeing, from the same word.
+      //
+      // A prefix of a word is still a match, because this feeds a field that is
+      // read while it is being typed: "ondul" has to find "onduleur".
+      const at = entry.padded.indexOf(` ${word}`)
       if (at === -1) {
         matchedAll = false
         break
@@ -1060,10 +1071,471 @@ export function searchFamilies(query: string, limit = 3): CategorySummary[] {
   return catalog.categories
     .filter((category) => {
       if (category.level === 0 || category.hidden || category.totalCount === 0) return false
-      const text = fold(category.name)
-      return words.every((word) => text.includes(word))
+      const text = ` ${fold(category.name)}`
+      return words.every((word) => text.includes(` ${word}`))
     })
     .sort((a, b) => b.totalCount - a.totalCount)
     .slice(0, limit)
     .map(toCategorySummary)
+}
+
+/* -------------------------------------------------------------------------- */
+/* Brand pages                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** A brand as `/marques` renders it: countable, placed, and marked if we hold one. */
+export interface BrandEntry {
+  readonly name: string
+  readonly slug: string
+  readonly productCount: number
+  /** Departments the brand appears in, deepest first. Named, not id'd. */
+  readonly departments: readonly string[]
+  /** File in `public/brands/` without the extension, or null for the other 81. */
+  readonly file: string | null
+  readonly hover: string | null
+  /** Initial, for the alphabetical index. `#` for anything not A-Z. */
+  readonly letter: string
+}
+
+let brandProducts: Map<string, Product[]> | null = null
+
+function byBrandSlug(): Map<string, Product[]> {
+  if (brandProducts) return brandProducts
+  const index = new Map<string, Product[]>()
+  for (const brand of catalog.brands) index.set(brand.slug, [])
+  for (const product of catalog.products) {
+    if (!product.brand) continue
+    const brand = catalog.brands.find((candidate) => candidate.name === product.brand)
+    if (!brand) continue
+    index.get(brand.slug)?.push(product)
+  }
+  brandProducts = index
+  return index
+}
+
+export function getBrandIndex(): BrandEntry[] {
+  return catalog.brands
+    .filter((brand) => brand.productCount > 0)
+    .map((brand) => {
+      const mark = BRAND_MARK_BY_NAME.get(brand.name)
+      const initial = brand.name.trim().charAt(0).toUpperCase()
+      return {
+        name: brand.name,
+        slug: brand.slug,
+        productCount: brand.productCount,
+        departments: brand.universeIds
+          .map((id) => universesById.get(id)?.shortName ?? null)
+          .filter((name): name is string => name !== null),
+        file: mark?.file ?? null,
+        hover: mark?.hover ?? null,
+        letter: /[A-Z]/.test(initial) ? initial : '#',
+      }
+    })
+    .sort((a, b) => b.productCount - a.productCount)
+}
+
+export function getBrandListing(slug: string, sort: SortKey, page: number): Listing | null {
+  const brand = brandsBySlug.get(slug)
+  if (!brand) return null
+  const { products, total, page: current, pages } = paginate(
+    byBrandSlug().get(slug) ?? [],
+    sort,
+    page,
+  )
+  return {
+    title: brand.name,
+    path: [
+      { name: 'Catalogue', href: '/catalogue' },
+      { name: 'Marques', href: '/marques' },
+    ],
+    total,
+    products,
+    // The families this brand actually appears in, which on a brand page is a
+    // more useful narrowing than its departments: "HP" spans six departments and
+    // nobody browses HP by department, they browse it by what the thing is.
+    children: (() => {
+      const counts = new Map<number, number>()
+      for (const product of byBrandSlug().get(slug) ?? []) {
+        counts.set(product.primaryCategoryId, (counts.get(product.primaryCategoryId) ?? 0) + 1)
+      }
+      return [...counts.entries()]
+        .map(([id, count]) => {
+          const category = categoriesById.get(id)
+          return category ? { name: category.name, slug: category.slug, count } : null
+        })
+        .filter((entry): entry is { name: string; slug: string; count: number } => entry !== null)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 12)
+    })(),
+    page: current,
+    pages,
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Suggestions — what the masthead field offers while it is being typed in     */
+/* -------------------------------------------------------------------------- */
+
+export interface Suggestions {
+  readonly products: readonly SearchHit[]
+  readonly families: readonly { readonly name: string; readonly slug: string; readonly count: number }[]
+  readonly brands: readonly { readonly name: string; readonly slug: string; readonly count: number }[]
+}
+
+/**
+ * Three kinds of answer to a half-typed question.
+ *
+ * A product, because sometimes the reader knows the reference. A family,
+ * because more often they know the KIND of thing and "Caméras de Surveillance"
+ * with 440 behind it is a better destination than any single camera. A brand,
+ * because "hp" is 544 products and no product page is the right answer to it.
+ *
+ * Ranked lists, one query, one round trip. Splitting this into three endpoints
+ * would triple the requests a field makes on every keystroke, which on a
+ * Cameroonian mobile connection is the difference between a field that helps and
+ * one that lags behind the typing.
+ */
+export function suggest(query: string): Suggestions {
+  const words = terms(query)
+  if (words.length === 0) return { products: [], families: [], brands: [] }
+
+  return {
+    products: searchCatalog(query, 5),
+    families: catalog.categories
+      .filter((category) => {
+        if (category.level === 0 || category.hidden || category.totalCount === 0) return false
+        const text = ` ${fold(category.name)}`
+        return words.every((word) => text.includes(` ${word}`))
+      })
+      .sort((a, b) => b.totalCount - a.totalCount)
+      .slice(0, 3)
+      .map((category) => ({ name: category.name, slug: category.slug, count: category.totalCount })),
+    brands: catalog.brands
+      .filter((brand) => {
+        if (brand.productCount === 0) return false
+        const text = ` ${fold(brand.name)}`
+        return words.every((word) => text.includes(` ${word}`))
+      })
+      .sort((a, b) => b.productCount - a.productCount)
+      .slice(0, 2)
+      .map((brand) => ({ name: brand.name, slug: brand.slug, count: brand.productCount })),
+  }
+}
+
+/**
+ * The results page behind the masthead field.
+ *
+ * A scope narrows to a department. Not a second query: the search runs once
+ * across the catalogue and the department filters it, because a reader who
+ * scoped to "Réseaux" and got nothing wants to know the shop has it elsewhere,
+ * and that is only knowable if the unscoped count was computed too.
+ */
+export interface SearchPage {
+  readonly query: string
+  readonly scope: string | null
+  readonly scopeName: string | null
+  readonly total: number
+  readonly totalUnscoped: number
+  readonly products: readonly ProductSummary[]
+  readonly families: readonly { readonly name: string; readonly slug: string; readonly count: number }[]
+  readonly brands: readonly { readonly name: string; readonly slug: string; readonly count: number }[]
+  readonly page: number
+  readonly pages: number
+}
+
+export function getSearchPage(
+  query: string,
+  scopeSlug: string | null,
+  sort: SortKey,
+  page: number,
+): SearchPage {
+  const words = terms(query)
+  const universe = scopeSlug ? universesBySlug.get(scopeSlug) ?? null : null
+  const hints = suggest(query)
+
+  if (words.length === 0) {
+    return {
+      query,
+      scope: universe?.slug ?? null,
+      scopeName: universe?.name ?? null,
+      total: 0,
+      totalUnscoped: 0,
+      products: [],
+      families: [],
+      brands: [],
+      page: 1,
+      pages: 1,
+    }
+  }
+
+  // The same word-start rule as searchCatalog, for the same reason: the count
+  // printed on this page and the list the masthead offered have to be the same
+  // query, or the page contradicts the field that sent the reader to it.
+  const all = catalog.products.filter((product) => {
+    const text = ` ${fold(
+      [product.name, product.brand ?? '', categoriesById.get(product.primaryCategoryId)?.name ?? ''].join(' '),
+    )}`
+    return words.every((word) => text.includes(` ${word}`))
+  })
+
+  const scoped = universe
+    ? all.filter((product) => categoriesById.get(product.primaryCategoryId)?.universeId === universe.id)
+    : all
+
+  const { products, total, page: current, pages } = paginate(scoped, sort, page)
+
+  return {
+    query,
+    scope: universe?.slug ?? null,
+    scopeName: universe?.name ?? null,
+    total,
+    totalUnscoped: all.length,
+    products,
+    families: hints.families,
+    brands: hints.brands,
+    page: current,
+    pages,
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Facets — the filter panel on the catalogue                                 */
+/* -------------------------------------------------------------------------- */
+
+export interface CatalogFilters {
+  readonly rayons: readonly string[]
+  readonly familles: readonly string[]
+  readonly marques: readonly string[]
+  readonly prixMin: number | null
+  readonly prixMax: number | null
+  /** Only what is at the counter today. */
+  readonly stock: boolean
+  /** Only the 513 references genuinely marked down 40% or more. */
+  readonly remise: boolean
+  /** Only what the supplier actually photographed. */
+  readonly photo: boolean
+}
+
+export const NO_FILTERS: CatalogFilters = {
+  rayons: [],
+  familles: [],
+  marques: [],
+  prixMin: null,
+  prixMax: null,
+  stock: false,
+  remise: false,
+  photo: false,
+}
+
+export interface FacetValue {
+  readonly label: string
+  readonly value: string
+  /** How many products this value would ADD to the current selection. */
+  readonly count: number
+  readonly selected: boolean
+}
+
+export interface CatalogFacets {
+  readonly rayons: readonly FacetValue[]
+  readonly familles: readonly FacetValue[]
+  readonly marques: readonly FacetValue[]
+  readonly stock: { readonly count: number; readonly selected: boolean }
+  readonly remise: { readonly count: number; readonly selected: boolean }
+  readonly photo: { readonly count: number; readonly selected: boolean }
+  /** The real floor and ceiling of the whole catalogue, for the price inputs. */
+  readonly prixPlancher: number
+  readonly prixPlafond: number
+  readonly active: number
+}
+
+const DEAL_FLOOR = 40
+
+/**
+ * Faceted filtering over the whole catalogue.
+ *
+ * EVERY COUNT IS COMPUTED AGAINST THE OTHER FILTERS, NOT AGAINST THE WHOLE SHOP.
+ * That is the difference between a filter panel and a list of links. If a reader
+ * has already chosen "Reseaux", the count beside "MikroTik" has to be the
+ * MikroTik references inside Reseaux, or the number is a promise the next click
+ * breaks. The one exception is the dimension being counted itself, which is
+ * excluded from its own filter so that a reader can see what the other values in
+ * that same group would give them: without it, every unselected brand reads 0
+ * the moment one brand is picked.
+ *
+ * A value that would give nothing is dropped rather than disabled. A greyed row
+ * still costs a line and still has to be read past, and this panel already has
+ * 268 families and 101 brands competing for a column.
+ *
+ * FOUR PASSES OVER 4 254 PRODUCTS, which is under two milliseconds and happens on
+ * the server. An index would be the right answer at ten times this size.
+ */
+/**
+ * Every family a product answers to, its own and all of their ancestors.
+ *
+ * THE FILTER AND THE FACET HAVE TO ASK THE SAME QUESTION, and until this existed
+ * they asked two. The filter looked only at the terms WooCommerce put on the
+ * product, so "Ordinateurs portables / Laptop" filtered to the 80 products filed
+ * on that exact term. The facet beside it said 307, because 307 is what the
+ * shop counts on that shelf: the term plus everything under it, which is also
+ * what /categorie/ shows and what the department menu prints. Two numbers, both
+ * visible, four hundred pixels apart.
+ *
+ * The shelf reading wins, because it is the one the rest of the site already
+ * uses. A product filed in "Laptop HP" is a laptop.
+ */
+const familyIds = new WeakMap<Product, ReadonlySet<number>>()
+
+function familiesOf(product: Product): ReadonlySet<number> {
+  const cached = familyIds.get(product)
+  if (cached) return cached
+  const ids = new Set<number>()
+  for (const id of [product.primaryCategoryId, ...product.categoryIds]) {
+    const category = categoriesById.get(id)
+    if (!category) continue
+    ids.add(category.id)
+    for (const ancestor of category.ancestorIds) ids.add(ancestor)
+  }
+  familyIds.set(product, ids)
+  return ids
+}
+
+function matches(product: Product, filters: CatalogFilters, skip?: keyof CatalogFilters): boolean {
+  const category = categoriesById.get(product.primaryCategoryId)
+
+  if (skip !== 'rayons' && filters.rayons.length > 0) {
+    const universe = category ? universesById.get(category.universeId) : null
+    if (!universe || !filters.rayons.includes(universe.slug)) return false
+  }
+  if (skip !== 'familles' && filters.familles.length > 0) {
+    // A family matches if the product sits in it OR anywhere under it, which is
+    // how the shop counts a shelf at the counter. See familiesOf.
+    const own = familiesOf(product)
+    const inFamily = filters.familles.some((slug) => {
+      const target = categoriesBySlug.get(slug)
+      return target ? own.has(target.id) : false
+    })
+    if (!inFamily) return false
+  }
+  if (skip !== 'marques' && filters.marques.length > 0) {
+    const brand = product.brand
+      ? catalog.brands.find((candidate) => candidate.name === product.brand)
+      : null
+    if (!brand || !filters.marques.includes(brand.slug)) return false
+  }
+  if (skip !== 'prixMin' && filters.prixMin !== null && product.price < filters.prixMin) return false
+  if (skip !== 'prixMax' && filters.prixMax !== null && product.price > filters.prixMax) return false
+  if (skip !== 'stock' && filters.stock && !product.inStock) return false
+  if (skip !== 'remise' && filters.remise && (product.discountPct ?? 0) < DEAL_FLOOR) return false
+  if (skip !== 'photo' && filters.photo && product.images.length === 0) return false
+  return true
+}
+
+export function getFilteredCatalogue(
+  filters: CatalogFilters,
+  sort: SortKey,
+  page: number,
+): { listing: Listing; facets: CatalogFacets } {
+  const kept = catalog.products.filter((product) => matches(product, filters))
+  const { products, total, page: current, pages } = paginate(kept, sort, page)
+
+  const tally = <T>(
+    skip: keyof CatalogFilters,
+    key: (product: Product) => T | null,
+  ): Map<T, number> => {
+    const counts = new Map<T, number>()
+    for (const product of catalog.products) {
+      if (!matches(product, filters, skip)) continue
+      const value = key(product)
+      if (value === null) continue
+      counts.set(value, (counts.get(value) ?? 0) + 1)
+    }
+    return counts
+  }
+
+  const rayonCounts = tally('rayons', (product) => {
+    const category = categoriesById.get(product.primaryCategoryId)
+    return category ? universesById.get(category.universeId)?.slug ?? null : null
+  })
+  // THE FAMILY FACET COUNTS THE SAME WAY THE FAMILY FILTER FILTERS, and it did
+  // not. `tally` gives one value per product, so this counted a product only
+  // against the family it is filed in; `matches` accepts a product filed
+  // ANYWHERE UNDER the chosen family, which is how the counter reads a shelf.
+  // The two disagreed on every family that has sub-families: the chip said one
+  // number, the grid rendered another, and a customer can see both.
+  //
+  // A product now counts for its own family and for every ancestor of it, which
+  // is the same set the filter would accept.
+  const familleCounts = new Map<string, number>()
+  for (const product of catalog.products) {
+    if (!matches(product, filters, 'familles')) continue
+    for (const id of familiesOf(product)) {
+      const category = categoriesById.get(id)
+      if (!category || category.hidden || category.level === 0) continue
+      familleCounts.set(category.slug, (familleCounts.get(category.slug) ?? 0) + 1)
+    }
+  }
+  const marqueCounts = tally('marques', (product) => {
+    if (!product.brand) return null
+    return catalog.brands.find((candidate) => candidate.name === product.brand)?.slug ?? null
+  })
+
+  const value = <T extends string>(
+    counts: Map<T, number>,
+    selected: readonly string[],
+    label: (key: T) => string | null,
+    limit: number,
+  ): FacetValue[] =>
+    [...counts.entries()]
+      .flatMap(([key, count]) => {
+        const name = label(key)
+        return name ? [{ label: name, value: key as string, count, selected: selected.includes(key) }] : []
+      })
+      // A chosen value stays at the top even when something else outranks it,
+      // so a reader never loses the control they just used off the end of a list.
+      .sort((a, b) => Number(b.selected) - Number(a.selected) || b.count - a.count)
+      .slice(0, limit)
+
+  const prices = catalog.products.map((product) => product.price).filter((price) => price > 0)
+
+  return {
+    listing: {
+      title: 'Toutes les références',
+      path: [],
+      total,
+      products,
+      children: [],
+      page: current,
+      pages,
+    },
+    facets: {
+      rayons: value(rayonCounts, filters.rayons, (slug) => universesBySlug.get(slug)?.name ?? null, 12),
+      familles: value(familleCounts, filters.familles, (slug) => categoriesBySlug.get(slug)?.name ?? null, 24),
+      marques: value(marqueCounts, filters.marques, (slug) => brandsBySlug.get(slug)?.name ?? null, 24),
+      stock: {
+        count: catalog.products.filter((p) => matches(p, filters, 'stock') && p.inStock).length,
+        selected: filters.stock,
+      },
+      remise: {
+        count: catalog.products.filter(
+          (p) => matches(p, filters, 'remise') && (p.discountPct ?? 0) >= DEAL_FLOOR,
+        ).length,
+        selected: filters.remise,
+      },
+      photo: {
+        count: catalog.products.filter((p) => matches(p, filters, 'photo') && p.images.length > 0).length,
+        selected: filters.photo,
+      },
+      prixPlancher: Math.min(...prices),
+      prixPlafond: Math.max(...prices),
+      active:
+        filters.rayons.length +
+        filters.familles.length +
+        filters.marques.length +
+        (filters.prixMin !== null ? 1 : 0) +
+        (filters.prixMax !== null ? 1 : 0) +
+        (filters.stock ? 1 : 0) +
+        (filters.remise ? 1 : 0) +
+        (filters.photo ? 1 : 0),
+    },
+  }
 }

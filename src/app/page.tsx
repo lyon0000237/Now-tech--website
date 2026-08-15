@@ -43,6 +43,17 @@ import { formatAmount } from '@/lib/format'
  * "best seller" shelf, because the export carries no order history. No
  * countdown, because nothing here is genuinely expiring. Every list on this page
  * is a query a customer could run themselves, and each one says which.
+ *
+ * THE BAND BETWEEN SECTIONS IS 64 PIXELS ON A PHONE AND THE TOKEN'S OWN VALUE
+ * FROM sm UP. `--s-band` is clamp(6rem, 8.5vw, 10rem), and 8.5vw of a 360
+ * screen is 30 pixels, so the clamp holds it at its 96px floor: a measure
+ * calculated for a 1440 screen, where it computes to 122 and separates two
+ * bands the eye takes in whole. On a phone nothing is taken in whole, the
+ * sections are already one per screen, and six of those gaps put 576 pixels of
+ * empty page between them on a document that measured 13 009 tall. Sixteen
+ * (64px) keeps the page's air and gives back a third of it. At 640 the utility
+ * returns and computes to the same 96 it always did, so no screen from sm up
+ * moves.
  */
 export default function HomePage() {
   const meta = getMeta()
@@ -89,15 +100,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="shell mt-band">
+      <section className="shell mt-16 sm:mt-band">
         <Selections selections={selections} />
       </section>
 
-      <div className="mt-band">
+      <div className="mt-16 sm:mt-band">
         <ServiceStrip />
       </div>
 
-      <section className="shell mt-band">
+      <section className="shell mt-16 sm:mt-band">
         <SectionHeader
           title="Le tour du magasin"
           context="Un article en stock dans chacun des six rayons que le haut de cette page ne traverse pas."
@@ -106,7 +117,7 @@ export default function HomePage() {
         <CounterTour picks={picks} reconditioned={getDepartmentPicture('services')} />
       </section>
 
-      <section className="shell mt-band">
+      <section className="shell mt-16 sm:mt-band">
         <SectionHeader
           title="Derniers arrivages"
           context="Les trois familles où du stock est entré le plus récemment, une par rayon."
@@ -115,7 +126,7 @@ export default function HomePage() {
         <RecentColumns columns={columns} />
       </section>
 
-      <section className="shell mt-band">
+      <section className="shell mt-16 sm:mt-band">
         <SectionHeader
           title="Marques distribuées"
           context={`${formatAmount(meta.productCount)} références réparties sur une centaine de marques, retrouvées ligne par ligne dans le catalogue.`}
@@ -124,7 +135,7 @@ export default function HomePage() {
         <BrandRail brands={brands} />
       </section>
 
-      <div className="mt-band">
+      <div className="mt-16 sm:mt-band">
         <ShowroomBand />
       </div>
     </>

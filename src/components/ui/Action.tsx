@@ -25,7 +25,7 @@ type Size = 'md' | 'sm'
  * not switched.
  */
 const VARIANTS: Record<Variant, string> = {
-  primary: 'fill bg-brand text-paper [--fill-to:var(--accent)]',
+  primary: 'fill bg-accent text-paper [--fill-to:var(--accent-ink)]',
   /* The outline fills with the wash rather than with a colour: a bordered
      button that turns solid on hover has changed weight, not state. */
   secondary: 'fill border border-rule-2 text-ink hover:border-ink [--fill-to:var(--accent-wash)]',
@@ -39,10 +39,17 @@ const VARIANTS: Record<Variant, string> = {
 
 /**
  * The label is bold at 14px, and that is a contrast decision before it is a
- * typographic one. The primary button is filled with #009d17, the brand's own
- * green, which carries white at 3.60:1: below AA for normal text and above the
- * 3.0 the standard sets for large text, where 14px bold qualifies. The button
- * therefore gets to be the logo's colour instead of a darkened stand-in.
+ * typographic one.
+ *
+ * THIS COMMENT USED TO CLAIM THAT 14px BOLD COUNTS AS LARGE TEXT AND THAT THE
+ * BUTTON COULD THEREFORE BE FILLED WITH THE MARK'S OWN #009d17 AT 3.60:1. It
+ * does not. WCAG sets large-scale at 18pt, which is 24px, or 14pt bold, which is
+ * 18.66px bold. 14px bold is neither, so the label is normal text and owes
+ * 4.5:1. Every primary button on the site was failing AA on that reading.
+ *
+ * The fill is --accent, #008013, which carries white at 5.13:1. Same hue, one
+ * step of lightness, and the mark keeps #009d17 everywhere it is a shape rather
+ * than a ground under a word.
  */
 const SIZES: Record<Size, string> = {
   md: 'px-7 py-3 text-[0.875rem] font-bold',

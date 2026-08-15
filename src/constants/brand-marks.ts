@@ -5,12 +5,22 @@
  * `public/brands/`. Nothing at runtime fetches a logo from anywhere.
  *
  * WHY A LIST AND NOT A GUESS. The wall used to be type, because a hundred
- * manufacturers cannot all be drawn. Marks exist for twenty of them, so the wall
- * is now the marked brands ranked by the same depth the rest of the site ranks
- * brands by. A brand with no mark is skipped rather than set as a word between
- * two logos: half a wall of type and half a wall of marks reads as a wall that
- * failed to load. Hikvision, Dahua, Canon, D-Link, ZKTeco and Grandstream are
- * significant here and have no mark in the set; `/marques` carries all 101.
+ * manufacturers cannot all be drawn. Marks exist for thirty-three of them, so
+ * the wall is the marked brands ranked by the same depth the rest of the site
+ * ranks brands by. A brand with no mark is skipped rather than set as a word
+ * between two logos: half a wall of type and half a wall of marks reads as a
+ * wall that failed to load.
+ *
+ * THIRTY-THREE IS THE CEILING, NOT A STOPPING POINT, AND IT WAS MEASURED. The
+ * 101 brand names the ingest recovered were checked one by one against Simple
+ * Icons' own index, 3 453 entries: 34 exist there, 67 do not. Simple Icons
+ * removed most non-free marks in 2024, so Canon, Logitech, Microsoft, Philips,
+ * Xerox, Brother, SanDisk, Western Digital, Crucial, Hisense, TCL, BenQ,
+ * Transcend, Ricoh, Legrand, Eaton, Tenda, D-Link, Hikvision, APC and HPE are
+ * all absent, several of them among the deepest brands this shop carries.
+ * Hikvision alone is 266 references. Those are not missing through neglect;
+ * there is no free file to fetch, and inventing one is not an option.
+ * `/marques` carries all 101 either way, marked or not.
  *
  * WHY EACH ONE CARRIES TWO COLOURS. `official` is the brand's own hex, used when
  * a pointer arrives. Several of them are unusable as ink on white: Sony is
@@ -55,6 +65,19 @@ export const BRAND_MARKS: readonly BrandMark[] = [
   { brand: 'ACER', file: 'acer', official: '#83B81A', hover: '#5A7F12' },
   { brand: 'SONY', file: 'sony', official: '#FFFFFF', hover: INK },
   { brand: 'NETGEAR', file: 'netgear', official: '#2C262D', hover: '#2C262D' },
+  { brand: 'FORTINET', file: 'fortinet', official: '#EE3124', hover: '#EE3124' },
+  { brand: 'KASPERSKY', file: 'kaspersky', official: '#006D5C', hover: '#006D5C' },
+  { brand: 'INTEL', file: 'intel', official: '#0071C5', hover: '#0071C5' },
+  { brand: 'HUAWEI', file: 'huawei', official: '#FF0000', hover: '#FF0000' },
+  { brand: 'MSI', file: 'msi', official: '#FF0000', hover: '#FF0000' },
+  { brand: 'JBL', file: 'jbl', official: '#FF3300', hover: '#FF3300' },
+  { brand: 'APPLE', file: 'apple', official: '#000000', hover: INK },
+  { brand: 'ASUS', file: 'asus', official: '#000000', hover: INK },
+  { brand: 'GARMIN', file: 'garmin', official: '#000000', hover: INK },
+  { brand: 'KINGSTON', file: 'kingstontechnology', official: '#000000', hover: INK },
+  { brand: 'LINKSYS', file: 'linksys', official: '#000000', hover: INK },
+  { brand: 'IMOU', file: 'imou', official: '#E89313', hover: INK },
+  { brand: 'NIKON', file: 'nikon', official: '#FFE100', hover: INK },
 ]
 
 export const BRAND_MARK_BY_NAME: ReadonlyMap<string, BrandMark> = new Map(

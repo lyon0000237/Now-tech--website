@@ -22,6 +22,16 @@ import { PAYMENT_METHODS, PHONES, SHOWROOMS, VAT_RATE, WHATSAPP, dialable } from
  * to the bottom is already looking for it. The departments are repeated in full
  * because this is the only place on a product page, three levels deep, where the
  * whole shop is visible again.
+ *
+ * ON A PHONE THE LINKS ARE ROWS, NOT LINES. Measured at 360: every entry here
+ * was 19 or 20 pixels tall with 12 pixels of air between it and the next, which
+ * is a 19px target flanked by two more 19px targets a finger-width away. It is
+ * the densest navigation on the site and it was the least tappable. Below `md`
+ * each link becomes a 44 pixel row and the air between them is given up, so the
+ * columns read as lists and cost the footer about 250 pixels rather than the
+ * 440 that keeping the gaps as well would have cost. From `md` the lines and
+ * their spacing come back exactly as they were: measured at 1440 the footer is
+ * 1440 x 517 before and after.
  */
 const SHOP_LINKS = [
   { href: '/a-propos', label: 'La maison' },
@@ -42,7 +52,7 @@ export function Footer() {
   const universes = getUniverses()
 
   return (
-    <footer className="on-rail mt-band bg-rail pt-20 pb-10 text-rail-ink">
+    <footer className="on-rail bg-rail pt-20 pb-10 text-rail-ink">
       <div className="shell grid gap-x-14 gap-y-14 md:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr_1fr]">
         <div>
           <Logo href={null} tone="rail" />
@@ -51,12 +61,12 @@ export function Footer() {
             Cameroun. Vente aux particuliers, aux entreprises et aux installateurs.
           </p>
 
-          <ul className="mt-8 space-y-3 text-small">
+          <ul className="mt-6 space-y-0 text-small md:mt-8 md:space-y-3">
             {PHONES.map((phone) => (
               <li key={phone}>
                 <a
                   href={`tel:${dialable(phone)}`}
-                  className="t-num flex items-center gap-2.5 text-rail-ink-2 transition-colors duration-[var(--t-fast)] hover:text-rail-ink"
+                  className="t-num flex min-h-11 items-center gap-2.5 text-rail-ink-2 transition-colors duration-[var(--t-fast)] hover:text-rail-ink md:min-h-0"
                 >
                   <IconPhone className="text-[1rem]" />
                   {phone}
@@ -66,7 +76,12 @@ export function Footer() {
             <li>
               <a
                 href={`https://wa.me/${dialable(WHATSAPP)}`}
-                className="font-semibold text-rail-accent transition-colors duration-[var(--t-fast)] hover:text-rail-ink"
+                /* White, not --rail-accent. The mint measures 4.41:1 on the rail,
+                   which is under the 4.5 a 13px semibold word owes; it is an
+                   indicator colour, for focus rings and underlines, not an ink.
+                   White is 5.54:1 and still reads as the emphasised line beside
+                   the two telephone numbers, which are set in --rail-ink-2. */
+                className="flex min-h-11 items-center font-semibold text-rail-ink transition-colors duration-[var(--t-fast)] hover:text-rail-accent md:inline md:min-h-0"
               >
                 WhatsApp
               </a>
@@ -76,7 +91,7 @@ export function Footer() {
 
         {/* Twelve in one column is a 500-pixel spike next to three columns of
             five. Two of six keeps the block square and the footer level. */}
-        <FooterColumn title="Rayons" listClassName="grid grid-cols-2 gap-x-6 gap-y-2.5">
+        <FooterColumn title="Rayons" listClassName="grid grid-cols-2 gap-x-6 gap-y-0 md:gap-y-2.5">
           {universes.map((universe) => (
             <li key={universe.id}>
               <FooterLink href={`/rayon/${universe.slug}`}>{universe.shortName}</FooterLink>
@@ -126,7 +141,7 @@ export function Footer() {
 function FooterColumn({
   title,
   children,
-  listClassName = 'space-y-3',
+  listClassName = 'space-y-0 md:space-y-3',
 }: {
   title: string
   children: ReactNode
@@ -134,7 +149,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="t-label mb-6 text-rail-ink">{title}</h2>
+      <h2 className="t-label mb-4 text-rail-ink md:mb-6">{title}</h2>
       <ul className={`text-small ${listClassName}`}>{children}</ul>
     </div>
   )
@@ -144,7 +159,12 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Link
       href={href}
-      className="draw-under text-rail-ink-2 transition-colors duration-[var(--t-fast)] hover:text-rail-ink"
+      /* PADDING AND NOT A FLEX BOX, BECAUSE OF WHERE THE UNDERLINE LANDS.
+         `.draw-under` paints a gradient at `0 100%` of the element, so a link
+         given a 44px flex box draws its line at the bottom of the box, twelve
+         pixels clear of the word it belongs to. Padding plus `bg-origin-content`
+         puts the 44 pixels around the text and the line back under it. */
+      className="draw-under inline-block min-h-11 bg-origin-content py-3 text-rail-ink-2 transition-colors duration-[var(--t-fast)] hover:text-rail-ink md:inline md:min-h-0 md:py-0"
     >
       {children}
     </Link>

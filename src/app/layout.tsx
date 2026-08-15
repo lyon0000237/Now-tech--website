@@ -2,12 +2,15 @@ import type { Metadata } from 'next'
 import { IBM_Plex_Mono, Poppins } from 'next/font/google'
 
 import './globals.css'
+import { AuthDialog } from '@/components/account/AuthDialog'
 import { Assistant } from '@/components/assistant/Assistant'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { CartDrawer } from '@/components/layout/CartDrawer'
 import { Reveal } from '@/components/ui/Reveal'
+import { AccountProvider } from '@/lib/account'
 import { CartProvider } from '@/lib/cart'
+import { getMeta } from '@/lib/catalog'
 import { SITE } from '@/constants/site'
 
 /**
@@ -71,17 +74,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${poppins.variable} ${plexMono.variable}`}>
       <body>
-        {/* The provider wraps the document rather than a subtree: the counter
-            lives in the masthead, the drawer at the root, and the controls that
-            fill it are inside the page. Nothing below is a client component
-            because of this; the provider is the only one, and it renders its
-            children through. */}
-        <CartProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <CartDrawer />
-        </CartProvider>
+        {/* Both providers wrap the document rather than a subtree: the masthead
+            reads them, the drawer and the dialog render at the root, and the
+            controls that fill them are inside the page. Nothing below is a
+            client component because of this; the providers are, and they render
+            their children through.
+
+            The account wraps the basket because the account names whoever the
+            basket belongs to, and because its dialog is the one surface allowed
+            to cover the drawer. The reference count is read here rather than
+            inside the dialog: `lib/catalog` is `server-only`, so a client
+            component cannot ask it anything. */}
+        <AccountProvider>
+          <CartProvider>
+            <Header />
+            <main>{children}</main>
+            <Footer />
+            <CartDrawer />
+          </CartProvider>
+          <AuthDialog referenceCount={getMeta().productCount} />
+        </AccountProvider>
         <Assistant />
         <Reveal />
       </body>

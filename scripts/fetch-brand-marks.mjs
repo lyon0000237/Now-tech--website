@@ -15,6 +15,11 @@
  * path with no colour, which is why the component can paint it as a mask.
  *
  * WHICH BRANDS. Only those the catalog actually carries AND that have a mark.
+ * Thirty-three of 101. The other 67 have no file in the set at all: Simple Icons
+ * removed most non-free marks in 2024, which is why Hikvision (266 references),
+ * Canon (157), D-Link (57), APC (48) and HPE (43) are absent despite being among
+ * the deepest brands here. No substitute is fetched for them from anywhere else,
+ * because provenance that cannot be stated is provenance that does not exist.
  * The wall is ranked by the same depth the rest of the site ranks brands by, so
  * a brand with no mark is skipped rather than drawn as a word beside a logo:
  * half a wall of type and half a wall of marks reads as a wall that failed to
@@ -46,6 +51,22 @@ const MARKS = {
   XIAOMI: 'xiaomi',
   TOSHIBA: 'toshiba',
   SONY: 'sony',
+  // Second pass. Everything below was checked against Simple Icons' own index
+  // (3 453 entries) rather than guessed at: of the 101 brands the ingest
+  // recovered, exactly 34 exist there and 67 do not.
+  FORTINET: 'fortinet',
+  KASPERSKY: 'kaspersky',
+  INTEL: 'intel',
+  HUAWEI: 'huawei',
+  MSI: 'msi',
+  JBL: 'jbl',
+  APPLE: 'apple',
+  ASUS: 'asus',
+  GARMIN: 'garmin',
+  KINGSTON: 'kingstontechnology',
+  LINKSYS: 'linksys',
+  IMOU: 'imou',
+  NIKON: 'nikon',
 }
 
 const OUT = join(process.cwd(), 'public', 'brands')

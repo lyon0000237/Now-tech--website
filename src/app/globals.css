@@ -53,16 +53,21 @@
      THE SCALE IS THE HUE, DARKENED, NOT A DIFFERENT COLOUR. Every step below is
      hue 129 at full saturation; only lightness moves. Measured on white:
 
-       --brand      #009d17   3.60:1   the mark itself. Fills and large type
-                                       only, never body copy: it is the logo's
-                                       lightness and the logo was not drawn to
-                                       be read at 13px.
-       --accent     #008013   5.13:1   links, labels, controls, small text
+       --brand      #009d17   3.60:1   the mark itself. SHAPES ONLY. Never a
+                                       ground under type, at any size.
+       --accent     #008013   5.13:1   links, labels, controls, small text, and
+                                       every filled button that carries a word
        --accent-ink #00610f   7.73:1   the hover of the above
 
      So the brand green appears at full strength wherever it is a shape (the
-     wordmark lozenge, the plate behind a photograph, the discount stamp) and
-     one stop down wherever it is a word. */
+     plate behind a photograph, the availability dot, the mark) and one stop
+     down wherever it is, or carries, a word.
+
+     THE LINE ABOVE USED TO SAY "fills and large type only", AND THAT WAS A
+     MISREADING OF THE STANDARD THAT PUT WHITE ON #009d17 UNDER EVERY PRIMARY
+     BUTTON ON THE SITE. WCAG's large-scale text is 24px, or 18.66px bold. The
+     button label is 14px bold, which is not large text by either measure, so it
+     owed 4.5:1 and was sitting at 3.60. Filled buttons now take --accent. */
   --brand: #009d17;
   --accent: #008013;
   --accent-ink: #00610f;
@@ -90,25 +95,37 @@
      The one dark surface, and it appears exactly twice: the department bar
      under the masthead and the footer. Those two bands close the page top and
      bottom, which is what lets everything between them stay white without the
-     layout losing its edges. Deeper than --accent on purpose, so white sits at
-     It is the brand green itself, taken down by exactly as much as legibility
-     costs and no further. #009d17 carries white at 3.60:1, which a 13px nav link
-     fails; #008a15 carries it at 4.52:1 and clears AA. Four points of lightness
-     is what separates a bar that reads as the logo from one that does not, and
-     the hover takes it back to #009d17 exactly.
+     layout losing its edges.
 
-     The previous value was #055111, which cleared white at 9.6:1 and read as a
-     forest, not as this brand. Contrast bought at that price is a different
-     company's colour. */
-  --rail: #008a15;
+     IT IS #007a12 AND NOT #008a15, AND THE ARITHMETIC DECIDED IT, NOT TASTE.
+     The bar carries two inks: white for the links, and a tint for the footer's
+     body copy and the department counts. On #008a15 white itself measures only
+     4.52:1, which means NOTHING lighter than white can reach 4.5:1 on it. The
+     secondary ink was #d3ecd6 at 3.60:1 and there was no value that would have
+     fixed it: the bar was the problem, not the tint. At #007a12 white is at
+     5.54:1 and the tint below clears 4.5:1 with room. Same hue, 129, same
+     saturation; three points of lightness is the whole change, and the hover
+     still takes it back to the mark's own #009d17.
+
+     The value before both was #055111, which cleared white at 9.6:1 and read as
+     a forest rather than as this brand. Contrast bought at that price is a
+     different company's colour. */
+  --rail: #007a12;
   --rail-ink: #ffffff;
-  --rail-ink-2: #d3ecd6;
-  --rail-rule: rgb(255 255 255 / 0.22);
+  /* 4.54:1 on the rail. The footer's paragraphs and every count on the green
+     bar are set in it, so it is body copy and owes the full 4.5. */
+  --rail-ink-2: #d0f1d5;
+  --rail-rule: rgb(255 255 255 / 0.26);
   --rail-hover: #009d17;
   /* --accent is unreadable on the rail: deep pine on deep pine. The rail gets
-     its own, and it is the same mint in both themes because the rail is the one
-     surface whose lightness barely moves between them. */
-  --rail-accent: #74e785;
+     its own.
+
+     4.41:1, up from #74e785's 2.91. This is not only decoration: it draws the
+     underline that says which section you are in, and the focus ring for every
+     control on a .on-rail surface. WCAG 1.4.11 asks 3:1 of a focus indicator
+     and the old value missed it, which is also why the hover on the green bar
+     was invisible in use. */
+  --rail-accent: #9dfaae;
 
   /* --- Structure ---------------------------------------------------------- */
   /* On a white page the hairline is the only thing drawing structure, so it is
@@ -237,6 +254,11 @@
      second thing asking for the same attention. */
   --z-assistant: 60;
   --z-drawer: 70;
+  /* The account dialog is the only true modal on the site: it traps focus and
+     locks the page behind it, so nothing may be painted over it. The basket
+     drawer is dismissible furniture and the chat launcher floats; both give way
+     to the one surface that is waiting on an answer. */
+  --z-modal: 80;
 
   /* --- Panel -------------------------------------------------------------
      A dropdown separates itself from the page by a shadow on white and cannot
@@ -326,6 +348,23 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+
+  /* NO `scroll-behavior: smooth` HERE, AND THAT IS A MEASUREMENT.
+     It was added to copy E-shop, where navigating away from a scrolled page
+     makes it travel back to the top instead of jumping. On this site it breaks
+     navigation outright: Next resets the scroll position on every route change,
+     the declaration turns that reset into an animation, and the new page's
+     render interrupts the animation before it lands. Measured from 4 000px down
+     /catalogue, three runs out of three: the reader arrives on the product page
+     at 169 pixels, not at the top.
+
+     E-shop gets away with it because its pages are short and its reset finishes
+     inside a frame. /catalogue here is 18 500 pixels tall.
+
+     Having the travel would mean taking scrolling away from the browser on every
+     link on the site, which is a scroll library in all but name. The page
+     transition in src/app/template.tsx carries the same message for the cost of
+     one component: the page arrives rather than appearing. */
 }
 
 html,
@@ -849,6 +888,20 @@ body {
    The board can be that saturated because only one is ever turned. It is a
    hover, so the grid shows twelve white wells and, under the pointer, one green.
 
+   IT IS THE MARK'S GREEN AT 55 PER CENT, AND THE ANGLE IS WHAT WAS BOUGHT WITH
+   THE DIFFERENCE. At full strength #009d17 on white, the seventeen pixels
+   showing at each corner were the loudest thing in a grid of white wells, and
+   the effect stopped reading as a board under a print and started reading as a
+   green flash. Mixed to 55 per cent it resolves to #73c97f, which still names
+   the brand, still separates from --surface at every corner, and lets the four
+   degrees be the thing the eye reports. It is a mix rather than an `opacity`
+   because a pseudo-element carrying opacity is a compositing layer this hover
+   does not need, and because the resulting value is a colour that can be read
+   in the source and checked.
+
+   The board is never under type. It is a shape, which is exactly and only what
+   --brand is allowed to be.
+
    It is animation and not transition on purpose, so the return is animated too;
    a transition on `transform` would snap back the moment the pointer left.
 
@@ -863,7 +916,7 @@ body {
   inset: 0;
   z-index: 0;
   border-radius: var(--r-well);
-  background: var(--brand);
+  background: color-mix(in srgb, var(--brand) 55%, var(--paper));
   animation: plate-return 260ms ease-in forwards;
 }
 .plate > * {
@@ -889,6 +942,50 @@ body {
   }
   to {
     transform: rotate(0deg);
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   The magnifier.
+
+   THIS ONE IS A TOOL, NOT AN EFFECT. Half of what this shop sells is a black
+   box, and everything that distinguishes one black box from the next is printed
+   small on it: the port count along the front, the indicator legend, the model
+   reference silkscreened on the fascia. The supplier packshots hold that
+   detail; the 560px frame on the product page does not show it. Pointing at the
+   picture magnifies it around the pointer, which is the one gesture that turns
+   a photograph back into a document you can read.
+
+   THE POINTER IS THE ORIGIN, AND THAT IS THE WHOLE MECHANISM. The frame writes
+   the pointer's position into --zoom-x / --zoom-y as percentages and the
+   picture takes them as its `transform-origin`. Origin is not transitioned, so
+   the picture tracks the hand with no lag at all; only the scale eases, on the
+   way in and on the way out, which is where the weight belongs. Nothing here
+   goes through React state: a pointermove stream through a `useState` would
+   re-render the gallery sixty times a second to move a picture the compositor
+   can move on its own.
+
+   IT IS ON `scale`, NOT ON `transform`, for the same reason the grid's lean is:
+   the main image is uncovered by `e-media-shutter`, which animates `transform`
+   with `both` fill and would overwrite any transform this rule set, forever.
+
+   FINE POINTERS ONLY, AND THE MEDIA QUERY IS THE GUARD, NOT A PREFERENCE. On a
+   touch screen there is no pointer to follow, and a finger that magnifies what
+   it lands on is a finger that can no longer scroll the page: the effect would
+   turn the largest object on a phone screen into a trap. The `pointer: fine`
+   gate is what the effect exists behind; on a phone the picture simply stays a
+   picture, which is an honest answer and not a missing feature.
+
+   `zoom-in` is the cursor, because it is what the cursor is for, and it appears
+   only where the behaviour does. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .magnify {
+    cursor: zoom-in;
+  }
+  .magnify .magnify-subject {
+    scale: var(--zoom-scale, 1);
+    transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
+    transition: scale var(--t-base) var(--ease-brand);
   }
 }
 
@@ -1082,4 +1179,3 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-

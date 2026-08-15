@@ -57,6 +57,43 @@ export function Assistant() {
   const thread = useRef<HTMLDivElement>(null)
   const reduced = useReducedMotion()
 
+  /**
+   * How many pixels the on-screen keyboard is eating, or 0 when there is none.
+   *
+   * THE PANEL IS FIXED 88 PIXELS OFF THE BOTTOM OF THE LAYOUT VIEWPORT, AND A
+   * KEYBOARD DOES NOT MOVE THAT. Android Chrome shrinks the visual viewport and
+   * leaves the layout alone, so at 360 x 640 the composer sat at y=509 with the
+   * keys starting around y=370: the panel opened, the field took focus by
+   * design, and the field was behind the keyboard. The one control this thing
+   * exists for was unreachable the moment it was used.
+   *
+   * `visualViewport` is the only thing that knows. Under 80 pixels of inset
+   * there is no keyboard, the state stays 0 and no inline geometry is written
+   * at all, so a desktop panel measures the same 368 x 544 it always did.
+   */
+  const [keyboard, setKeyboard] = useState(0)
+  const [visible, setVisible] = useState(0)
+
+  useEffect(() => {
+    const view = window.visualViewport
+    if (!open || !view) return
+
+    const read = () => {
+      const eaten = window.innerHeight - view.height - view.offsetTop
+      setKeyboard(eaten < 80 ? 0 : Math.round(eaten))
+      setVisible(Math.round(view.height))
+    }
+
+    read()
+    view.addEventListener('resize', read)
+    view.addEventListener('scroll', read)
+    return () => {
+      view.removeEventListener('resize', read)
+      view.removeEventListener('scroll', read)
+      setKeyboard(0)
+    }
+  }, [open])
+
   // The newest turn, not the top of the thread: a reader who just asked
   // something wants to see the answer, not the greeting they read on opening.
   useEffect(() => {
@@ -120,8 +157,18 @@ export function Assistant() {
             animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.98 }}
             transition={reduced ? { duration: 0 } : SPRING}
-            style={{ transformOrigin: 'bottom right' }}
-            className="fixed right-4 bottom-[5.5rem] z-[var(--z-assistant)] flex max-h-[min(78vh,34rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-well border border-rule bg-paper shadow-[var(--shadow-panel)] sm:right-6 sm:w-[23rem] md:bottom-24"
+            style={{
+              transformOrigin: 'bottom right',
+              // Written only while a keyboard is up. See `keyboard` above.
+              ...(keyboard > 0
+                ? { bottom: `${keyboard + 8}px`, maxHeight: `${Math.max(200, visible - 24)}px` }
+                : null),
+            }}
+            /* `dvh` and not `vh`: on iOS the address bar is counted into `vh`,
+               so a panel capped at 78vh opened 60 pixels taller than the screen
+               it was drawn on and its composer was under the bar. At 900 the
+               34rem cap bites first and the desktop is unchanged either way. */
+            className="fixed right-4 bottom-[5.5rem] z-[var(--z-assistant)] flex max-h-[min(78dvh,34rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-well border border-rule bg-paper shadow-[var(--shadow-panel)] sm:right-6 sm:w-[23rem] md:bottom-24"
           >
             <header className="flex items-center gap-3 border-b border-rule px-5 py-4">
               <span className="relative block size-9 shrink-0">
@@ -178,7 +225,11 @@ export function Assistant() {
                     key={topic.id}
                     type="button"
                     onClick={() => ask(topic.label)}
-                    className="press rounded-pill border border-rule px-3 py-1.5 text-micro text-ink-2 transition-colors duration-[var(--t-fast)] hover:border-ink hover:text-ink"
+                    /* 44 on a phone, 32 from `md` up, which is what they
+                       measured before. A chip is a suggestion and not a
+                       decision, but eight of them at 32 pixels on a touch
+                       screen is eight ways to open the wrong one. */
+                    className="press inline-flex min-h-11 items-center rounded-pill border border-rule px-3.5 text-micro text-ink-2 transition-colors duration-[var(--t-fast)] hover:border-ink hover:text-ink md:min-h-8 md:px-3 md:py-1.5"
                   >
                     {topic.label}
                   </button>
@@ -203,13 +254,16 @@ export function Assistant() {
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder="Onduleur 1500 VA, livraison, garantie…"
                 autoComplete="off"
-                className="min-w-0 flex-1 bg-transparent px-2 text-small outline-none placeholder:text-ink-3"
+                /* 16px on a phone: under that, Safari zooms the whole page when
+                   the field takes focus, and this field takes focus by itself
+                   the moment the panel opens. */
+                className="min-h-11 min-w-0 flex-1 bg-transparent px-2 text-[1rem] outline-none placeholder:text-ink-3 md:min-h-0 md:text-small"
               />
               <button
                 type="submit"
                 disabled={busy || draft.trim().length === 0}
                 aria-label="Envoyer"
-                className="press grid size-10 shrink-0 place-items-center rounded-control bg-brand text-paper transition-colors duration-[var(--t-fast)] hover:bg-accent disabled:pointer-events-none disabled:opacity-30"
+                className="press grid size-11 shrink-0 place-items-center rounded-control bg-accent text-paper transition-colors duration-[var(--t-fast)] hover:bg-accent-ink disabled:pointer-events-none disabled:opacity-30 md:size-10"
               >
                 <IconArrowRight className="text-[1.125rem]" />
               </button>
@@ -284,7 +338,7 @@ function Answer({ reply, question }: { reply?: AssistantReply; question: string 
           <li key={family.slug}>
             <Link
               href={`/categorie/${family.slug}`}
-              className="flex items-center gap-2 text-micro text-accent hover:text-accent-ink"
+              className="flex min-h-11 items-center gap-2 text-micro text-accent hover:text-accent-ink md:min-h-0"
             >
               <IconSearch className="text-[0.9375rem]" />
               <span className="draw-under">{family.name}</span>
@@ -300,7 +354,7 @@ function Answer({ reply, question }: { reply?: AssistantReply; question: string 
     return (
       <Link
         href={reply.link.href}
-        className="draw-under mt-3 inline-block text-micro font-semibold text-accent hover:text-accent-ink"
+        className="draw-under mt-3 inline-flex min-h-11 items-center text-micro font-semibold text-accent hover:text-accent-ink md:inline-block md:min-h-0"
       >
         {reply.link.label}
       </Link>
@@ -315,7 +369,7 @@ function Answer({ reply, question }: { reply?: AssistantReply; question: string 
         }`}
         target="_blank"
         rel="noopener noreferrer"
-        className="press mt-3 inline-flex min-h-10 items-center gap-2 rounded-control bg-brand px-4 text-micro font-bold text-paper transition-colors duration-[var(--t-fast)] hover:bg-accent"
+        className="press mt-3 inline-flex min-h-11 items-center gap-2 rounded-control bg-accent px-4 text-micro font-bold text-paper transition-colors duration-[var(--t-fast)] hover:bg-accent-ink md:min-h-10"
       >
         Poser la question sur WhatsApp
       </a>

@@ -27,7 +27,15 @@ import type { BrandTile } from '@/lib/catalog'
  */
 export function BrandRail({ brands }: { brands: readonly BrandTile[] }) {
   return (
-    <div className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-3 lg:grid-cols-6">
+    // THREE ACROSS ON A PHONE, NOT TWO, AND THE MEASUREMENT SETTLED IT. A mark
+    // is 32 pixels tall inside a cell 137 wide, so two columns spent 800
+    // pixels of a 360 screen on twelve logos and a great deal of white: six
+    // rows the reader scrolls through to reach the showroom. Three columns of
+    // 91 hold the same mark at the same height in four rows, 504 pixels, and
+    // the longest name here, HIKVISION at 12px, measures 70. The horizontal gap
+    // drops to 16 to buy that width back; from sm the wall is the desktop's,
+    // three then six columns on 32 and 48.
+    <div className="grid grid-cols-3 gap-x-4 gap-y-10 sm:gap-x-8 sm:gap-y-12 lg:grid-cols-6">
       {brands.map((brand, index) => (
         <Link
           key={brand.slug}

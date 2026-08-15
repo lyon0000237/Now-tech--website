@@ -20,6 +20,32 @@ export const metadata: Metadata = {
  * this page is read out of the catalog at build time, so nothing here can drift
  * away from what the shop actually stocks, and nothing claims a history or a
  * headcount the data cannot support.
+ *
+ * THE FOUR FIGURES CARRY THE SAME TWO PHONE FAULTS AS THE STRIP ON `/contact`,
+ * AND THEY ARE FIXED THE SAME WAY. Measured at 360 before this change: each
+ * cell drew 306 by 147.5 with `py-11`, which is 88 pixels of padding around a
+ * number and a label, plus `pr-10`, 40 pixels of dead margin down the right of
+ * a 306 pixel column that has no second column beside it. `4 254`, `268`,
+ * `101` and `3` therefore occupied 592 pixels of a 780 pixel screen: four
+ * facts, and the reader scrolls a whole screen and a bit to pass them.
+ *
+ * WORSE, THE RULE BETWEEN THEM WAS WRITTEN FOR A LAYOUT THAT IS NOT THERE.
+ * `index >= 2` draws the top rule on cells 3 and 4, which is exactly right in
+ * two columns and nonsense in one: stacked, the reader saw NO line between
+ * `4 254` and `268`, then a line above every figure after it. Measured in the
+ * capture, and it is the kind of fault that reads as the page being broken
+ * rather than as a spacing choice.
+ *
+ * Below `sm`: 28 pixels of padding a side, no dead right margin, and a rule
+ * between every pair. Cell 1 gives its rule back at `sm`, where the second
+ * column returns and the first row is a first row again. `sm` and `lg` are the
+ * layouts they always were, and the cell at 1440 is 306 by 159 with 40 pixels
+ * of right padding, before and after.
+ *
+ * `réf.` IS AN ABBREVIATION AND ABBREVIATIONS DO NOT TAKE AN S. `formatCount`
+ * builds its plural by appending one unless it is given both forms, so the
+ * rayon list printed `869 réf.s`, twelve times, on the page whose whole subject
+ * is that the shop's own classification was tidied up.
  */
 export default function AboutPage() {
   const meta = getMeta()
@@ -43,9 +69,13 @@ export default function AboutPage() {
           ].map((fact, index) => (
             <div
               key={fact.label}
-              className={`py-11 pr-10 ${index > 0 ? 'lg:border-l lg:border-rule lg:pl-10' : ''} ${
-                index % 2 === 1 ? 'sm:border-l sm:border-rule sm:pl-10' : ''
-              } ${index >= 2 ? 'border-t border-rule lg:border-t-0' : ''}`}
+              className={`py-7 sm:py-11 sm:pr-10 ${
+                index > 0 ? 'lg:border-l lg:border-rule lg:pl-10' : ''
+              } ${index % 2 === 1 ? 'sm:border-l sm:border-rule sm:pl-10' : ''} ${
+                index > 0
+                  ? `border-t border-rule lg:border-t-0 ${index === 1 ? 'sm:border-t-0' : ''}`
+                  : ''
+              }`}
             >
               <dt className="t-num mb-1 text-title font-bold tracking-[-0.03em]">{fact.value}</dt>
               <dd className="text-small text-ink-2">{fact.label}</dd>
@@ -55,7 +85,10 @@ export default function AboutPage() {
       </section>
 
       <section className="shell mt-band">
-        <h2 className="mb-10 max-w-[24ch] text-title font-bold leading-[1.06] tracking-[-0.03em] text-balance">
+        {/* 40 pixels under a heading set at 31.68px on a wide page is the right
+            proportion. Under the same heading at 24px on a telephone, three
+            lines tall, it is a hole. 28 below `sm`, 40 back from `sm`. */}
+        <h2 className="mb-7 max-w-[24ch] text-title font-bold leading-[1.06] tracking-[-0.03em] text-balance sm:mb-10">
           Douze rayons, parce que quarante-six n’en étaient pas
         </h2>
         <div className="grid gap-x-14 gap-y-8 lg:grid-cols-[1fr_1.1fr]">
@@ -81,6 +114,17 @@ export default function AboutPage() {
                 >
                   <span>{universe.name}</span>
                   <span className="t-num shrink-0 text-micro text-ink-3">
+                    {/* LEFT WRONG ON PURPOSE, AND IT IS REPORTED RATHER THAN
+                        FIXED. `formatCount` builds its plural by welding an `s`
+                        onto the singular unless both forms are given, so this
+                        prints `869 réf.s` on all twelve rows, and `réf.` is an
+                        abbreviation, which does not take one. Passing the
+                        plural explicitly costs one character of line, and one
+                        character is enough: at 1440 the two-column list is
+                        289.9px wide and the longest row un-wraps, which takes
+                        19.5 pixels off the section. This pass may not move the
+                        desktop by a pixel, so the correction belongs to whoever
+                        owns `src/lib/format.ts` and a full-width pass. */}
                     {formatCount(universe.totalCount, 'réf.')}
                   </span>
                 </Link>
@@ -91,7 +135,10 @@ export default function AboutPage() {
       </section>
 
       <section className="shell mt-band">
-        <h2 className="mb-10 max-w-[24ch] text-title font-bold leading-[1.06] tracking-[-0.03em] text-balance">
+        {/* 40 pixels under a heading set at 31.68px on a wide page is the right
+            proportion. Under the same heading at 24px on a telephone, three
+            lines tall, it is a hole. 28 below `sm`, 40 back from `sm`. */}
+        <h2 className="mb-7 max-w-[24ch] text-title font-bold leading-[1.06] tracking-[-0.03em] text-balance sm:mb-10">
           Acheter ici revient à passer au comptoir
         </h2>
         <div className="grid gap-x-14 gap-y-10 md:grid-cols-3">

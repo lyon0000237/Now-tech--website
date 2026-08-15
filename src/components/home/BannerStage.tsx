@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 
 import { IconChevronLeft, IconChevronRight } from '@/components/brand/Icons'
 import { BANNERS, type Banner } from '@/constants/banners'
@@ -37,27 +37,77 @@ import { BANNERS, type Banner } from '@/constants/banners'
  * makes a poster read as a panel sliding into place rather than as an image
  * being swapped.
  *
- * THE PHONE GETS THE PIECES DRAWN FOR IT, NOT A CROP OF THE OTHERS. A 4.73:1
- * banner on a 390px screen is 82 pixels tall. Every window that makes it taller
- * throws away part of a composition that puts the product on one side and the
- * words on the other, and showing it whole leaves a strip floating in 300 pixels
- * of green. So the phone runs the 1:1 pieces the designer already draws for the
- * social feeds, at full bleed, uncropped, and the wide ones sit that screen out.
- * A department drawn in only one format therefore appears on the screens it was
- * drawn for and on no others, which is a registry rule rather than a crop.
+ * THE PHONE WINDOW IS 21:9, AND THE ARITHMETIC PICKED IT, NOT TASTE. It was
+ * 16:9, which shows 1.78 / 4.726 = 37.6% of the artwork's width. Measured on the
+ * five pieces, the headline alone spans between 26% and 43% of that width, so a
+ * 37.6% window cut every one of them: "plus de plaisir en cuisin", "Protégez
+ * votre ré", "Imprimez Sans Lim". A 21:9 window shows 49.4%, which clears the
+ * widest headline (banner 6, 42.7%) with room on both sides, and it is the last
+ * window that does: 2:1 shows 42.3% and clips that same piece by 1.9%.
  *
- * Two tracks and one clock. The lists differ in length, so each takes the tick
- * modulo its own, which keeps a single interval and a single source of truth
- * while letting the two run at their own lengths. The hidden track carries
- * `sizes: 0px`, so a screen never fetches the format it will not show.
+ * AND THE CROP WAS CENTRED ON THE WRONG POINT. `focus` is documented as where
+ * the words sit ACROSS THE ARTWORK, but it was handed straight to
+ * `object-position`, which under `cover` measures a fraction of the OVERFLOW,
+ * not of the image. On the cuisine piece, focus 70 put the window's centre at
+ * 62.5% instead of 70% and shaved the last word off the headline. The
+ * conversion below is the whole fix: X = (focus - k/2) / (1 - k), where k is the
+ * share of the artwork's width the window shows.
+ *
+ * THE PHONE HAS NO ARROWS AND NEVER HAD A SWIPE, WHICH LEFT IT NO CONTROL AT
+ * ALL. The arrows are `hidden` under sm on purpose: a 48px disc punched into a
+ * 154px picture is a hole. But that left five 6px indicators whose hit areas
+ * overlapped each other by 24 pixels as the only way to steer, on the one device
+ * that cannot hover. So the track now takes a finger: a horizontal drag past 44
+ * pixels moves one banner, `touch-action: pan-y` keeps the page scrolling
+ * vertically underneath it, and the drag suppresses the click so a swipe never
+ * lands on the department page. The indicators become 44px cells on the phone
+ * and keep their 6px mark.
+ *
+ * AND THE PAUSE IS A MOUSE'S, WHICH IS WHY IT USED TO KILL THE PHONE'S TOUR.
+ * `pointerenter` fires for a finger as well as for a cursor, and `pointerleave`
+ * does not follow it: a thumb set down on the artwork to scroll the page raised
+ * `held` and nothing ever lowered it again. Measured on a 360 screen: the strip
+ * sat on banner 1 for eleven seconds after one touch, where two ticks should
+ * have taken it to banner 3. A touchscreen has a swipe and needs no brake, so
+ * the brake is now a mouse's alone.
  */
 const AUTOPLAY_MS = 5000
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
+
+/** The artwork's own proportion, and the window the phone shows it through. */
+const ART_RATIO = 14179 / 3000
+const PHONE_RATIO = 21 / 9
+/** Share of the artwork's width that window shows: 0.4937. */
+const WINDOW_SHARE = PHONE_RATIO / ART_RATIO
+
+/**
+ * `object-position` for the phone window, from the banner's declared `focus`.
+ *
+ * Under `object-fit: cover` a percentage aligns the same percentage of the image
+ * with that percentage of the box, so the visible span is
+ * [(1-k)X, (1-k)X + k] and its centre is (1-k)X + k/2. Setting that centre to
+ * the declared focus gives the line below. Clamped, because three of the five
+ * pieces put their words far enough right that the window ends up flush to the
+ * artwork's edge.
+ */
+function phoneCrop(focus: number): string {
+  const x = (focus / 100 - WINDOW_SHARE / 2) / (1 - WINDOW_SHARE)
+  return `${Math.round(Math.min(1, Math.max(0, x)) * 1000) / 10}% center`
+}
+
+/** A drag shorter than this is a tap, not a swipe. */
+const SWIPE_MIN = 44
+/** How far the strip follows a finger before it stops giving ground. */
+const DRAG_MAX = 110
 
 export function BannerStage() {
   const [tick, setTick] = useState(0)
   const [visible, setVisible] = useState(false)
   const [held, setHeld] = useState(false)
+  // Once the reader has steered, the strip stops steering itself. A carousel
+  // that resumes its own tour four seconds after someone chose a panel is
+  // taking the choice back.
+  const [taken, setTaken] = useState(false)
   const section = useRef<HTMLElement>(null)
   const reduced = useReducedMotion()
 
@@ -75,10 +125,10 @@ export function BannerStage() {
   }, [])
 
   useEffect(() => {
-    if (!visible || held || reduced) return
+    if (!visible || held || reduced || taken) return
     const timer = window.setInterval(() => setTick((current) => current + 1), AUTOPLAY_MS)
     return () => window.clearInterval(timer)
-  }, [visible, held, reduced])
+  }, [visible, held, reduced, taken])
 
   if (BANNERS.length === 0) return null
 
@@ -87,12 +137,23 @@ export function BannerStage() {
       ref={section}
       aria-label="En avant"
       aria-roledescription="carrousel"
-      onPointerEnter={() => setHeld(true)}
-      onPointerLeave={() => setHeld(false)}
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse') setHeld(true)
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType === 'mouse') setHeld(false)
+      }}
       onFocusCapture={() => setHeld(true)}
       className="relative w-full overflow-hidden"
     >
-      <Track tick={tick} reduced={reduced} onPick={setTick} />
+      <Track
+        tick={tick}
+        reduced={reduced}
+        onPick={(next) => {
+          setTaken(true)
+          setTick(next)
+        }}
+      />
     </section>
   )
 }
@@ -101,10 +162,16 @@ export function BannerStage() {
  * The strip and its controls.
  *
  * One list on every screen. The desktop holds each piece at its own 4.73:1 and
- * the phone takes a 16:9 window centred on the banner's declared `focus`, which
- * is where its words are. That is the widest window that still gives a phone
- * real height, and it is declared per banner because these pieces disagree:
- * four put the copy on the right, the sound-and-picture one puts it on the left.
+ * the phone takes a 21:9 window centred on the banner's declared `focus`, which
+ * is where its words are. It is declared per banner because these pieces
+ * disagree: four put the copy on the right, the sound-and-picture one puts it on
+ * the left.
+ *
+ * THE FINGER IS ON ITS OWN LAYER, AND ON PURPOSE. The paged movement is a
+ * spring on the inner track; the drag is a plain translate on the wrapper above
+ * it, written straight to the node rather than through state. Twelve renders a
+ * second on a 360px Android to move a picture sideways is the kind of cost this
+ * audience pays for in dropped frames, and the two transforms compose for free.
  */
 function Track({
   tick,
@@ -116,39 +183,146 @@ function Track({
   onPick: (tick: number) => void
 }) {
   const index = tick % BANNERS.length
+  const layer = useRef<HTMLDivElement>(null)
+  const from = useRef<{ x: number; y: number } | null>(null)
+  const swiped = useRef(false)
+
+  const settle = () => {
+    const node = layer.current
+    if (!node) return
+    node.style.transition = ''
+    node.style.transform = ''
+  }
+
+  // A mouse is left alone: the desktop already has two arrows and a click that
+  // must stay a click.
+  const grab = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse') return
+    from.current = { x: event.clientX, y: event.clientY }
+    swiped.current = false
+  }
+
+  const drag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const start = from.current
+    if (!start) return
+    const moved = event.clientX - start.x
+    const fell = event.clientY - start.y
+    // Below eight pixels the gesture has not declared itself yet; past that, a
+    // steeper travel than it is wide belongs to the page, not to the strip.
+    if (!swiped.current) {
+      if (Math.abs(moved) < 8) return
+      if (Math.abs(fell) > Math.abs(moved)) {
+        from.current = null
+        settle()
+        return
+      }
+      swiped.current = true
+    }
+    const node = layer.current
+    if (!node) return
+    node.style.transition = 'none'
+    node.style.transform = `translate3d(${Math.max(-DRAG_MAX, Math.min(DRAG_MAX, moved))}px,0,0)`
+  }
+
+  const release = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const start = from.current
+    from.current = null
+    settle()
+    if (!start) return
+    const moved = event.clientX - start.x
+    if (Math.abs(moved) < SWIPE_MIN) return
+    onPick(moved < 0 ? index + 1 : index - 1 + BANNERS.length)
+  }
 
   return (
     <div className="relative">
-      <div className="overflow-hidden">
-        <motion.div
-          className="flex"
-          style={{ width: `${BANNERS.length * 100}%` }}
-          animate={{ x: `-${index * (100 / BANNERS.length)}%` }}
-          transition={reduced ? { duration: 0 } : SPRING}
+      <div
+        className="touch-pan-y overflow-hidden"
+        onPointerDown={grab}
+        onPointerMove={drag}
+        onPointerUp={release}
+        onPointerCancel={() => {
+          from.current = null
+          settle()
+        }}
+        // The slides are links, so a swipe would otherwise end on a department
+        // page. The capture phase is where that click is stopped.
+        onClickCapture={(event) => {
+          if (!swiped.current) return
+          swiped.current = false
+          event.preventDefault()
+          event.stopPropagation()
+        }}
+      >
+        <div
+          ref={layer}
+          className="transition-transform duration-[var(--t-base)] ease-brand"
         >
-          {BANNERS.map((banner: Banner, position) => (
-            <Link
-              key={banner.file}
-              href={banner.href}
-              inert={position !== index}
-              aria-hidden={position !== index}
-              style={{ width: `${100 / BANNERS.length}%` }}
-              className="relative block shrink-0"
-            >
-              <span className="relative block aspect-video w-full sm:aspect-[14179/3000]">
-                <Image
-                  src={`/branding/${banner.file}`}
-                  alt={banner.alt}
-                  fill
-                  priority={position === 0}
-                  sizes="100vw"
-                  style={{ objectPosition: `${banner.focus}% center` }}
-                  className="object-cover sm:!object-[50%_center]"
-                />
-              </span>
-            </Link>
-          ))}
-        </motion.div>
+          <motion.div
+            className="flex"
+            style={{ width: `${BANNERS.length * 100}%` }}
+            animate={{ x: `-${index * (100 / BANNERS.length)}%` }}
+            transition={reduced ? { duration: 0 } : SPRING}
+          >
+            {BANNERS.map((banner: Banner, position) => (
+              <Link
+                key={banner.file}
+                href={banner.href}
+                inert={position !== index}
+                aria-hidden={position !== index}
+                draggable={false}
+                style={{ width: `${100 / BANNERS.length}%` }}
+                className="relative block shrink-0"
+              >
+                {/* NOTHING IS CUT ON A PHONE ANY MORE, AND THE FRAME IS STILL A
+                    FRAME. These pieces are 14 179 by 3 000, which is 4.73:1. On a
+                    390 screen that is 82 pixels tall shown whole, a rule rather
+                    than an opening, so the phone used to take a 21:9 window of
+                    it: 167 pixels tall and 49 per cent of the composition. Going
+                    taller makes it worse, not better, and that is the part that
+                    is easy to get backwards. `cover` on a source wider than its
+                    frame crops the SIDES, so a 16:9 window measured 38 per cent
+                    and cut the headline in half: "Moins d'effort" lost its M.
+
+                    So the phone shows the piece ENTIRE, contained, and fills the
+                    band above and below it with the same file blown up and
+                    blurred out of legibility. The letterbox is made of the
+                    picture itself, so the band has a real height, the headline
+                    survives whole, and no colour had to be invented to sit
+                    behind it.
+
+                    From `sm` none of this exists: the piece is shown at its own
+                    4.73:1 across the full width and the blurred layer is not
+                    rendered at all. */}
+                <span className="relative block aspect-[16/9] w-full overflow-hidden sm:aspect-[14179/3000]">
+                  <Image
+                    src={`/branding/${banner.file}`}
+                    alt=""
+                    aria-hidden
+                    fill
+                    priority={position === 0}
+                    // Deliberately small: it is scaled up and blurred past any
+                    // detail, so fetching it at full width would spend the
+                    // reader's data on pixels that are destroyed on arrival.
+                    sizes="64px"
+                    draggable={false}
+                    style={{ objectPosition: phoneCrop(banner.focus) }}
+                    className="scale-110 object-cover blur-2xl select-none sm:hidden"
+                  />
+                  <Image
+                    src={`/branding/${banner.file}`}
+                    alt={banner.alt}
+                    fill
+                    priority={position === 0}
+                    sizes="100vw"
+                    draggable={false}
+                    className="object-contain select-none sm:object-cover"
+                  />
+                </span>
+              </Link>
+            ))}
+          </motion.div>
+        </div>
       </div>
 
       {/* Manual passage, at the two edges where a hand reaches for it. Quiet: a
@@ -177,8 +351,16 @@ function Track({
           they sit on artwork: a bar reads as a rule, and this page draws rules
           to mean structure. Six pixels: they are a position readout, not a
           control anyone hunts for, and the arrows beside them are the control.
-          The pseudo-element still gives each one a 42px hit area. */}
-      <div className="absolute inset-x-0 bottom-4 z-[1] flex items-center justify-center gap-2 md:bottom-5">
+
+          THE MARK AND THE TARGET ARE NOW TWO ELEMENTS, BECAUSE THEY WERE ONE
+          AND IT COST THE PHONE ITS CONTROLS. A 6px button with `-inset-4`
+          reaches 38px, under the hand's 44, and five of them 14px apart made
+          five hit areas that overlapped each other by 24 pixels: on a phone
+          every tap in that row was a coin toss. The button is a 44px cell
+          below sm, spaced 8px clear of its neighbours, and the span inside it
+          keeps the 6px mark. From sm the button is the mark again, at exactly
+          its old size, and the pseudo-element carries the pointer's hit area. */}
+      <div className="absolute inset-x-0 bottom-0 z-[1] flex items-center justify-center gap-2 sm:bottom-4 md:bottom-5">
         {BANNERS.map((banner, position) => {
           const current = position === index
           return (
@@ -188,10 +370,18 @@ function Track({
               onClick={() => onPick(position)}
               aria-label={banner.label}
               aria-current={current}
-              className={`press relative size-1.5 rounded-full ring-1 ring-[rgb(20_23_21_/_0.2)] transition-[background-color,transform] duration-[var(--t-base)] ease-brand after:absolute after:-inset-4 after:content-[''] ${
-                current ? 'scale-150 bg-paper' : 'bg-[rgb(255_255_255_/_0.5)] hover:bg-paper'
+              className={`press relative grid size-11 place-items-center transition-transform duration-[var(--t-base)] ease-brand after:absolute after:inset-0 after:content-[''] sm:size-1.5 sm:after:-inset-4 ${
+                current ? 'sm:scale-150' : ''
               }`}
-            />
+            >
+              <span
+                className={`block size-1.5 rounded-full ring-1 ring-[rgb(20_23_21_/_0.2)] transition-[background-color,transform] duration-[var(--t-base)] ease-brand ${
+                  current
+                    ? 'scale-150 bg-paper sm:scale-100'
+                    : 'bg-[rgb(255_255_255_/_0.5)] hover:bg-paper'
+                }`}
+              />
+            </button>
           )
         })}
       </div>

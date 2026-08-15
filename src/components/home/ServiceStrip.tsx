@@ -14,8 +14,12 @@ import { SERVICE_POINTS } from '@/constants/site'
  */
 export function ServiceStrip() {
   return (
-    <section className="bg-space py-16 md:py-24">
-      <dl className="shell grid gap-x-12 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+    // The band is a pause, not a room. On a phone the four facts stack, so
+    // py-16 and a 48px gap turned a 264px desktop strip into 477 pixels of
+    // tinted page. Twelve and eight below sm; the desktop measures return at
+    // sm and md.
+    <section className="bg-space py-12 sm:py-16 md:py-24">
+      <dl className="shell grid gap-x-12 gap-y-8 sm:grid-cols-2 sm:gap-y-12 lg:grid-cols-4">
         {SERVICE_POINTS.map((point) => (
           <div key={point.title} className="enter e-item">
             <dt className="mb-2 text-body font-semibold tracking-[-0.01em]">{point.title}</dt>

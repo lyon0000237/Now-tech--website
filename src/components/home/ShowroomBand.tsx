@@ -19,8 +19,8 @@ import { PHONES, SHOWROOMS, WHATSAPP, dialable } from '@/constants/site'
  */
 export function ShowroomBand() {
   return (
-    <section className="bg-space py-20 md:py-28">
-      <div className="shell grid gap-x-16 gap-y-12 lg:grid-cols-[1fr_1.4fr]">
+    <section className="bg-space py-14 sm:py-20 md:py-28">
+      <div className="shell grid gap-x-16 gap-y-10 sm:gap-y-12 lg:grid-cols-[1fr_1.4fr]">
         <div>
           <h2 className="enter text-title font-semibold leading-[1.1] tracking-[-0.025em] text-balance">
             <span className="-mb-[0.14em] block overflow-hidden pb-[0.14em]">
@@ -34,13 +34,18 @@ export function ShowroomBand() {
           <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-5">
             <Action href={`https://wa.me/${dialable(WHATSAPP)}`}>Écrire sur WhatsApp</Action>
             {/* The two numbers travel together: split across a wrap they read as
-                one number and one orphan. */}
+                one number and one orphan.
+
+                On a phone a telephone number is the shortest path to this shop
+                and it was a 19.5px target. Below sm each line takes 44 pixels
+                and the pair keeps the 8px gap it already had; the desktop rows
+                are unchanged. */}
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {PHONES.map((phone) => (
                 <a
                   key={phone}
                   href={`tel:${dialable(phone)}`}
-                  className="t-num flex items-center gap-2 text-small text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-ink"
+                  className="t-num flex min-h-11 items-center gap-2 text-small text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-ink sm:min-h-0"
                 >
                   <IconPhone className="text-[1rem] text-ink-3" />
                   {phone}
@@ -68,10 +73,10 @@ export function ShowroomBand() {
         </ul>
       </div>
 
-      <div className="shell mt-14 border-t border-rule pt-6">
+      <div className="shell mt-10 border-t border-rule pt-4 sm:mt-14 sm:pt-6">
         <Link
           href="/contact"
-          className="draw-under text-small font-semibold text-accent hover:text-accent-ink"
+          className="draw-under inline-flex min-h-11 items-center text-small font-semibold text-accent hover:text-accent-ink sm:min-h-0"
         >
           Horaires, plan d’accès et formulaire
         </Link>

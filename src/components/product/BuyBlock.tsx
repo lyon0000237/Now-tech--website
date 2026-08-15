@@ -30,6 +30,23 @@ import { WHATSAPP, dialable } from '@/constants/site'
  * The confirmation is spoken where the click happened. The drawer opens on the
  * other side of a wide monitor, and a panel appearing 1 400 pixels away is not
  * feedback for the hand that just moved.
+ *
+ * BELOW `sm` THE TWO CONTROLS ARE TWO ROWS, BECAUSE ONE ROW DOES NOT FIT. The
+ * buy column is 306px wide at 360. The stepper is 130 and the gap is 12, which
+ * leaves 164 for the button, of which 56 is its own padding and 29 is the
+ * basket: `Ajouter au panier` had 79px of line to sit on and broke in two, so
+ * the button measured 66 tall against 50 at 1440 and the sentence that carries
+ * the whole decision was set in two ragged lines. Given its own line it is 306
+ * wide, the label sits on one line, and it lands 48px tall at the bottom of the
+ * block, which is where a thumb holding the phone one-handed actually reaches.
+ *
+ * The stepper takes the full width on the same principle, and it is a real
+ * improvement rather than a consequence: minus at the far left, plus at the far
+ * right, 176px apart instead of 50, on the control most likely to be pressed
+ * repeatedly and least likely to be looked at while it is.
+ *
+ * At 1440 both come back to exactly what they were: stepper 130 by 50 with the
+ * count 32 wide, button 274 by 50.
  */
 export function BuyBlock({
   product,
@@ -65,7 +82,7 @@ export function BuyBlock({
           )}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="press fill inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-control bg-brand px-7 py-3 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent)] sm:w-auto"
+          className="press fill inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-control bg-accent px-7 py-3 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent-ink)] sm:w-auto"
         >
           <IconPhone className="text-[1.125rem]" />
           Demander cette référence
@@ -81,7 +98,7 @@ export function BuyBlock({
             keyboard over the price the customer is looking at, and the answer
             is almost always one, two or three. */}
         <div
-          className="flex items-center rounded-control border border-rule"
+          className="flex w-full items-center rounded-control border border-rule sm:w-auto"
           role="group"
           aria-label="Quantité"
         >
@@ -96,7 +113,10 @@ export function BuyBlock({
               −
             </span>
           </button>
-          <span aria-live="polite" className="t-num w-8 text-center text-body font-bold">
+          {/* `flex-1` below `sm` is what pushes minus and plus to the two ends
+              of a full-width stepper; `sm:flex-none` hands the width back to
+              `w-8` and the group back to its 130px. */}
+          <span aria-live="polite" className="t-num w-8 flex-1 text-center text-body font-bold sm:flex-none">
             {qty}
           </span>
           <button
@@ -126,7 +146,10 @@ export function BuyBlock({
             setConfirmed(true)
             open()
           }}
-          className="press fill inline-flex min-h-12 flex-1 items-center justify-center gap-2.5 rounded-control bg-brand px-7 py-3 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent)]"
+          // `basis-full` inside the wrapping row is what sends the button to
+          // its own line below `sm`. `sm:basis-0` with `grow` restores the
+          // `flex: 1 1 0%` this button has always had on a wide column.
+          className="press fill inline-flex min-h-12 grow basis-full items-center justify-center gap-2.5 rounded-control bg-accent px-7 py-3 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent-ink)] sm:basis-0"
         >
           <IconBasket className="text-[1.1875rem]" />
           {/* The label does not change to "Ajouté". The drawer opening IS the

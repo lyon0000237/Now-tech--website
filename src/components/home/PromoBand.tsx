@@ -2,7 +2,14 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 
 import { IconArrowRight } from '@/components/brand/Icons'
 import type { PromoPanel } from '@/lib/catalog'
@@ -28,21 +35,50 @@ import type { PromoPanel } from '@/lib/catalog'
  * WHY IT WALKS BACK. Three pages that loop have to rewind two widths at the end.
  * It goes 1, 2, 3, 2, 1 instead, so every move is one page in one direction and
  * no frame is spent rewinding.
+ *
+ * ON A PHONE THE BAND TAKES A FINGER, AND THE ARITHMETIC IS WHY. A page is two
+ * panels side by side on a desktop and two panels STACKED on a phone: measured
+ * at 360, 394.5 + 415.3 plus the gap makes the band 830 pixels tall. The three
+ * bars are underneath all of it, so the only way to reach the last four
+ * departments was to scroll 830 pixels past the thing being controlled, tap,
+ * and then scroll back up to find that the panels above had changed. A control
+ * that far from its subject is not a control. The panels themselves now answer
+ * a swipe, exactly as the banners above them do and with the same numbers: 44
+ * pixels of horizontal travel is a page, `touch-action: pan-y` leaves the page
+ * scrolling underneath, and the drag suppresses the click so a swipe never
+ * lands on a department. The bars stay, as the readout they always were.
  */
 const ADVANCE_MS = 5600
 const PER_PAGE = 2
+/** A drag shorter than this is a tap, not a swipe. */
+const SWIPE_MIN = 44
+/** How far the strip follows a finger before it stops giving ground. */
+const DRAG_MAX = 110
 const REDUCED = '(prefers-reduced-motion: reduce)'
+const POINTER = '(hover: hover) and (pointer: fine)'
 
-function useMotionAllowed(): boolean {
+/**
+ * Whether the band is allowed to walk on its own.
+ *
+ * TOUCH IS EXCLUDED, AND IT IS THE SAME RULE THE DECK ALREADY FOLLOWS. The band
+ * halts while a pointer rests on it, which is the reader's brake — and a
+ * touchscreen has no pointer to rest. On a phone the two banners stand 830
+ * pixels tall, so a reader who is halfway down the second one when the clock
+ * fires at 5 600ms has the page replaced under their thumb with no way to stop
+ * it and no way to get it back. Standing still, the pages below are the control.
+ */
+function useTourAllowed(): boolean {
   const subscribe = useCallback((onChange: () => void) => {
-    const query = window.matchMedia(REDUCED)
-    query.addEventListener('change', onChange)
-    return () => query.removeEventListener('change', onChange)
+    const queries = [window.matchMedia(REDUCED), window.matchMedia(POINTER)]
+    for (const query of queries) query.addEventListener('change', onChange)
+    return () => {
+      for (const query of queries) query.removeEventListener('change', onChange)
+    }
   }, [])
 
   return useSyncExternalStore(
     subscribe,
-    () => !window.matchMedia(REDUCED).matches,
+    () => !window.matchMedia(REDUCED).matches && window.matchMedia(POINTER).matches,
     () => false,
   )
 }
@@ -52,7 +88,67 @@ export function PromoBand({ panels }: { panels: readonly PromoPanel[] }) {
   const [page, setPage] = useState(0)
   const [paused, setPaused] = useState(false)
   const [heading, setHeading] = useState(1)
-  const travels = useMotionAllowed() && pages > 1
+  const travels = useTourAllowed() && pages > 1
+  const layer = useRef<HTMLDivElement>(null)
+  const from = useRef<{ x: number; y: number } | null>(null)
+  const swiped = useRef(false)
+
+  /**
+   * The finger is on its own layer, and on purpose: the paged movement is a
+   * transition on the track, the drag is a plain translate written straight to
+   * this node rather than through state. Twelve renders a second on a 360px
+   * Android to move a banner sideways is paid for in dropped frames, and the
+   * two transforms compose for free.
+   */
+  const settle = () => {
+    const node = layer.current
+    if (!node) return
+    node.style.transition = ''
+    node.style.transform = ''
+  }
+
+  // A mouse is left alone: the pointer already pauses the band and its click
+  // must stay a click.
+  const grab = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse') return
+    from.current = { x: event.clientX, y: event.clientY }
+    swiped.current = false
+  }
+
+  const drag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const start = from.current
+    if (!start) return
+    const moved = event.clientX - start.x
+    const fell = event.clientY - start.y
+    // Below eight pixels the gesture has not declared itself; past that, a
+    // steeper travel than it is wide belongs to the page, not to the band.
+    if (!swiped.current) {
+      if (Math.abs(moved) < 8) return
+      if (Math.abs(fell) > Math.abs(moved)) {
+        from.current = null
+        settle()
+        return
+      }
+      swiped.current = true
+    }
+    const node = layer.current
+    if (!node) return
+    node.style.transition = 'none'
+    node.style.transform = `translate3d(${Math.max(-DRAG_MAX, Math.min(DRAG_MAX, moved))}px,0,0)`
+  }
+
+  const release = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const start = from.current
+    from.current = null
+    settle()
+    if (!start) return
+    const moved = event.clientX - start.x
+    if (Math.abs(moved) < SWIPE_MIN) return
+    const next = moved < 0 ? page + 1 : page - 1
+    if (next < 0 || next >= pages) return
+    setHeading(moved < 0 ? 1 : -1)
+    setPage(next)
+  }
 
   useEffect(() => {
     if (!travels || paused) return
@@ -73,71 +169,106 @@ export function PromoBand({ panels }: { panels: readonly PromoPanel[] }) {
 
   return (
     <div
-      onPointerEnter={() => setPaused(true)}
-      onPointerLeave={() => setPaused(false)}
+      // A finger cannot lift a brake it puts on: `pointerleave` never follows a
+      // touch, so a thumb set down here to scroll the page used to stop the
+      // band for good. The brake is a mouse's.
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse') setPaused(true)
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType === 'mouse') setPaused(false)
+      }}
       onFocusCapture={() => setPaused(true)}
     >
       <div
         role="group"
         aria-roledescription="carrousel"
         aria-label="Rayons en avant"
-        className="w-full overflow-hidden"
+        className="w-full touch-pan-y overflow-hidden"
+        onPointerDown={grab}
+        onPointerMove={drag}
+        onPointerUp={release}
+        onPointerCancel={() => {
+          from.current = null
+          settle()
+        }}
+        // The panels are links, so a swipe would otherwise end on a department
+        // page. The capture phase is where that click is stopped.
+        onClickCapture={(event) => {
+          if (!swiped.current) return
+          swiped.current = false
+          event.preventDefault()
+          event.stopPropagation()
+        }}
       >
-        <div
-          className="flex transition-transform duration-[var(--e-bounce)] ease-[var(--ease-bounce)] motion-reduce:transition-none"
-          style={{ transform: `translateX(-${page * 100}%)` }}
-        >
-          {Array.from({ length: pages }, (_, group) => (
-            <div
-              key={group}
-              inert={group !== page}
-              aria-hidden={group !== page}
-              className="grid w-full shrink-0 gap-5 sm:grid-cols-2 sm:gap-6"
-            >
-              {panels.slice(group * PER_PAGE, group * PER_PAGE + PER_PAGE).map((panel) => (
-                <Link
-                  key={panel.id}
-                  href={panel.href}
-                  className="group flex flex-col items-start gap-6 rounded-space bg-space p-6 transition-colors duration-[var(--t-base)] hover:bg-space-2 sm:flex-row sm:items-center sm:gap-8 sm:p-8 xl:gap-10 xl:p-10"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sub font-semibold leading-[1.2] tracking-[-0.02em] text-balance">
-                      {panel.headline}
-                    </p>
-                    <p className="mt-3.5 text-small leading-[1.6] text-pretty text-ink-2">
-                      {panel.body}
-                    </p>
-                    <span className="mt-7 inline-flex items-center gap-2.5 text-small font-semibold text-accent">
-                      <span className="measure">Voir le rayon</span>
-                      <IconArrowRight className="travel text-[1.0625rem]" />
-                    </span>
-                  </div>
+        <div ref={layer} className="transition-transform duration-[var(--t-base)] ease-brand">
+          <div
+            className="flex transition-transform duration-[var(--e-bounce)] ease-[var(--ease-bounce)] motion-reduce:transition-none"
+            style={{ transform: `translateX(-${page * 100}%)` }}
+          >
+            {Array.from({ length: pages }, (_, group) => (
+              <div
+                key={group}
+                inert={group !== page}
+                aria-hidden={group !== page}
+                className="grid w-full shrink-0 gap-5 sm:grid-cols-2 sm:gap-6"
+              >
+                {panels.slice(group * PER_PAGE, group * PER_PAGE + PER_PAGE).map((panel) => (
+                  <Link
+                    key={panel.id}
+                    href={panel.href}
+                    className="group flex flex-col items-start gap-6 rounded-space bg-space p-6 transition-colors duration-[var(--t-base)] hover:bg-space-2 sm:flex-row sm:items-center sm:gap-8 sm:p-8 xl:gap-10 xl:p-10"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sub font-semibold leading-[1.2] tracking-[-0.02em] text-balance">
+                        {panel.headline}
+                      </p>
+                      <p className="mt-3.5 text-small leading-[1.6] text-pretty text-ink-2">
+                        {panel.body}
+                      </p>
+                      <span className="mt-7 inline-flex items-center gap-2.5 text-small font-semibold text-accent">
+                        <span className="measure">Voir le rayon</span>
+                        <IconArrowRight className="travel text-[1.0625rem]" />
+                      </span>
+                    </div>
 
-                  {panel.image ? (
-                    <span
-                      aria-hidden
-                      className="relative block aspect-[16/10] w-full shrink-0 overflow-hidden rounded-well bg-surface sm:aspect-square sm:w-[30%] sm:max-w-[15rem] xl:w-[34%]"
-                    >
-                      <Image
-                        src={panel.image}
-                        alt=""
-                        fill
-                        sizes="(max-width: 639px) 46vw, (max-width: 1279px) 26vw, 240px"
-                        className="lift object-contain p-4"
-                      />
-                    </span>
-                  ) : null}
-                </Link>
-              ))}
-            </div>
-          ))}
+                    {panel.image ? (
+                      <span
+                        aria-hidden
+                        className="relative block aspect-[16/10] w-full shrink-0 overflow-hidden rounded-well bg-surface sm:aspect-square sm:w-[30%] sm:max-w-[15rem] xl:w-[34%]"
+                      >
+                        <Image
+                          src={panel.image}
+                          alt=""
+                          fill
+                          sizes="(max-width: 639px) 46vw, (max-width: 1279px) 26vw, 240px"
+                          className="lift object-contain p-4"
+                        />
+                      </span>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* The pages are the control. There is no stop button beside them: the band
           halts while a pointer is on it, and a dot is a way to say which page
-          rather than a way to say later. */}
-      {travels ? (
+          rather than a way to say later.
+
+          THEY ARE DRAWN WHENEVER THERE IS MORE THAN ONE PAGE, NOT WHENEVER THE
+          BAND WALKS. Tying them to `travels` meant that the moment the band
+          stopped walking on a touchscreen the last four of the six departments
+          became unreachable, which is a worse band than a moving one.
+
+          THE BAR AND THE TARGET ARE TWO ELEMENTS. A 36 by 3 bar with
+          `-inset-5` reached 76 by 43: under the hand's 44 in one direction, and
+          46 pixels apart, so the three hit areas overlapped one another by 30.
+          Below sm the button is a 44px cell and the span inside keeps the
+          3px bar; from sm the button is the bar again, at its own size. */}
+      {pages > 1 ? (
         <div className="mt-7 flex items-center gap-2.5">
           {Array.from({ length: pages }, (_, group) => (
             <button
@@ -149,11 +280,13 @@ export function PromoBand({ panels }: { panels: readonly PromoPanel[] }) {
               }}
               aria-label={`Page ${group + 1} sur ${pages}`}
               aria-current={group === page}
-              // 3px tall is a 3px target. The bar keeps its weight and the
-              // pseudo-element carries a thumb-sized hit area around it.
-              className="press relative h-[3px] w-9 rounded-pill transition-colors duration-[var(--t-base)] after:absolute after:-inset-5 after:content-['']"
-              style={{ background: group === page ? 'var(--accent)' : 'var(--rule-2)' }}
-            />
+              className="press relative grid size-11 place-items-center after:absolute after:inset-0 after:content-[''] sm:h-[3px] sm:w-9 sm:after:-inset-5"
+            >
+              <span
+                className="block h-[3px] w-9 rounded-pill transition-colors duration-[var(--t-base)]"
+                style={{ background: group === page ? 'var(--accent)' : 'var(--rule-2)' }}
+              />
+            </button>
           ))}
         </div>
       ) : null}

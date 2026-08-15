@@ -2,7 +2,14 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 
 import { DEPARTMENT_ICON, IconArrowRight, IconChevronRight } from '@/components/brand/Icons'
 import { Action } from '@/components/ui/Action'
@@ -104,11 +111,33 @@ export function HeroDeck({ panels }: { panels: readonly HeroPanel[] }) {
     setIndex(position)
   }
 
+  /**
+   * THE ROW ONLY ANSWERS A CURSOR, AND ON THIS MARKET THAT IS A DATA BILL.
+   * `pointerenter` fires for a finger too, immediately before the tap that
+   * follows the row's own link. So tapping `Stockage` remounted the card, ran
+   * the four entrance keyframes and started fetching a second department
+   * photograph on a page the reader was in the act of leaving: one wasted
+   * request of the size of a packshot, on a metered connection, plus the work
+   * of a remount at the exact moment the tap has to feel instant. A finger
+   * follows the link; a cursor drives the deck.
+   */
+  const point = (position: number) => (event: ReactPointerEvent<HTMLAnchorElement>) => {
+    if (event.pointerType === 'mouse') take(position)
+  }
+
   return (
     <div className="grid gap-x-14 gap-y-10 lg:grid-cols-[17.5rem_1fr]">
+      {/* ON A PHONE THE RAIL COMES FIRST, AND THAT IS THE ANSWER TO A MEASURED
+          FAULT. The tour only runs where there is a fine pointer, so on a
+          touchscreen the card never changes and the rail is the only way into
+          the other eleven departments. It was sitting 656 pixels below the top
+          of the card, which is a full screen of scrolling past a panel the
+          reader cannot steer. Above the card it is the shop's directory,
+          reached in one flick under the artwork. The order is restored at sm,
+          so every screen from 640 up is untouched. */}
       <nav
         aria-label="Rayons"
-        className="order-2 grid grid-cols-2 gap-x-8 sm:grid-cols-3 lg:order-1 lg:h-full lg:grid-cols-1 lg:gap-x-0 lg:[grid-template-rows:repeat(12,minmax(0,1fr))]"
+        className="order-1 grid grid-cols-2 gap-x-8 sm:order-2 sm:grid-cols-3 lg:order-1 lg:h-full lg:grid-cols-1 lg:gap-x-0 lg:[grid-template-rows:repeat(12,minmax(0,1fr))]"
       >
         {panels.map((panel, position) => {
           const Icon = DEPARTMENT_ICON[panel.id]
@@ -117,7 +146,7 @@ export function HeroDeck({ panels }: { panels: readonly HeroPanel[] }) {
             <Link
               key={panel.id}
               href={panel.href}
-              onPointerEnter={() => take(position)}
+              onPointerEnter={point(position)}
               onFocus={() => take(position)}
               aria-current={isActive ? 'true' : undefined}
               // The active row states itself with its own hairline. A separate
@@ -154,14 +183,34 @@ export function HeroDeck({ panels }: { panels: readonly HeroPanel[] }) {
           match. The clip below hides the overflow; this is what stops it
           claiming the space first. */}
       <div
-        className="order-1 min-w-0 lg:order-2"
-        onPointerEnter={() => setPaused(true)}
-        onPointerLeave={() => setPaused(false)}
+        /* THE CARD DOES NOT EXIST ON A PHONE, AND THAT IS THE ARCHITECTURE,
+           NOT A CUT. The deck is a rail that drives a card: point at a door,
+           see the room. A phone has no pointer, so the tour is already disabled
+           there and the card can only ever show one department, chosen for the
+           reader, under a list that already offers all twelve. Measured at 390
+           it cost 660 pixels, more than two thirds of a screen, to advertise one
+           of twelve rooms whose door was 300 pixels above it. The rail alone is
+           the honest phone version: twelve doors, no anteroom. From `sm` the
+           card returns and the desktop is untouched. */
+        className="order-2 hidden min-w-0 sm:order-1 sm:block lg:order-2"
+        // A finger cannot lift the brake it puts on. On a touchscreen laptop,
+        // where the tour runs because the pointer is fine, one touch on the
+        // card raised `paused` and no `pointerleave` ever followed.
+        onPointerEnter={(event) => {
+          if (event.pointerType === 'mouse') setPaused(true)
+        }}
+        onPointerLeave={(event) => {
+          if (event.pointerType === 'mouse') setPaused(false)
+        }}
         onFocusCapture={() => setPaused(true)}
       >
+        {/* The carousel is only announced where one exists. Without a fine
+            pointer nothing advances and nothing can be advanced, so a reader on
+            a screen reader and a phone was being told to look for controls on a
+            panel that has none. */}
         <div
           role="group"
-          aria-roledescription="carrousel"
+          aria-roledescription={tours ? 'carrousel' : undefined}
           aria-label="Les douze rayons"
         >
           {/* Keyed on the department, so React remounts the card and the
@@ -190,13 +239,28 @@ export function HeroDeck({ panels }: { panels: readonly HeroPanel[] }) {
               {/* Five family links wrap onto three lines on a 390px screen,
                   which turns the card's closing line into a paragraph. Three fit
                   on two and say the same thing: there is depth behind this
-                  door. */}
-              <ul className="e-item mt-9 flex flex-wrap gap-x-7 gap-y-3 text-small text-ink-3">
+                  door.
+
+                  They are not links inside a sentence, they are a list of
+                  doors, and they measured 19.5 pixels tall with 12 between
+                  them. On the phone each one takes 14 pixels of padding top and
+                  bottom, which brings the target to 47.5, and the row gap drops
+                  to 8 so the block does not grow into a paragraph again. From
+                  sm the padding goes and the desktop spacing returns.
+
+                  AND ON A PHONE THEY DID NOT LOOK LIKE LINKS AT ALL. Their
+                  whole affordance is `.draw-under`, which is a hover, and a
+                  touchscreen has no hover: three doors were rendering as three
+                  lines of 14px grey metadata under the button. Below sm the
+                  rule is simply drawn, one pixel, four from the baseline, which
+                  is the same mark the pointer draws on the desktop. From sm it
+                  is taken back off and `.draw-under` is the affordance again. */}
+              <ul className="e-item mt-9 flex flex-wrap gap-x-7 gap-y-2 text-small text-ink-3 sm:gap-y-3">
                 {active.families.map((family, rank) => (
                   <li key={family.slug} className={rank > 2 ? 'hidden sm:list-item' : undefined}>
                     <Link
                       href={`/categorie/${family.slug}`}
-                      className="draw-under transition-colors duration-[var(--t-fast)] hover:text-ink"
+                      className="draw-under inline-block py-3.5 underline decoration-1 underline-offset-4 transition-colors duration-[var(--t-fast)] hover:text-ink sm:py-0 sm:no-underline"
                     >
                       {family.name}
                     </Link>

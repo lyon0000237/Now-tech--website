@@ -30,14 +30,26 @@ export interface RecentColumn {
  */
 export function RecentColumns({ columns }: { columns: readonly RecentColumn[] }) {
   return (
-    <div className="grid gap-x-14 gap-y-14 md:grid-cols-2 lg:grid-cols-3">
+    // Below md the three columns are three stacked blocks, each already carrying
+    // its own rule and its own label, so the 56px gap that separates them side
+    // by side is 56px of nothing between two headed lists. Forty on the phone;
+    // the desktop gap returns at md, where the columns sit next to each other
+    // again and it is doing real work.
+    <div className="grid gap-x-14 gap-y-10 md:grid-cols-2 md:gap-y-14 lg:grid-cols-3">
       {columns.map((column, index) => (
         <section key={column.categorySlug} className="enter" style={{ '--enter-index': index } as React.CSSProperties}>
           <div className="relative flex items-baseline justify-between gap-4 pb-3.5">
             <h3 className="min-w-0">
+              {/* THE FAMILY'S NAME IS THE WAY INTO THE FAMILY, AND ON A PHONE IT
+                  WAS A 21 PIXEL TARGET. Measured at 360: 186.7 x 21, 171 x 21
+                  and 57.3 x 21 for the three columns, against a hand's 44. Below
+                  md it takes 12 pixels of padding above and below, which brings
+                  the line box to 45; `bg-origin-content` keeps `.draw-under`'s
+                  rule against the words rather than 12 pixels under them. From
+                  md the head is the inline heading it always was, 21 tall. */}
               <Link
                 href={`/categorie/${column.categorySlug}`}
-                className="draw-under text-body font-semibold tracking-[-0.015em]"
+                className="draw-under inline-block bg-origin-content py-3 text-body font-semibold tracking-[-0.015em] md:inline md:py-0"
               >
                 {column.categoryName}
               </Link>

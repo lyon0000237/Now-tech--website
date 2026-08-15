@@ -1,10 +1,9 @@
-import Link from 'next/link'
-
-import { IconUser } from '@/components/brand/Icons'
+import { AccountMenu } from '@/components/account/AccountMenu'
 import { Logo } from '@/components/brand/Logo'
 import { CartButton } from './CartButton'
 import { RayonBar } from './RayonBar'
 import { SearchField } from './SearchField'
+import { MobileNav } from './MobileNav'
 import { UtilityBar } from './UtilityBar'
 import { getMenuDepartments, getFamilyCount } from '@/lib/catalog'
 
@@ -28,6 +27,21 @@ import { getMenuDepartments, getFamilyCount } from '@/lib/catalog'
  * field sharing a row with a wordmark and a basket is left about 110 pixels,
  * which is a field nobody can read what they typed into, so search takes a row
  * of its own.
+ *
+ * WHAT THE PHONE ROW COSTS, MEASURED. 56 + 64 + 48 = 168 pixels at rest and 112
+ * once the wordmark row has lifted, on a 640-tall Android: 26 per cent of the
+ * screen before the first word, 17.5 per cent for the rest of the session. The
+ * budget is spent on the three questions and nothing else, so the arithmetic is
+ * kept and the pixels inside it are rearranged: the search field grew from 52 to
+ * 56 so its submit clears 44 (see SearchField), and the row's own bottom padding
+ * gave the four pixels back. The row is 64 before and 64 after.
+ *
+ * TWO CONTROLS IN THE CORNER, EIGHT PIXELS APART, NOT FOUR. `gap-1` put the
+ * account trigger and the basket 4px apart, which is inside the width of a
+ * thumb: measured at 360 the two 44px targets sat at x=240 and x=288 with four
+ * pixels of paper between them, and the miss lands on the other one. `gap-2` is
+ * the same value the row already used from `md` up, so the desktop measures the
+ * same 166 and 97 pixel boxes it did before.
  */
 export function Header() {
   const departments = getMenuDepartments(5)
@@ -38,37 +52,62 @@ export function Header() {
   }))
 
   return (
-    <header className="sticky top-[-3.5rem] z-[var(--z-header)] bg-paper md:top-[-2.25rem]">
-      <UtilityBar />
+    <>
+      {/* `top-0` on a phone: the bar IS the header now, 56 pixels of it, and
+          there is nothing left to hang above the viewport. From `md` the old
+          offset returns unchanged, so the desktop still scrolls its counter
+          strip away exactly as it did. */}
+      <header className="sticky top-0 z-[var(--z-header)] bg-paper md:top-[-2.25rem]">
+        <MobileNav departments={departments} />
 
-      <div className="masthead-in shell flex h-14 items-center gap-6 md:h-[72px] md:gap-10">
-        <Logo />
+        <UtilityBar />
+
+      <div className="masthead-in shell hidden h-14 items-center gap-6 md:flex md:h-[72px] md:gap-10">
+        {/* THE MARK IS 36 PIXELS AND ITS TARGET IS 44. The link was the artwork
+            and nothing else, so the one control a reader taps to get home
+            measured 36 by 36 on a phone. The box is widened around the mark
+            rather than the mark enlarged, and pulled 4px into the gutter so the
+            disc stays exactly where it was drawn. From `md` the floor is
+            dropped and the link is the 40px mark again, which is what the
+            desktop measured before. */}
+        <Logo className="-ml-1 min-h-11 min-w-11 justify-center md:ml-0 md:min-h-0 md:min-w-0" />
 
         <div className="hidden min-w-0 flex-1 md:block">
           <SearchField scopes={scopes} />
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 md:ml-0 md:gap-2">
-          <Link
-            href="/devis"
-            className="hidden items-center gap-2.5 rounded-control px-3 py-2 text-small transition-colors duration-[var(--t-fast)] hover:text-accent lg:flex"
-          >
-            <IconUser className="text-[1.25rem] text-ink-3" />
-            <span className="leading-tight">
-              Mon devis
-              <span className="block text-micro text-ink-3">Liste de matériel</span>
-            </span>
-          </Link>
+        <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
+          {/* Where "Mon devis" stood. The quote is not lost: it is the first row
+              of the menu this opens, which is the truer hierarchy, since a list
+              of material belongs to somebody. The same link in the counter strip
+              above is a different address, "Devis entreprise", and stays. */}
+          <AccountMenu />
 
           <CartButton />
         </div>
       </div>
 
-      <div className="shell pb-3 md:hidden">
-        <SearchField scopes={scopes} />
-      </div>
+        {/* The green bar is a desktop object. Its four section links already
+            carried `hidden md:flex`, so on a phone it drew a 48 pixel band with
+            one button in it and four links measuring zero. Those four now live
+            in the panel, where they can be read. */}
+        <div className="hidden md:block">
+          <RayonBar departments={departments} familyCount={familyCount} />
+        </div>
+      </header>
 
-      <RayonBar departments={departments} familyCount={familyCount} />
-    </header>
+      {/* OUTSIDE THE STICKY HEADER, AND THAT IS THE POINT. A full-width search
+          box costs 56 pixels; pinned to the header it costs them on every screen
+          the reader ever sees. Here it is present when they arrive and gone once
+          they are reading, and the magnifier in the bar is the anchor that
+          brings it back.
+
+          `compact` is the placeholder, and only the placeholder: the long one is
+          a sentence of 51 characters and a 360px field shows 27 of them, cropped
+          mid-word with no ellipsis. See SearchField. */}
+      <div id="recherche" className="shell scroll-mt-16 pt-2 pb-3 md:hidden">
+        <SearchField scopes={scopes} compact />
+      </div>
+    </>
   )
 }
