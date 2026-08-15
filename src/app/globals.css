@@ -1185,41 +1185,52 @@ body {
    paper on a white page, so a card reads as broken rather than as loading, and
    a grid of 24 reads as a page that failed.
 
-   THIS IS DJULAH'S SHIMMER, TO THE NUMBER: 1400ms, base #EBEBF4, highlight
-   #F4F4F4, a band travelling left to right. The same gesture already exists on
-   this site as `.sheen`, which passes once over a card that has just arrived;
-   this is its opposite, a loop that runs while nothing has arrived yet, and the
-   two share a vocabulary on purpose.
+   THE MECHANISM IS NVC'S, AND IT IS BETTER THAN THE ONE IT REPLACES. The first
+   version animated `background-position` across an oversized gradient, which is
+   a paint on the main thread every frame. This lays a solid tint down and slides
+   a band of light across it on `transform`, which the compositor owns: it costs
+   nothing on the entry-level Android this shop is browsed on, and it is visibly
+   smoother. -100% to 200% over 1.5s, the same numbers as the reference.
 
-   It stops for a reader who asked for less motion, and becomes a flat tint: a
+   THE TINT IS --space-2 AND NOT A GREY. NVC sweeps over stone-300, which is
+   right on its own palette and would be a bruise on this one: every well here is
+   white because every packshot was shot on white, and a dark rectangle waiting
+   in a grid of white cells reads as an error state. --space-2 is the site's own
+   second surface, far enough from paper to say "not yet" and close enough not to
+   shout it.
+
+   It stops for a reader who asked for less motion and becomes a flat tint: a
    surface that pulses forever is exactly what that preference is about. */
 
 .shimmer {
-  background-color: #ebebf4;
-  background-image: linear-gradient(
-    100deg,
-    rgb(235 235 244 / 0) 30%,
-    rgb(244 244 244 / 0.85) 50%,
-    rgb(235 235 244 / 0) 70%
+  position: relative;
+  overflow: hidden;
+  background-color: var(--space-2);
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0) 0%,
+    rgb(255 255 255 / 0.85) 50%,
+    rgb(255 255 255 / 0) 100%
   );
-  background-size: 220% 100%;
-  background-repeat: no-repeat;
-  animation: shimmer-pass 1400ms linear infinite;
+  transform: translateX(-100%);
+  animation: shimmer-sweep 1500ms infinite;
 }
 
-@keyframes shimmer-pass {
-  from {
-    background-position: 130% 0;
-  }
+@keyframes shimmer-sweep {
   to {
-    background-position: -30% 0;
+    transform: translateX(200%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shimmer {
-    background-image: none;
+  .shimmer::after {
     animation: none;
+    opacity: 0;
   }
 }
 
