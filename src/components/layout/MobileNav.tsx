@@ -126,7 +126,7 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
             aria-label="Aller à la recherche"
             className="press grid size-11 place-items-center rounded-control text-ink transition-colors duration-[var(--t-fast)] hover:text-accent"
           >
-            <IconSearch className="text-[1.375rem]" />
+            <IconSearch className="text-[1.1875rem]" />
           </a>
 
           <CartButton />
@@ -140,7 +140,7 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
             aria-label="Ouvrir le menu"
             className="press grid size-11 place-items-center rounded-control text-ink transition-colors duration-[var(--t-fast)] hover:text-accent"
           >
-            <IconMenu className="text-[1.375rem]" />
+            <IconMenu className="text-[1.1875rem]" />
           </button>
         </div>
       </div>

@@ -33,7 +33,7 @@ export function Logo({
 }) {
   const mark = (
     <span
-      className={`relative block size-9 shrink-0 md:size-10 ${
+      className={`relative block size-[1.75rem] shrink-0 sm:size-9 md:size-10 ${
         tone === 'rail' ? 'rounded-full bg-paper p-0.5' : ''
       }`}
     >

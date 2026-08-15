@@ -105,7 +105,7 @@ export function Header() {
           `compact` is the placeholder, and only the placeholder: the long one is
           a sentence of 51 characters and a 360px field shows 27 of them, cropped
           mid-word with no ellipsis. See SearchField. */}
-      <div id="recherche" className="shell scroll-mt-16 pt-2 pb-3 md:hidden">
+      <div id="recherche" className="shell scroll-mt-16 pt-1.5 pb-2.5 md:hidden">
         <SearchField scopes={scopes} compact />
       </div>
     </>

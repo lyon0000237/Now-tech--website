@@ -530,7 +530,7 @@ export function SearchField({
            is the font size, not the box: 16px type sits in a 48px field with 16
            pixels of leading to spare, and the eight pixels bought nothing except
            a search bar that read as the biggest object on the screen. */
-        className="field relative flex h-12 w-full items-stretch rounded-control border border-rule-2 bg-space transition-[border-color,box-shadow] duration-[var(--t-fast)]"
+        className="field relative flex h-11 w-full items-stretch rounded-control border border-rule-2 bg-space transition-[border-color,box-shadow] duration-[var(--t-fast)] md:h-12"
     >
       <ScopeSelect
         scopes={scopes}
@@ -556,7 +556,7 @@ export function SearchField({
         }}
         onKeyDown={onKeyDown}
         placeholder={
-          compact ? 'Onduleur, caméra, switch PoE…' : 'Onduleur 1500 VA, caméra 4 MP, switch 24 ports PoE…'
+          compact ? 'Onduleur, caméra, switch…' : 'Onduleur 1500 VA, caméra 4 MP, switch 24 ports PoE…'
         }
         aria-label="Rechercher dans le catalogue"
         role="combobox"
@@ -573,6 +573,12 @@ export function SearchField({
            back is a pinch. Nothing else on the page can cause that, because
            nothing else on the page is a text field. Small text is the house
            size for a pointer and stays that from `md`. */
+        /* 16px, AND IT IS NOT A TYPOGRAPHIC CHOICE. Safari on iOS zooms
+           the whole page when a field under 16px takes focus, and the reader has
+           to pinch back out of it. This is the one piece of text on the site
+           whose size is decided by a browser rather than by the type scale. The
+           placeholder is kept short instead, so the line weighs less without
+           the field lying about its size. From md the scale takes over again. */
         className="min-w-0 flex-1 bg-transparent px-4 text-[1rem] text-ink outline-none placeholder:text-ink-3 md:text-small"
       />
 
@@ -582,7 +588,12 @@ export function SearchField({
              field, so its height is the field's minus twice the margin: at 48
              with m-1 that is 40, under the 44 a thumb is owed. Two pixels of
              inset give exactly 44 and the desktop keeps the four it had. */
-        className="press m-0.5 flex shrink-0 items-center gap-2 rounded-[6px] bg-accent px-5 text-small font-semibold text-paper transition-colors duration-[var(--t-fast)] hover:bg-accent-ink md:m-1"
+        /* Flush to the field's edge on a phone, inset from `md`. Inset
+             inside a 44-pixel field the submit is 40, under the floor a thumb
+             is owed; flush it takes the whole height and the field's own
+             corner. From md the field is 48 again and the 4-pixel inset the
+             desktop always had comes back. */
+        className="press m-0 flex shrink-0 items-center gap-2 rounded-r-control rounded-l-none bg-accent px-4 text-small font-semibold text-paper transition-colors duration-[var(--t-fast)] hover:bg-accent-ink md:m-1 md:rounded-[6px] md:px-5"
       >
         <IconSearch className="text-[1.125rem]" />
         <span className="hidden sm:inline">Chercher</span>
