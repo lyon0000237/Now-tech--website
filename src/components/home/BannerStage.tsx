@@ -274,41 +274,25 @@ function Track({
                 style={{ width: `${100 / BANNERS.length}%` }}
                 className="relative block shrink-0"
               >
-                {/* NOTHING IS CUT ON A PHONE ANY MORE, AND THE FRAME IS STILL A
-                    FRAME. These pieces are 14 179 by 3 000, which is 4.73:1. On a
-                    390 screen that is 82 pixels tall shown whole, a rule rather
-                    than an opening, so the phone used to take a 21:9 window of
-                    it: 167 pixels tall and 49 per cent of the composition. Going
-                    taller makes it worse, not better, and that is the part that
-                    is easy to get backwards. `cover` on a source wider than its
-                    frame crops the SIDES, so a 16:9 window measured 38 per cent
-                    and cut the headline in half: "Moins d'effort" lost its M.
+                {/* THE PHONE TAKES A SHORTER WINDOW, NOT A TALLER ONE, AND THAT
+                    IS THE PART THAT IS EASY TO GET BACKWARDS. These pieces are
+                    14 179 by 3 000, which is 4.73:1. `cover` on a source wider
+                    than its frame crops the SIDES, so making the band taller
+                    shows LESS of the composition, not more: a 16:9 window came
+                    out at 219 pixels and 38 per cent, and cut "Moins d'effort"
+                    in half. Going the other way pays twice. At 3:1 the band is
+                    130 pixels instead of 167 and shows 63 per cent instead of
+                    49.
 
-                    So the phone shows the piece ENTIRE, contained, and fills the
-                    band above and below it with the same file blown up and
-                    blurred out of legibility. The letterbox is made of the
-                    picture itself, so the band has a real height, the headline
-                    survives whole, and no colour had to be invented to sit
-                    behind it.
+                    A letterbox filled with the blurred picture was tried, which
+                    shows the piece whole at any height. It reads as a photograph
+                    resting on a smear of itself, and this page has no other
+                    blurred surface anywhere. Cropping honestly and keeping the
+                    band low is the quieter answer.
 
-                    From `sm` none of this exists: the piece is shown at its own
-                    4.73:1 across the full width and the blurred layer is not
-                    rendered at all. */}
-                <span className="relative block aspect-[16/9] w-full overflow-hidden sm:aspect-[14179/3000]">
-                  <Image
-                    src={`/branding/${banner.file}`}
-                    alt=""
-                    aria-hidden
-                    fill
-                    priority={position === 0}
-                    // Deliberately small: it is scaled up and blurred past any
-                    // detail, so fetching it at full width would spend the
-                    // reader's data on pixels that are destroyed on arrival.
-                    sizes="64px"
-                    draggable={false}
-                    style={{ objectPosition: phoneCrop(banner.focus) }}
-                    className="scale-110 object-cover blur-2xl select-none sm:hidden"
-                  />
+                    `objectPosition` carries the banner's declared `focus`, so
+                    what survives the crop is the half with the words in it. */}
+                <span className="relative block aspect-[3/1] w-full sm:aspect-[14179/3000]">
                   <Image
                     src={`/branding/${banner.file}`}
                     alt={banner.alt}
@@ -316,7 +300,8 @@ function Track({
                     priority={position === 0}
                     sizes="100vw"
                     draggable={false}
-                    className="object-contain select-none sm:object-cover"
+                    style={{ objectPosition: phoneCrop(banner.focus) }}
+                    className="object-cover select-none sm:!object-[50%_center]"
                   />
                 </span>
               </Link>
