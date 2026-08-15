@@ -333,6 +333,33 @@ export function withPrice(
   return { ...filters, prixMin: min, prixMax: max }
 }
 
+/**
+ * How many filters are on, counted the way the reader can count them.
+ *
+ * THE PRICE IS ONE FILTER, NOT TWO, AND THAT IS THE WHOLE REASON THIS EXISTS.
+ * `facets.active` adds a floor and a ceiling separately, so `?prix=50000-150000`
+ * made the page print "2 filtres actifs" and "répondent à 2 filtres" over a panel
+ * drawing ONE chip, offering ONE removal, and a dead-end screen naming ONE
+ * dimension. Measured on the live page before this: 2 against 1, in four places
+ * at once. A reader who set one bracket and is told they set two has no way to
+ * find the second, because there is no second.
+ *
+ * The panel, the chips, the phone button's badge, the dead end and the page
+ * header now all read this one function, so the number cannot drift again. The
+ * three flags and the three slug groups count as themselves.
+ */
+export function countFilters(filters: CatalogFilters): number {
+  return (
+    filters.rayons.length +
+    filters.familles.length +
+    filters.marques.length +
+    (filters.prixMin !== null || filters.prixMax !== null ? 1 : 0) +
+    Number(filters.stock) +
+    Number(filters.remise) +
+    Number(filters.photo)
+  )
+}
+
 /** Unfolds or refolds one of the long groups. */
 export function toggleGroup(
   open: readonly FacetGroup[],

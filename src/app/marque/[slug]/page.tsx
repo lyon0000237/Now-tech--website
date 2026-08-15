@@ -41,18 +41,28 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
  * came from, because a page titled with a manufacturer's name and set in that
  * manufacturer's mark is read as a claim unless it says otherwise.
  *
- * THE MARK IS DRAWN ONLY IF WE HOLD ONE, and 81 of the 101 brands have none.
+ * THE MARK IS DRAWN ONLY IF WE HOLD ONE, and 68 of the 101 brands have none.
  * That is why the header band is a line of text with an optional mark in front
  * of it, rather than a masthead built around a logo: the same component has to
  * hold ZKTECO, which has no mark and 50 references, without looking like a page
  * that failed to load. The mark is painted with the mask used everywhere else,
  * so it is the page's own ink and never a second colour on the page.
  *
- * THE DEPARTMENTS ARE STATED, NOT LINKED. HP spans six of the twelve, which is
- * the fact worth printing here. They are not links because /rayon/impression
- * would silently drop the brand the reader came for, and a control that returns
- * more than you asked for is worse than a sentence. The families across the top
- * of the listing, which the query does carry, are the real narrowing.
+ * AND IT IS DRAWN AT 56 HERE WHILE THE INDEX STAMPS IT AT 40 OR 30. /marques
+ * has to hold thirty-three marks in one grid, where the four files that are a
+ * filled field with the type reversed out of them — XIAOMI at 73.6 % ink inside
+ * the 24x24 box, MIKROTIK 55.2, HP 52.9, UBIQUITI 47.5, against a set median of
+ * 16 — outweigh every wordmark beside them, so that page cuts them down. Weight
+ * is a comparison, and there is nothing here to compare against: one brand, one
+ * mark, its own page. It is drawn at its own size.
+ *
+ * THE DEPARTMENTS ARE STATED, NOT LINKED, AND ONLY ONCE. HP spans six of the
+ * twelve, which is the fact worth printing here; it used to be printed twice,
+ * in the lead and again in the band under it, and the second one was the useful
+ * one because it names them. They are not links because /rayon/impression would
+ * silently drop the brand the reader came for, and a control that returns more
+ * than you asked for is worse than a sentence. The families across the top of
+ * the listing, which the query does carry, are the real narrowing.
  */
 export default async function MarquePage({ params, searchParams }: Params) {
   const [{ slug }, query] = await Promise.all([params, searchParams])
@@ -84,14 +94,16 @@ export default async function MarquePage({ params, searchParams }: Params) {
             ? 'Tout ce que le magasin tient sous ce nom.'
             : families === 1
               ? `Tout ce que le magasin tient sous ce nom, rangé dans une seule famille : « ${top.name} ».`
-              : `Tout ce que le magasin tient sous ce nom, ${departments.length > 1 ? `réparti sur ${formatCount(departments.length, 'rayon')}` : 'dans un seul rayon'}. La famille la plus fournie est « ${top.name} » avec ${formatCount(top.count, 'référence')}.`
+              : `Tout ce que le magasin tient sous ce nom. La famille la plus fournie est « ${top.name} » avec ${formatCount(top.count, 'référence')}.`
         }
         aside={formatCount(listing.total, 'référence')}
       />
 
       {/* The provenance band. Mark on the left when we hold one, the sentence
           that keeps the page honest on the right. With no mark the row is simply
-          the sentence, at full measure, which is the common case: 81 of 101. */}
+          the sentence, at full measure, which is the common case: 68 of 101.
+          It is also the only place the departments are named, which is why the
+          lead above it stopped counting them. */}
       <section className="shell" aria-label="D’où vient cette marque">
         <div className="enter flex flex-wrap items-center gap-x-10 gap-y-6 border-t border-rule pt-6">
           {entry?.file ? (

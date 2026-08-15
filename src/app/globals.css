@@ -1179,3 +1179,83 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* --- The skeleton under a photograph that has not arrived -----------------
+   4 215 packshots on a metered connection. Until one lands its cell is white
+   paper on a white page, so a card reads as broken rather than as loading, and
+   a grid of 24 reads as a page that failed.
+
+   THIS IS DJULAH'S SHIMMER, TO THE NUMBER: 1400ms, base #EBEBF4, highlight
+   #F4F4F4, a band travelling left to right. The same gesture already exists on
+   this site as `.sheen`, which passes once over a card that has just arrived;
+   this is its opposite, a loop that runs while nothing has arrived yet, and the
+   two share a vocabulary on purpose.
+
+   It stops for a reader who asked for less motion, and becomes a flat tint: a
+   surface that pulses forever is exactly what that preference is about. */
+
+.shimmer {
+  background-color: #ebebf4;
+  background-image: linear-gradient(
+    100deg,
+    rgb(235 235 244 / 0) 30%,
+    rgb(244 244 244 / 0.85) 50%,
+    rgb(235 235 244 / 0) 70%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer-pass 1400ms linear infinite;
+}
+
+@keyframes shimmer-pass {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -30% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    background-image: none;
+    animation: none;
+  }
+}
+
+/* --- The bar that says a page is on its way -------------------------------
+   Next replaces a segment with its `loading.tsx` while the next one is being
+   fetched, which on a fast connection is a flash and on a Cameroonian mobile
+   one is several seconds of nothing. The bar travels rather than filling,
+   because a filling bar claims to know a proportion nobody measured. */
+
+.route-bar {
+  position: relative;
+  overflow: hidden;
+  background: var(--rule);
+}
+.route-bar::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inline-size: 40%;
+  background: var(--accent);
+  animation: route-travel 1100ms var(--ease-draw) infinite;
+}
+
+@keyframes route-travel {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(350%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-bar::after {
+    animation: none;
+    inline-size: 100%;
+    opacity: 0.4;
+  }
+}

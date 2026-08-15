@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { Pager } from '@/components/catalog/Pager'
 import { Action } from '@/components/ui/Action'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -8,7 +9,7 @@ import { getBrandIndex, getMeta, type BrandEntry } from '@/lib/catalog'
 import { formatAmount, formatCount } from '@/lib/format'
 
 /**
- * The brand directory.
+ * The brand directory: ONE index, in tiles, paginated.
  *
  * WHAT THIS LIST IS, BEFORE ANYTHING ELSE. The WooCommerce export carries no
  * brand taxonomy: the column exists and is filled on 14 rows out of 7 116. The
@@ -21,35 +22,102 @@ import { formatAmount, formatCount } from '@/lib/format'
  * fact: 3 042 of the 4 254 references carry a recovered brand, and each name
  * opens the same query a customer could run themselves.
  *
+ * THERE USED TO BE TWO LISTS AND NOW THERE IS ONE. The page carried a text
+ * index of 101 names and, at its foot, a separate wall titled "Les logos que
+ * nous tenons" holding the 33 brands we have a drawn mark for. Two surfaces for
+ * one set is two places to look for the same name, and the second one quietly
+ * ranked 33 brands above the other 68 for a reason that has nothing to do with
+ * the shop: whether Simple Icons still ships the file. The wall is gone. Its
+ * composition, a grid of tiles rather than a column of rows, is what the index
+ * is now built in.
+ *
+ * ONE TILE IN THREE CARRIES A MARK, AND THAT IS THE WHOLE DESIGN PROBLEM.
+ * Marks exist for 33 of the 101 and never will for the other 68: the names were
+ * checked one by one against Simple Icons' index, 3 453 entries, and 67 are not
+ * in it. Simple Icons dropped most non-free marks in 2024, so Canon, Logitech,
+ * Microsoft, Philips, Xerox, Brother, SanDisk, Western Digital, Hisense, TCL,
+ * BenQ, Transcend, Ricoh, Legrand, Eaton, Tenda, D-Link, APC, HPE and HIKVISION
+ * are absent, and HIKVISION is 266 references, the second deepest brand in the
+ * shop. Nothing may be drawn in their place: an initial in a circle or a grey
+ * rectangle is a fabricated logo standing exactly where a real one is missing.
+ *
+ * SO THE TILE IS A NAME AND A COUNT, AND THE MARK IS A STAMP IN ITS CORNER.
+ * The inversion is the answer. A logo grid with holes fails because the image
+ * is the object the eye scans and two thirds of the objects are missing; here
+ * the object is the name, set at 20px in the page's own type, identical in kind
+ * and position in all 101 tiles, and the mark rides in the bottom corner where
+ * a maker's stamp goes. A corner that is empty on 68 tiles is not a hole,
+ * because nothing above it depended on it: the top rule, the name, the count and
+ * the department all land at the same place with or without it. The page also
+ * says the ratio in figures, three lines up, so a reader who notices the
+ * unevenness is told what it means rather than left to guess it means stock.
+ *
+ * WHY THE STAMP IS 40 PIXELS AND NOT 48. Every file in the set is a 24x24
+ * square, so the mask is bound by its height and a wordmark like PANASONIC ends
+ * up drawn across a fraction of it. The old wall answered that with 48, which
+ * also multiplied the four files that are a filled field with the type reversed
+ * out of it: measured ink coverage inside the 24x24 box is XIAOMI 73.6 %,
+ * MIKROTIK 55.2 %, HP 52.9 % and UBIQUITI 47.5 % against a set median of 16 %,
+ * so at 48 those four came out as solid slabs beside every wordmark. They are
+ * treated by name here, the way brand-marks.ts already treats Zebra's unusable
+ * black: a declared exception, drawn at 30 pixels rather than 40. In a 40-pixel
+ * box those four paint 760 to 1 178 square pixels of ink against the set
+ * median's 256, three to four and a half times it; at 30 they paint 428 to 662,
+ * under two to two and a half times, which is the range every other mark in the
+ * set already lives in. Nothing is invented; the numbers are the files'.
+ *
+ * THE LEADER LINE IS GONE, AND IT WAS MEASURED BEFORE IT WENT. Each row used to
+ * end in a rule whose filled part was the brand's share of the deepest one.
+ * Measured at 1440 on the live page: the rule is 165px, and on 93 of the 101
+ * rows the filled part came out under 20px, on 51 rows under 4px and on 14 rows
+ * under one whole pixel. A scale on which nine tenths of the population is a
+ * tick indistinguishable from every other tick is not a measure, it is texture.
+ * Worse, the rule was `flex-1` sharing its row with the count, so a one-digit
+ * count and a three-digit one left it 172.3px and 165px: three different leader
+ * lengths in one column, and a leader that does not align across rows is the one
+ * thing a leader cannot do. The exact figure was always printed next to it, and
+ * that figure is now the whole measure, in tabular figures, plus the department
+ * the brand actually sits in, which is real data the old rule never showed.
+ *
  * TWO READERS, ONE INDEX. Someone asking "vous avez du Mikrotik ?" needs to hit
  * one name out of 101; someone asking what this shop actually stocks needs to
  * see that HP has 544 references and eight brands have exactly one. Those wants
  * are opposite orderings of the same list, so the list is ordered two ways and
- * the reader picks, exactly as every listing on this site lets them pick. Both
- * orderings are URLs, not state: `?tri=nom` is shareable, back-buttonable and
- * renders without JavaScript, and the filter is a plain GET form for the same
- * reason. No client component, no hydration boundary, no 3.3 MB catalogue
- * anywhere near the browser.
- *
- * THE INDEX IS TYPE, NOT TILES, AND THAT IS THE WHOLE DESIGN PROBLEM. Marks
- * exist for 20 of the 101. A grid of logo cards would therefore be 81 empty
- * boxes, and any substitute drawn to fill them, an initial in a circle, a grey
- * rectangle, is a fabricated logo standing where a real one is missing. So the
- * index has no image slot at all: a brand is a name, a measure and a count, and
- * a brand with no mark is not a broken row. The 20 marks we do hold are gathered
- * once at the foot of the page, where they are a complete set on their own terms
- * rather than 20 survivors of a grid.
- *
- * THE MEASURE IS THE LEADER LINE. The rule between a name and its count is the
- * leader of a printed index; here its filled part is the brand's share of the
- * deepest one. It costs no vertical space, it is linear and unmanipulated, so a
- * single-reference brand renders as a faint tick and is meant to, and the exact
- * figure is always printed beside it.
+ * the reader picks. Both orderings are URLs, not state: `?tri=nom` is shareable,
+ * back-buttonable and renders without JavaScript, the filter is a plain GET form
+ * for the same reason, and so is the page number. No client component, no
+ * hydration boundary, no 3.3 MB catalogue anywhere near the browser.
  */
 
 interface Params {
-  searchParams: Promise<{ q?: string | string[]; tri?: string | string[] }>
+  searchParams: Promise<{
+    q?: string | string[]
+    tri?: string | string[]
+    page?: string | string[]
+  }>
 }
+
+/**
+ * 36 tiles a page: 101 brands in three pages of 36, 36 and 29.
+ *
+ * Not the catalogue's 24. A brand index is scanned, not shopped, and 24 would
+ * cut 101 names into five pages whose last one holds five tiles. 36 is also the
+ * only round number that divides by 2, 3 and 4, which are the three column
+ * counts this grid runs at, so no page but the last ever ends on a ragged row.
+ */
+const PER_PAGE = 36
+
+/**
+ * The four mark files that are a filled field with the type reversed out.
+ *
+ * Measured, not judged: ink coverage inside the 24x24 box, over the whole set
+ * of 33, runs from 5.8 % (KASPERSKY) to 73.6 % (XIAOMI) with a median of 16 %.
+ * These four sit at 73.6, 55.2, 52.9 and 47.5. Painted at the same height as a
+ * wordmark they carry three to five times its ink and read as black slabs in a
+ * grid of hairline logotypes. Keyed by file name, because what is being
+ * corrected is a property of the artwork and not of the manufacturer.
+ */
+const DENSE_MARKS: ReadonlySet<string> = new Set(['xiaomi', 'mikrotik', 'hp', 'ubiquiti'])
 
 export async function generateMetadata(): Promise<Metadata> {
   const brands = getBrandIndex()
@@ -76,7 +144,13 @@ function readOne(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value)?.trim() ?? ''
 }
 
-/** Every control on this page is a link to another state of the same page. */
+/**
+ * Every control on this page is a link to another state of the same page.
+ *
+ * `page` is deliberately absent: changing the ordering or clearing the filter
+ * returns to the first page, and a helper that could not express page 7 is a
+ * helper that cannot forget to reset it.
+ */
 function href(query: string, order: 'nom' | null, hash = ''): string {
   const params = new URLSearchParams()
   if (query) params.set('q', query)
@@ -86,46 +160,72 @@ function href(query: string, order: 'nom' | null, hash = ''): string {
 }
 
 /**
- * One line of the index.
+ * One tile of the index.
  *
- * `truncate` on the name and not on the count: names run to "ZEBRA
- * TECHNOLOGIES" while the count is never more than three digits, and a row that
- * drops its number has lost the only thing that distinguishes it from the row
- * above.
+ * THE WHOLE TILE IS THE TARGET AND IT IS NEVER UNDER 44 PIXELS. Measured at
+ * 390: two columns of 158, the name on one or two lines, the foot row held at
+ * 40 by `min-h-10`, which gives 108 and 128 tall. The foot is pinned with
+ * `mt-auto` so that in a row of four tiles the counts sit on one line whatever
+ * the names above them did, and the stamp sits on that same line.
  *
- * 44 PIXELS TALL ON A PHONE, 33.5 FROM MD UP. An index row is a real target
- * aimed at with a thumb, and 101 of them stacked at desktop density is a column
- * of misses. `py-3` alone measured 43.5, half a pixel under the floor and
- * therefore under it; `min-h-11` states the number instead of arriving at it by
- * addition. A pointer does not need the same room, and at three columns that
- * density is what lets the whole list be read at once.
- *
- * THE MEASURE IS CENTRED ON A PHONE AND SITS ON THE BASELINE FROM MD UP. The
- * `-0.2em` lift is what puts a one-pixel rule on the baseline of a line of
- * text; in a row that is 44 tall rather than 33.5 the text is no longer at the
- * bottom of its box, so the lift stops being a correction and becomes a
- * displacement. `items-center` with no lift is the same rule in the same place
- * relative to the name it measures.
+ * THE HAIRLINE ON TOP IS THE TILE. There is no box, no fill and no shadow: 36
+ * bordered cards is a page of frames, and the rule alone states the column the
+ * name starts at, which is all a grid of type needs. It takes the page's ink on
+ * hover, which is the only thing on the tile that moves besides the name's
+ * colour and the stamp's.
  */
-function BrandRow({ brand, deepest }: { brand: BrandEntry; deepest: number }) {
-  const share = deepest > 0 ? (brand.productCount / deepest) * 100 : 0
+function BrandTile({ brand, index }: { brand: BrandEntry; index: number }) {
+  // One department is worth naming; six is worth counting. Both are facts of
+  // the ingest, and between them they replace a rule that showed neither.
+  const place =
+    brand.departments.length === 1
+      ? brand.departments[0]
+      : brand.departments.length > 1
+        ? formatCount(brand.departments.length, 'rayon')
+        : ''
+
   return (
     <Link
       href={`/marque/${brand.slug}`}
-      className="group flex min-h-11 items-center gap-3 py-2 text-small tracking-[0.01em] transition-colors duration-[var(--t-fast)] hover:text-accent md:min-h-0 md:items-baseline md:py-[0.4375rem]"
+      style={
+        {
+          '--enter-index': index % 8,
+          ...(brand.file
+            ? {
+                '--mark-hover': brand.hover ?? undefined,
+                '--mark-src': `url(/brands/${brand.file}.svg)`,
+              }
+            : null),
+        } as React.CSSProperties
+      }
+      className="group enter e-item flex h-full flex-col border-t border-rule pt-4 transition-colors duration-[var(--t-fast)] hover:border-ink"
     >
-      <span className="min-w-0 flex-1 truncate">{brand.name}</span>
-      <span
-        aria-hidden
-        className="relative h-px min-w-6 flex-1 bg-rule md:translate-y-[-0.2em]"
-      >
-        <span
-          className="absolute inset-y-0 left-0 bg-accent transition-colors duration-[var(--t-fast)] group-hover:bg-accent-ink"
-          style={{ width: `${share}%` }}
-        />
+      <span className="text-sub font-semibold leading-[1.2] tracking-[-0.02em] text-ink transition-colors duration-[var(--t-fast)] group-hover:text-accent">
+        {brand.name}
       </span>
-      <span className="t-num text-micro text-ink-3 transition-colors duration-[var(--t-fast)] group-hover:text-ink-2">
-        {formatAmount(brand.productCount)}
+
+      <span className="mt-auto flex min-h-10 items-end justify-between gap-3 pt-6">
+        <span className="flex min-w-0 flex-col gap-1">
+          <span className="t-num text-micro text-ink-2">
+            {formatCount(brand.productCount, 'référence')}
+          </span>
+          {place ? <span className="clamp-1 text-micro text-ink-3">{place}</span> : null}
+        </span>
+
+        {/* The stamp. A real box the size of the mark, because `contain` on a
+            24x24 file centres the mark in whatever it is given and a wide box
+            would float it away from the corner it belongs in. */}
+        {brand.file ? (
+          <span
+            aria-hidden
+            className={DENSE_MARKS.has(brand.file) ? 'block size-[1.875rem] shrink-0' : 'block size-10 shrink-0'}
+          >
+            <span
+              className="brand-mark"
+              style={{ height: DENSE_MARKS.has(brand.file) ? '1.875rem' : '2.5rem' }}
+            />
+          </span>
+        ) : null}
       </span>
     </Link>
   )
@@ -141,21 +241,44 @@ export default async function MarquesPage({ searchParams }: Params) {
 
   const deepest = brands[0]
   const branded = brands.reduce((sum, brand) => sum + brand.productCount, 0)
-  const marked = brands.filter((brand) => brand.file !== null)
+  const marked = brands.filter((brand) => brand.file !== null).length
   const singles = brands.filter((brand) => brand.productCount === 1).length
   const shallowest = brands[brands.length - 1]
 
   const needle = fold(query)
   const found = needle ? brands.filter((brand) => fold(brand.name).includes(needle)) : brands
-  const rows =
+  const sorted =
     order === 'nom' ? [...found].sort((a, b) => a.name.localeCompare(b.name, 'fr')) : found
 
-  // A-Z is grouped under its initials. 25 letters carry the 101 names, so the
-  // blocks are short and uneven, and CSS columns with `break-inside: avoid` is
-  // the only layout that packs them without stranding a two-name letter beside
-  // an empty column. Depth order is one flat run: ranking it and then cutting it
-  // into 25 pieces would destroy the ranking.
-  const letters = [...new Set(rows.map((brand) => brand.letter))].sort()
+  // A page number out of range is clamped rather than 404ed: it arrives from a
+  // stale link or a hand-edited address, and the reader wants the list.
+  const pages = Math.max(1, Math.ceil(sorted.length / PER_PAGE))
+  const raw = Number(readOne(params.page))
+  const page = Number.isFinite(raw) && raw >= 1 ? Math.min(Math.floor(raw), pages) : 1
+  const shown = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+
+  /**
+   * The running head, in the terms of whatever ordering is on.
+   *
+   * A dictionary prints the first and last word of the spread at the top of it,
+   * and a paginated index needs the same thing for the same reason: the reader
+   * has to know whether the name they want is on this page before they read 36
+   * tiles. It is also what replaces the old letter grouping. That grouping does
+   * not survive a tile grid: 25 initials carry the 101 names, an average of four
+   * names each, so in a four-column grid a letter band would fall on every
+   * single row and the page would be more band than index.
+   */
+  const edge = shown[shown.length - 1]
+  const head =
+    shown.length === 0 || !edge
+      ? ''
+      : order === 'nom'
+        ? `de ${shown[0]?.name} à ${edge.name}`
+        : `de ${formatAmount(shown[0]?.productCount ?? 0)} à ${formatAmount(edge.productCount)} références`
+
+  const pagerQuery: Record<string, string> = {}
+  if (query) pagerQuery.q = query
+  if (order === 'nom') pagerQuery.tri = 'nom'
 
   return (
     <>
@@ -166,9 +289,10 @@ export default async function MarquesPage({ searchParams }: Params) {
       />
 
       {/* The three figures that say what kind of list this is: how much of the
-          catalogue it covers, how far apart its two ends are, and how much of it
-          we hold a drawn mark for. Set as a definition list because that is what
-          it is, a figure and what the figure counts. */}
+          catalogue it covers, how far apart its two ends are, and how many of
+          its tiles carry a drawn mark. The third one is not housekeeping. It is
+          the sentence that stops an uneven grid from being read as a statement
+          about the shop, and it has to be printed above the grid, not under it. */}
       <section className="shell" aria-label="Ce que couvre cette liste">
         <dl className="grid gap-x-12 gap-y-8 sm:grid-cols-3">
           {[
@@ -181,8 +305,8 @@ export default async function MarquesPage({ searchParams }: Params) {
               body: `références derrière ${deepest?.name ?? ''}, la marque la plus fournie. ${formatCount(singles, 'marque')} n’en ${singles > 1 ? 'ont' : 'a'} qu’une seule : le bas de la liste est aussi vrai que le haut.`,
             },
             {
-              figure: formatAmount(marked.length),
-              body: `marques ont une marque graphique dans nos fichiers. Les ${brands.length - marked.length} autres sont des lignes de texte dans l’index, avec exactement le même compte.`,
+              figure: `${formatAmount(marked)} sur ${brands.length}`,
+              body: `tuiles portent un logo, parce que nous n’avons le fichier que pour celles-là. Les ${brands.length - marked} autres portent le même nom et le même compte : un coin vide ne dit rien du stock.`,
             },
           ].map((item, index) => (
             <div
@@ -190,9 +314,7 @@ export default async function MarquesPage({ searchParams }: Params) {
               className="enter e-item border-t border-rule pt-5"
               style={{ '--enter-index': index } as React.CSSProperties}
             >
-              <dt className="t-num text-title font-bold tracking-[-0.03em]">
-                {item.figure}
-              </dt>
+              <dt className="t-num text-title font-bold tracking-[-0.03em]">{item.figure}</dt>
               <dd className="mt-2 max-w-[38ch] text-small leading-[1.6] text-ink-3">{item.body}</dd>
             </div>
           ))}
@@ -215,7 +337,7 @@ export default async function MarquesPage({ searchParams }: Params) {
       <section id="index" className="shell mt-band scroll-mt-32 lg:scroll-mt-28">
         <SectionHeader
           title="L’index des marques"
-          context={`Par profondeur de catalogue ou par ordre alphabétique, au choix. Le trait qui suit chaque nom est proportionnel à son compte, sur une échelle linéaire dont le maximum est ${deepest?.name ?? ''} avec ${formatAmount(deepest?.productCount ?? 0)} références.`}
+          context={`Les ${brands.length} noms, par profondeur de catalogue ou par ordre alphabétique, ${formatCount(PER_PAGE, 'tuile')} par page. Chaque tuile porte le nom, le nombre de références derrière ce nom et le rayon où il se trouve ; les ${marked} dont nous avons le fichier portent aussi leur logo, dans le coin.`}
         />
 
         {/* A plain GET form. The filter is a page, not a state: /marques?q=hik
@@ -227,9 +349,9 @@ export default async function MarquesPage({ searchParams }: Params) {
             the page the instant the field takes focus and leaves it zoomed,
             which on a 101-name index is a page the reader then has to pan
             sideways to read; 16 is the threshold that stops it. And at `h-13`
-            the submit button inside — the field is `items-stretch` with `m-1`
-            around it — came out 42 tall, four pixels under the floor, on the
-            one control that makes the form do anything. 56 puts it at 46. */}
+            the submit button inside, the field is `items-stretch` with `m-1`
+            around it, came out 42 tall, four pixels under the floor, on the one
+            control that makes the form do anything. 56 puts it at 46. */}
         <form
           action="/marques#index"
           method="get"
@@ -266,10 +388,15 @@ export default async function MarquesPage({ searchParams }: Params) {
         </form>
 
         <div className="enter mb-stack flex flex-wrap items-center justify-between gap-x-10 gap-y-4 border-b border-rule pb-5">
-          <p className="e-text t-num text-small text-ink-2">
-            {query
-              ? `${formatCount(rows.length, 'marque')} sur ${brands.length} pour « ${query} »`
-              : `${formatCount(brands.length, 'marque')}, de ${formatAmount(deepest?.productCount ?? 0)} références à ${formatAmount(shallowest?.productCount ?? 0)}`}
+          <p className="e-text text-small text-ink-2">
+            <span className="t-num">
+              {query
+                ? `${formatCount(sorted.length, 'marque')} sur ${brands.length} pour « ${query} »`
+                : `${formatCount(brands.length, 'marque')}, de ${formatAmount(deepest?.productCount ?? 0)} références à ${formatAmount(shallowest?.productCount ?? 0)}`}
+            </span>
+            {pages > 1 && head ? (
+              <span className="t-num block text-ink-3">{`Page ${page} sur ${pages}, ${head}`}</span>
+            ) : null}
           </p>
 
           <div className="e-item flex flex-wrap items-center gap-x-2 gap-y-2">
@@ -305,7 +432,7 @@ export default async function MarquesPage({ searchParams }: Params) {
           </div>
         </div>
 
-        {rows.length === 0 ? (
+        {shown.length === 0 ? (
           <div className="enter max-w-[62ch]">
             <p className="text-body text-ink">Aucune marque ne contient « {query} ».</p>
             <p className="e-text mt-3 text-small leading-[1.65] text-ink-2">
@@ -322,78 +449,31 @@ export default async function MarquesPage({ searchParams }: Params) {
               </Link>
             </div>
           </div>
-        ) : order === 'nom' ? (
-          <div className="enter columns-1 gap-x-12 sm:columns-2 lg:columns-3">
-            {letters.map((letter) => (
-              <section key={letter} className="mb-8 break-inside-avoid" aria-label={`Marques en ${letter}`}>
-                <h3 className="t-label mb-2 border-b border-rule pb-1.5 text-ink-3">{letter}</h3>
-                <ul>
-                  {rows
-                    .filter((brand) => brand.letter === letter)
-                    .map((brand) => (
-                      <li key={brand.slug}>
-                        <BrandRow brand={brand} deepest={deepest?.productCount ?? 1} />
-                      </li>
-                    ))}
-                </ul>
-              </section>
-            ))}
-          </div>
         ) : (
-          <ul className="enter columns-1 gap-x-12 sm:columns-2 lg:columns-3">
-            {rows.map((brand) => (
-              <li key={brand.slug} className="break-inside-avoid">
-                <BrandRow brand={brand} deepest={deepest?.productCount ?? 1} />
-              </li>
-            ))}
-          </ul>
+          <>
+            {/* TWO ON A PHONE, THREE FROM SM, FOUR FROM LG, and the tile is 158
+                wide at 390, which is what the longest name in the set, WESTERN
+                DIGITAL, needs to break on two lines rather than three. The
+                vertical gap is larger than the horizontal one on purpose: the
+                top rule is the tile, and rules that sit too close to the foot of
+                the tile above read as an underline for it. */}
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 sm:gap-x-8 lg:grid-cols-4">
+              {shown.map((brand, index) => (
+                <li key={brand.slug}>
+                  <BrandTile brand={brand} index={index} />
+                </li>
+              ))}
+            </ul>
+
+            {/* The pager writes `?page=`, keeps `q` and `tri`, and lands the
+                reader at the top of the page rather than back on the grid: it
+                builds its own hrefs and has no room for a fragment. On a
+                three-page index that is a fair trade, and it puts the sentence
+                that says what this list is back in front of a reader who is
+                about to read 36 more manufacturer names. */}
+            <Pager basePath="/marques" query={pagerQuery} page={page} pages={pages} />
+          </>
         )}
-      </section>
-
-      {/* The marks, gathered where they are a complete set instead of the 20
-          filled cells of a 101-cell grid. Painted with the same mask mechanism
-          the homepage wall uses: one SVG serves every state, the mark is the
-          page's own ink at rest and takes its own colour under a pointer, which
-          is the only way 20 logos stay a page rather than a paint chart. */}
-      <section className="shell mt-band">
-        <SectionHeader
-          title="Les logos que nous tenons"
-          context={`${formatCount(marked.length, 'marque')} sur ${brands.length} ${marked.length > 1 ? 'ont' : 'a'} une marque graphique dans nos fichiers, servie depuis notre propre serveur. Les ${brands.length - marked.length} autres sont des lignes de texte dans l’index ci-dessus : ne pas avoir de logo ici ne dit rien du stock.`}
-          action={{ href: '#index', label: 'Revenir à l’index' }}
-        />
-
-        <div className="grid grid-cols-3 gap-x-8 gap-y-12 sm:grid-cols-4 lg:grid-cols-5">
-          {marked.map((brand, index) => (
-            <Link
-              key={brand.slug}
-              href={`/marque/${brand.slug}`}
-              style={
-                {
-                  '--enter-index': index,
-                  '--mark-hover': brand.hover,
-                  '--mark-src': `url(/brands/${brand.file}.svg)`,
-                } as React.CSSProperties
-              }
-              className="group enter e-item flex flex-col items-center gap-3.5"
-            >
-              {/* 3rem where the homepage rail draws 2. Every file in the set is
-                  a 24x24 square, so `contain` makes the mark height-bound and a
-                  wordmark like SAMSUNG or PANASONIC ends up drawn across a
-                  fraction of that square: at 32px it is a smudge. This page is
-                  the one place the marks are the subject, so they get the height
-                  that makes them legible. */}
-              <span aria-hidden className="brand-mark" style={{ height: '3rem' }} />
-              <span className="flex flex-col items-center gap-1 text-center">
-                <span className="text-micro font-semibold tracking-[0.02em] text-ink-2 transition-colors duration-[var(--t-fast)] group-hover:text-ink">
-                  {brand.name}
-                </span>
-                <span className="t-num text-micro text-ink-3">
-                  {formatCount(brand.productCount, 'réf.', 'réf.')}
-                </span>
-              </span>
-            </Link>
-          ))}
-        </div>
       </section>
     </>
   )

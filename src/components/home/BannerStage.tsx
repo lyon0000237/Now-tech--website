@@ -144,7 +144,13 @@ export function BannerStage() {
         if (event.pointerType === 'mouse') setHeld(false)
       }}
       onFocusCapture={() => setHeld(true)}
-      className="relative w-full overflow-hidden"
+      // THE SAME ARRIVAL AS THE GREEN BAND, AND ON A PHONE THAT IS THE
+      // WHOLE POINT. `.band-in` paints a surface across the page from its
+      // leading edge on load, and until now the one saturated band on the site
+      // arrived that way while the artwork above it simply existed. Two
+      // openings, two behaviours, on the one screen where they are the only two
+      // things visible at once. They are now one gesture.
+      className="band-in relative w-full overflow-hidden"
     >
       <Track
         tick={tick}

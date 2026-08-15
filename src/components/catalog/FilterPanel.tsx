@@ -34,13 +34,27 @@ import {
  * whole thing keeps working with scripting off. A faceted panel built on state
  * would have had to reimplement all four of those, badly.
  *
- * THE COUNTS ARE THE POINT. `getFilteredCatalogue` computes every one of them
- * against the other filters, so 544 beside HP means 544 references you will
- * actually see, and a value that would give nothing is not offered at all. A
- * filter panel without counts is a row of doors with no windows: the reader
+ * THE COUNTS ARE THE POINT, AND THE COUNT IS THE SIZE OF ITS OWN VALUE. Every
+ * one of them is computed against the other filters already posted, never
+ * against the shop, so 544 beside HP is 544 HP references inside the current
+ * selection. Check it as the only value of its group and 544 is exactly what the
+ * grid renders. Check a SECOND brand and the grid renders the UNION, which is
+ * larger than either number beside it: on `?marque=apple` the panel offers HP at
+ * 544 and the two together give 551. That is the one thing the page used to get
+ * wrong, and it got it wrong in words rather than in arithmetic — it promised
+ * the count was the size of the next grid. The count is the size of the value.
+ * The promise is now made only where it holds, and the groups that can be
+ * unioned say out loud that a second value widens the list.
+ *
+ * A filter panel without counts is a row of doors with no windows: the reader
  * opens one to find out whether it was worth opening, and half the time it was
- * not. It is also why the panel never disables a row — there are no dead rows to
- * disable.
+ * not. Which is why NO ROW ON THIS PANEL LEADS TO AN EMPTY GRID. The three slug
+ * groups drop their empty values upstream; the price ladder and the three
+ * availability boxes are built here, were rendered whatever their count, and are
+ * now dropped by the same rule. Measured on `?marque=apple`: four controls with
+ * a bare "0" beside them, all four clickable, all four landing on "aucune
+ * référence". The panel never disables a row, because there are no dead rows
+ * left to disable.
  *
  * WHY SORTING LIVES IN HERE. It is not a filter, and it is in the panel anyway.
  * `SortBar` builds its links as `basePath?tri=…`, which cannot carry a query
@@ -87,10 +101,16 @@ export interface PriceStep {
  * hand back.
  *
  * The steps below are the log scale, written out in the round numbers a
- * Cameroonian buyer actually names, roughly tripling at each step. Measured over
- * the 4 246 priced references they hold 1 554 / 1 139 / 979 / 426 / 148, which is
- * as even a split as five human-readable boundaries can give, and every one of
- * them is one click, one tap target and one shareable URL.
+ * Cameroonian buyer actually names, roughly tripling at each step. Read off the
+ * unfiltered panel they hold 1 562 / 1 139 / 979 / 426 / 148, which sums to the
+ * 4 254 of the catalogue — the first step carries the 8 references the export
+ * leaves unpriced — and is as even a split as five human-readable boundaries can
+ * give. Every one of them is one click, one tap target and one shareable URL.
+ *
+ * FIVE IS THE CEILING, NOT THE COUNT. Under a filter the ladder is only the
+ * steps that still hold something: `?marque=apple` is seven references, all of
+ * them above 500 000, so the panel offers two steps and not five. See the note
+ * over `steps` in the panel for why the other three had to go.
  *
  * The two fields underneath are the escape hatch for the reader who has an exact
  * budget, and they are a plain GET form, so they work with scripting off.
@@ -191,6 +211,13 @@ const FOLD = 6
  * is the visible name, its count, and the verb — "HP, 544 références, retirer ce
  * filtre" — which carries the state the square carries visually.
  *
+ * `widens` IS THE HALF OF THAT SENTENCE THAT USED TO BE A LIE. In a group where
+ * something is already chosen, "ajouter ce filtre" beside 544 tells a reader
+ * using a screen reader that they are about to arrive at 544 references, and
+ * they are about to arrive at 551: values of one group are unioned, not
+ * intersected. The visible note under the group heading carries this for a
+ * reader who can see the panel; this carries it for one who cannot.
+ *
  * 44 pixels tall on a phone, 34 from md up. The panel becomes a sheet under a
  * thumb at 390 and a pinned column under a pointer at 1440, and those are not the
  * same target.
@@ -200,11 +227,14 @@ function Value({
   label,
   count,
   selected,
+  widens = false,
 }: {
   href: string
   label: string
   count: number
   selected: boolean
+  /** Its group already holds a value, so checking this one enlarges the list. */
+  widens?: boolean
 }) {
   return (
     <Link
@@ -212,7 +242,11 @@ function Value({
       scroll={false}
       title={label}
       aria-label={`${label}, ${formatCount(count, 'référence')}, ${
-        selected ? 'retirer ce filtre' : 'ajouter ce filtre'
+        selected
+          ? 'retirer ce filtre'
+          : widens
+            ? 'ajouter ce filtre, la liste s’élargira'
+            : 'ajouter ce filtre'
       }`}
       className="group flex min-h-11 items-center gap-3 py-1 text-small transition-colors duration-[var(--t-fast)] hover:text-accent md:min-h-[2.125rem]"
     >
@@ -240,7 +274,31 @@ function Value({
   )
 }
 
-/** A group of values, folded to six, with its own heading. */
+/**
+ * A group of values, folded to six, with its own heading.
+ *
+ * THE THREE SLUG GROUPS ARE THE ONLY PLACE ON THIS PANEL WHERE A SECOND CLICK
+ * ENLARGES THE LIST, AND THE ONLY PLACE THE COUNTS NEEDED A SENTENCE. Rayon,
+ * famille and marque are multi-valued, and multi-valued means UNION: two brands
+ * is HP or Dell, never HP and Dell, because no reference carries two brands.
+ * Everything else on the panel intersects — a price step replaces the bracket,
+ * a checkbox is on or off — so for those the count beside a value IS the grid it
+ * produces, and no note is drawn.
+ *
+ * WHY THE COUNTS STAY AS THEY ARE AND THE WORDS MOVE INSTEAD. The honest
+ * alternative was to print, beside each unchecked value, the total the reader
+ * would land on: 24 brands, 24 families and 12 departments re-queried against the
+ * union, sixty more passes over 4 254 products on every request. It buys a
+ * column of numbers that are worse. They stop being comparable, because they all
+ * carry the same base total and differ only in the tail; the "most references
+ * first" ordering the panel is sorted on becomes meaningless; and beside a
+ * chosen HP at 544 the reader would read 551, 553, 549 down the list and learn
+ * nothing about Dell at all. The size of a value is the number that describes
+ * the shop, is stable, is comparable, and is exactly the grid whenever the
+ * reader checks one thing — which is what almost every reader does. So the count
+ * keeps its meaning and the panel states it, once, in the group where the
+ * second click changes what it means.
+ */
 function Group({
   title,
   group,
@@ -268,6 +326,16 @@ function Group({
         {chosen > 0 ? <span className="t-num font-normal text-accent">{chosen}</span> : null}
       </h4>
 
+      {/* Drawn only once a value is chosen and something is left to add, because
+          until then there is no ambiguity to resolve: with the group empty, the
+          count beside a value is the grid that value gives. */}
+      {chosen > 0 && chosen < values.length ? (
+        <p className="-mt-0.5 mb-2.5 text-micro leading-[1.55] text-ink-3">
+          Une seconde valeur élargit la liste au lieu de la réduire : elle réunit les deux. Le
+          nombre est la taille de chaque valeur, pas le total après le second choix.
+        </p>
+      ) : null}
+
       <ul>
         {shown.map((value) => (
           <li key={value.value}>
@@ -279,6 +347,7 @@ function Group({
               label={value.label}
               count={value.count}
               selected={value.selected}
+              widens={chosen > 0}
             />
           </li>
         ))}
@@ -338,6 +407,7 @@ export function FilterPanel({
   facets,
   bands,
   total,
+  active,
   familyCount,
   brandCount,
 }: {
@@ -346,13 +416,47 @@ export function FilterPanel({
   bands: readonly PriceBand[]
   /** References the current filters give, printed on the sheet's way out. */
   total: number
+  /** Filters set, counted as the reader can count them: see `countFilters`. */
+  active: number
   familyCount: number
   brandCount: number
 }) {
   const { filters } = state
-  const active = facets.active
   const cleared = catalogueHref({ ...state, filters: NO_FILTERS })
   const closed = catalogueHref({ ...state, sheet: false }, '#resultats')
+
+  /**
+   * The ladder, and the boxes, reduced to what actually leads somewhere.
+   *
+   * A CONTROL THAT LANDS ON AN EMPTY GRID IS A CONTROL THAT LIES, and these two
+   * groups were the last on the panel still drawing them. Rayon, famille and
+   * marque have their empty values dropped in `getFilteredCatalogue` before they
+   * ever reach this file; the five price steps and the three availability boxes
+   * are assembled here from a fixed list, so they were rendered whatever their
+   * count said. Measured on `?marque=apple` — seven references, all above
+   * 500 000 FCFA, none discounted: the panel offered "Moins de 50 000 FCFA 0",
+   * "50 000 à 150 000 FCFA 0", "150 000 à 500 000 FCFA 0" and "Remisé de 40 % ou
+   * plus 0", four full-width tap targets whose only destination was the
+   * dead-end screen. Now four rows shorter and every remaining row has stock
+   * behind it.
+   *
+   * A SELECTED VALUE SURVIVES ITS OWN ZERO, which is the one exception and it is
+   * not a nicety: the reader who checked "En stock" and emptied the grid needs
+   * the box they checked still on screen to uncheck it. Its count reads 0 and
+   * that is the truth of it.
+   *
+   * The ladder can only empty completely when nothing matches at any price, so
+   * the price section keeps its two fields either way: it is the escape hatch,
+   * and a reader standing on a dead end should still be able to widen their
+   * bracket by hand.
+   */
+  const steps = bands.filter(
+    (band) =>
+      band.count > 0 || (filters.prixMin === band.min && filters.prixMax === band.max),
+  )
+  const flags = FLAGS.filter(
+    (flag) => facets[flag.key].count > 0 || facets[flag.key].selected,
+  )
 
   /* The price is one filter to the reader even when it is two bounds in the
      URL, so it is one chip and one removal. */
@@ -399,18 +503,32 @@ export function FilterPanel({
           /catalogue at 360 this button sits 2 247 pixels down an 18 848-pixel
           page; under a filter it sits above 24 cards, so a reader eight screens
           into the grid who wants to change one value has to scroll back through
-          all of them. The masthead pins at 112 pixels on a phone (three rows,
-          the first scrolling away under a negative `top`), so the bar sits at
-          `top-28` and at `z-30`, under the header's 40 and clear of the
+          all of them. It pins at `z-30`, under the header's 40 and clear of the
           drawer's 70. The negative gutter margins let the white band and its
           rule run to both screen edges while the button keeps the shell's
           measure, which is what stops a pinned control from reading as a
           floating card.
 
+          THE TWO OFFSETS ARE MEASURED, AND `top-28` WAS BOTH OF THEM WRONG. It
+          was set to 112 when the phone masthead was three rows deep; the phone
+          architecture is now ONE 56-pixel bar with the search field outside the
+          sticky box, and the header was re-measured pinning at 56 flat at 360,
+          390 and 414. A bar at 112 therefore hung 56 pixels below the chrome
+          with the grid running through the window between them: captured at 390
+          scrolled to 2 500, two packshots were sliced across the middle by a
+          white band that read as a card floating in the listing rather than as
+          part of the chrome. From md up the same class was wrong the other way
+          — the masthead is 157 tall and pins at 121, its first row sliding away
+          under `md:top-[-2.25rem]`, so 112 put the button 9 pixels UNDER the
+          green band, clipped along its top edge at 768, 834 and 1023. `top-14`
+          and `md:top-[121px]` are those two measurements, and the bar now sits
+          flush against the chrome at every width below lg, where it stops
+          existing.
+
           NONE OF THIS EXISTS ON A POINTER: the wrapper is `lg:hidden`, the
           panel is a pinned column of its own from lg up, and every class here
           is behind a `lg:` reset anyway. */}
-      <div className="mb-stack sticky top-28 z-30 -mx-[var(--gutter)] border-b border-rule bg-paper px-[var(--gutter)] py-3 lg:static lg:z-auto lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0 lg:hidden">
+      <div className="mb-stack sticky top-14 z-30 -mx-[var(--gutter)] border-b border-rule bg-paper px-[var(--gutter)] py-3 md:top-[121px] lg:static lg:z-auto lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0 lg:hidden">
         <Link
           href={catalogueHref({ ...state, sheet: true })}
           className="press fill flex min-h-12 w-full items-center justify-center gap-3 rounded-control bg-accent px-6 text-[0.875rem] font-bold text-paper [--fill-to:var(--accent-ink)]"
@@ -429,10 +547,13 @@ export function FilterPanel({
         aria-labelledby="filtres-titre"
         style={
           {
-            /* Measured, not guessed: the masthead pins at 121px from md up and
-               112 on a phone (three rows, the first of which scrolls away under
-               a negative `top`). Anything less and the panel's own head slides
-               under the green band; anything more and it floats. */
+            /* Measured, not guessed: from md up the masthead is 157 tall and
+               pins at 121, its first row scrolling away under a negative `top`.
+               Only the `lg:` rules below read this, so 121 is the only number it
+               needs. Anything less and the panel's own head slides under the
+               green band; anything more and it floats. Re-measured at 1440 with
+               the panel scrolled: chrome bottom 121, panel top 145, panel height
+               791, and it scrolls inside itself. */
             '--pin': '121px',
           } as React.CSSProperties
         }
@@ -590,54 +711,58 @@ export function FilterPanel({
             </ul>
           </section>
 
-          <section className="mt-5 border-t border-rule pt-5" aria-labelledby="facet-etat">
-            <h4 id="facet-etat" className="t-label mb-2 text-ink">
-              Disponibilité
-            </h4>
-            <ul>
-              {FLAGS.map((flag) => (
-                <li key={flag.key}>
-                  <Value
-                    href={catalogueHref({
-                      ...state,
-                      filters: { ...filters, [flag.key]: !filters[flag.key] },
-                    })}
-                    label={flag.label}
-                    count={facets[flag.key].count}
-                    selected={facets[flag.key].selected}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
+          {flags.length > 0 ? (
+            <section className="mt-5 border-t border-rule pt-5" aria-labelledby="facet-etat">
+              <h4 id="facet-etat" className="t-label mb-2 text-ink">
+                Disponibilité
+              </h4>
+              <ul>
+                {flags.map((flag) => (
+                  <li key={flag.key}>
+                    <Value
+                      href={catalogueHref({
+                        ...state,
+                        filters: { ...filters, [flag.key]: !filters[flag.key] },
+                      })}
+                      label={flag.label}
+                      count={facets[flag.key].count}
+                      selected={facets[flag.key].selected}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           <section className="mt-5 border-t border-rule pt-5" aria-labelledby="facet-prix">
             <h4 id="facet-prix" className="t-label mb-2 text-ink">
               Prix
             </h4>
 
-            <ul>
-              {bands.map((band) => {
-                const selected = filters.prixMin === band.min && filters.prixMax === band.max
-                return (
-                  <li key={band.label}>
-                    <Value
-                      href={catalogueHref({
-                        ...state,
-                        filters: withPrice(
-                          filters,
-                          selected ? null : band.min,
-                          selected ? null : band.max,
-                        ),
-                      })}
-                      label={band.label}
-                      count={band.count}
-                      selected={selected}
-                    />
-                  </li>
-                )
-              })}
-            </ul>
+            {steps.length > 0 ? (
+              <ul>
+                {steps.map((band) => {
+                  const selected = filters.prixMin === band.min && filters.prixMax === band.max
+                  return (
+                    <li key={band.label}>
+                      <Value
+                        href={catalogueHref({
+                          ...state,
+                          filters: withPrice(
+                            filters,
+                            selected ? null : band.min,
+                            selected ? null : band.max,
+                          ),
+                        })}
+                        label={band.label}
+                        count={band.count}
+                        selected={selected}
+                      />
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : null}
 
             {/* A plain GET form, exactly as /marques filters its index. Two
                 fields rather than one, because that is what a budget is, and

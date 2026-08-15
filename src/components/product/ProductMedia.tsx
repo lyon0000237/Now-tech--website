@@ -1,5 +1,7 @@
 import Image from 'next/image'
 
+import { Packshot } from './Packshot'
+
 import { PACKSHOT_BLUR } from '@/constants/blur'
 
 /**
@@ -95,13 +97,18 @@ export function ProductMedia({
           reader who has asked for stillness gets the wipe and the lean removed
           and loses nothing, because neither one carries information. */}
       <div className="absolute inset-0 transition-transform duration-[var(--t-base)] ease-brand motion-safe:group-hover:scale-[1.04] motion-safe:group-focus-within:scale-[1.04]">
-        <Image
+        {/* A SKELETON THAT MOVES, NOT A STILL FRAME THAT DOES NOT.
+            The blur placeholder that used to sit here was measured on a real
+            file from this library: 58 per cent near-white, mean rgb(210, 218,
+            227), because every one of these 4 215 packshots was shot on white.
+            A blurred white square on a white page is indistinguishable from an
+            empty cell, so a reader on a slow connection saw a blank card, waited,
+            and got a blank card with a product in it. See Packshot for why the
+            hook has to be JavaScript. */}
+        <Packshot
           src={src}
           alt={alt}
-          fill
           sizes={sizes}
-          placeholder="blur"
-          blurDataURL={PACKSHOT_BLUR}
           priority={priority}
           className="e-media object-contain"
         />

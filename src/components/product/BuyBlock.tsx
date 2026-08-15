@@ -27,6 +27,29 @@ import { WHATSAPP, dialable } from '@/constants/site'
  * WhatsApp line, which is how a Cameroonian buyer actually asks whether a
  * reference is really available and receives the proforma.
  *
+ * THE CONTROL COMES FIRST AND THE EXPLANATION AFTER IT, WHICH IS E-SHOP'S ORDER
+ * AND WAS NOT OURS. The three-line paragraph about ordering the reference used
+ * to sit above the WhatsApp button and pushed it 72 pixels down the column; at
+ * 390 that put the only action on the page at y 982 on an 844-pixel screen.
+ * E-shop prints its waitlist control first and its "this piece is between
+ * production runs" underneath, and it is right: the reader has already been told
+ * "Sur commande" on the price line four rules above, so the paragraph is not
+ * introducing the situation, it is answering the question the button raises.
+ * Below the button it answers it in the same place and costs the button nothing.
+ *
+ * WHAT WAS NOT TAKEN FROM E-SHOP: ITS CONFIRMATION ON THE CONTROL ITSELF. There
+ * the label cross-fades to "In your bag" behind a check for 2.2 seconds, with
+ * both states stacked in one box so nothing resizes — which is the clean answer
+ * to the objection recorded below, and it was measured before being refused.
+ * `add()` on both sites opens the basket drawer, and this drawer is 416 pixels
+ * of opaque panel pinned right with a full-screen scrim and a 2px blur behind
+ * it. At 1440 this button draws x 1058 to 1332, so every pixel of it is under
+ * the panel or under the scrim the instant the state it would announce becomes
+ * true. E-shop has the same drawer and the same overlap, so what is being copied
+ * there is an animation nobody can see. The live region below is the real
+ * confirmation for a reader who cannot see the drawer arrive, and the drawer is
+ * the confirmation for everyone else.
+ *
  * The confirmation is spoken where the click happened. The drawer opens on the
  * other side of a wide monitor, and a panel appearing 1 400 pixels away is not
  * feedback for the hand that just moved.
@@ -72,10 +95,6 @@ export function BuyBlock({
   if (!product.inStock) {
     return (
       <div>
-        <p className="mb-4 text-small leading-[1.6] text-ink-2">
-          Cette référence n’est pas au comptoir en ce moment. Elle se commande : envoyez-nous le
-          modèle sur WhatsApp et nous confirmons le délai et le prix.
-        </p>
         <a
           href={`https://wa.me/${dialable(WHATSAPP)}?text=${encodeURIComponent(
             `Bonjour, je cherche : ${product.name}`,
@@ -87,6 +106,13 @@ export function BuyBlock({
           <IconPhone className="text-[1.125rem]" />
           Demander cette référence
         </a>
+        {/* The measure is held to 52 characters. This paragraph is the widest
+            run of prose in the column and at 416 pixels it sets at about 62,
+            which is past the point a three-line block stops being scanned. */}
+        <p className="mt-4 max-w-[52ch] text-small leading-[1.6] text-ink-2">
+          Cette référence n’est pas au comptoir en ce moment. Elle se commande : envoyez-nous le
+          modèle sur WhatsApp et nous confirmons le délai et le prix.
+        </p>
       </div>
     )
   }

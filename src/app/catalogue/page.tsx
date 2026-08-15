@@ -31,6 +31,7 @@ import { formatAmount, formatCount } from '@/lib/format'
 import {
   catalogueHref,
   catalogueQuery,
+  countFilters,
   readCatalogue,
   withPrice,
   type CatalogueParams,
@@ -80,15 +81,7 @@ interface Params {
 
 export async function generateMetadata({ searchParams }: Params): Promise<Metadata> {
   const { filters } = readCatalogue(await searchParams)
-  const filtered =
-    filters.rayons.length +
-      filters.familles.length +
-      filters.marques.length +
-      (filters.prixMin !== null || filters.prixMax !== null ? 1 : 0) +
-      Number(filters.stock) +
-      Number(filters.remise) +
-      Number(filters.photo) >
-    0
+  const filtered = countFilters(filters) > 0
 
   return {
     title: 'Le catalogue',
@@ -118,17 +111,31 @@ export default async function CataloguePage({ searchParams }: Params) {
   const familyCount = getFamilyCount()
   const brandCount = getBrandIndex().length
   const { listing, facets } = getFilteredCatalogue(query.filters, query.sort, query.page)
-  const filtering = facets.active > 0
+
+  /**
+   * How many filters are on, counted once for the whole page.
+   *
+   * NOT `facets.active`, WHICH COUNTS THE PRICE TWICE. It adds `prixMin` and
+   * `prixMax` separately, so `?prix=50000-150000` printed "2 filtres actifs"
+   * beside one chip and one removal. `countFilters` is the panel's own reading
+   * and every place on this page that prints the number now reads it, so the
+   * header, the results line, the phone button's badge and the dead end cannot
+   * say three different things about one selection.
+   */
+  const active = countFilters(query.filters)
+  const filtering = active > 0
 
   /**
    * The five price steps, counted.
    *
-   * Five more passes over the catalogue, and they are what makes the price group
-   * obey the same rule as every other group on this panel: a step that would
-   * give nothing says so before it is clicked. Each is counted with the current
-   * price bounds REMOVED and everything else kept, which is the convention
-   * `getFilteredCatalogue` already applies to a dimension against itself —
-   * otherwise choosing one step would zero the other four.
+   * Five more passes over the catalogue, and they are what lets the price group
+   * obey the rule every other group on this panel obeys: a step that would give
+   * nothing is not offered. The panel does the dropping, because the panel is
+   * where the ladder is drawn; this only has to say how big each step is. Each
+   * is counted with the current price bounds REMOVED and everything else kept,
+   * which is the convention `getFilteredCatalogue` already applies to a
+   * dimension against itself — otherwise choosing one step would zero the other
+   * four.
    */
   const bands: PriceBand[] = PRICE_STEPS.map((step) => ({
     ...step,
@@ -262,7 +269,7 @@ export default async function CataloguePage({ searchParams }: Params) {
         }
         lead={
           filtering
-            ? `${formatCount(listing.total, 'référence')} sur ${formatAmount(meta.productCount)} ${listing.total < 2 ? 'répond' : 'répondent'} à ${formatCount(facets.active, 'filtre')}. Cette adresse porte la sélection entière : copiez-la, elle rouvrira exactement cette liste chez quelqu’un d’autre.`
+            ? `${formatCount(listing.total, 'référence')} sur ${formatAmount(meta.productCount)} ${listing.total < 2 ? 'répond' : 'répondent'} à ${formatCount(active, 'filtre')}. Cette adresse porte la sélection entière : copiez-la, elle rouvrira exactement cette liste chez quelqu’un d’autre.`
             : `Douze rayons, ${familyCount} familles et ${formatAmount(meta.productCount)} références, exactement telles qu’elles sont rangées au comptoir. Descendez pour les parcourir, ou ouvrez l’index si vous savez déjà ce que vous cherchez.`
         }
         aside={
@@ -344,7 +351,7 @@ export default async function CataloguePage({ searchParams }: Params) {
           title={filtering ? 'Les références retenues' : 'Toutes les références'}
           context={
             filtering
-              ? 'Chaque compte du panneau est calculé contre les autres filtres déjà posés, jamais contre le magasin entier : le nombre affiché à côté d’une valeur est le nombre de références que vous verrez après l’avoir cochée.'
+              ? 'Chaque compte du panneau est calculé contre les autres filtres déjà posés, jamais contre le magasin entier : c’est la taille de cette valeur seule. Cochez-en une dans un groupe et c’est exactement la liste que vous obtenez ; cochez-en une seconde dans le même groupe et la liste réunit les deux, donc elle s’élargit. Une valeur qui ne donnerait rien n’est pas proposée.'
               : 'Le catalogue entier, dans l’ordre que vous choisissez. « Arrivage » classe par date de mise en ligne de la photographie, seule date que l’export porte.'
           }
           action={filtering ? undefined : { href: '#index', label: `Les ${familyCount} familles` }}
@@ -373,11 +380,28 @@ export default async function CataloguePage({ searchParams }: Params) {
             facets={facets}
             bands={bands}
             total={listing.total}
+            active={active}
             familyCount={familyCount}
             brandCount={brandCount}
           />
 
-          <div id="resultats" className="min-w-0 scroll-mt-[8.5rem] lg:col-start-1 lg:row-start-1">
+          {/* WHERE "VOIR LES 544 RÉFÉRENCES" LANDS, AND IT HAS TO CLEAR TWO
+              PINNED THINGS, NOT ONE. Closing the sheet is a jump to this anchor,
+              so `scroll-mt` has to be the full height of everything that stays on
+              screen. Measured with the sheet closed by its own foot button: at
+              390 the masthead pins at 56 and the filter bar under it is 73, so
+              8.5rem lands the results head at 135.9 with 6.9 pixels of air. At
+              834 the masthead pins at 121 and the same bar is still drawn — the
+              sheet exists everywhere below lg — which is 194, and 8.5rem put the
+              head at 136: fifty-eight pixels BEHIND the chrome, so a reader who
+              tapped "Voir les 544 références" arrived on a page whose count line
+              was covered by the button they had just pressed. 13.125rem is
+              121 + 73 + 16. From lg the bar is gone and 8.5rem is right again,
+              measured at 1440 landing the head at 124 under a chrome of 121. */}
+          <div
+            id="resultats"
+            className="min-w-0 scroll-mt-[8.5rem] md:scroll-mt-[13.125rem] lg:col-start-1 lg:row-start-1 lg:scroll-mt-[8.5rem]"
+          >
             <div className="enter mb-stack flex flex-wrap items-center justify-between gap-x-10 gap-y-3 border-b border-rule pb-5">
               <p className="e-text t-num text-small text-ink-2">
                 {listing.total === 0
@@ -387,9 +411,9 @@ export default async function CataloguePage({ searchParams }: Params) {
                     : `${formatAmount(from)} à ${formatAmount(to)} sur ${formatAmount(listing.total)}`}
               </p>
               <p className="e-item text-small text-ink-3">
-                {facets.active === 0
+                {active === 0
                   ? 'Aucun filtre'
-                  : formatCount(facets.active, 'filtre actif', 'filtres actifs')}
+                  : formatCount(active, 'filtre actif', 'filtres actifs')}
               </p>
             </div>
 
@@ -397,7 +421,7 @@ export default async function CataloguePage({ searchParams }: Params) {
               <NoResults
                 rescue={rescue}
                 cleared={catalogueHref({ ...state, filters: NO_FILTERS })}
-                active={facets.active}
+                active={active}
               />
             ) : (
               // THREE COLUMNS, NOT FOUR. The panel takes 320 pixels off the
