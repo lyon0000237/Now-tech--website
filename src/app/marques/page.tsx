@@ -44,27 +44,23 @@ import { formatAmount, formatCount } from '@/lib/format'
  * SO THE TILE IS A NAME AND A COUNT, AND THE MARK IS A STAMP IN ITS CORNER.
  * The inversion is the answer. A logo grid with holes fails because the image
  * is the object the eye scans and two thirds of the objects are missing; here
- * the object is the name, set at 20px in the page's own type, identical in kind
- * and position in all 101 tiles, and the mark rides in the bottom corner where
- * a maker's stamp goes. A corner that is empty on 68 tiles is not a hole,
- * because nothing above it depended on it: the top rule, the name, the count and
- * the department all land at the same place with or without it. The page also
- * says the ratio in figures, three lines up, so a reader who notices the
- * unevenness is told what it means rather than left to guess it means stock.
+ * the object is the name, set in the page's own type at 18px on a phone and
+ * 18.72px at 1440, identical in kind and position in all 101 tiles, and the mark
+ * rides in the bottom corner where a maker's stamp goes. A corner that is empty
+ * on 68 tiles is not a hole, because nothing above it depended on it: the top
+ * rule, the name, the count and the department all land at the same place with
+ * or without it. The page also says the ratio in figures, three lines up, so a
+ * reader who notices the unevenness is told what it means rather than left to
+ * guess it means stock.
  *
  * WHY THE STAMP IS 40 PIXELS AND NOT 48. Every file in the set is a 24x24
- * square, so the mask is bound by its height and a wordmark like PANASONIC ends
- * up drawn across a fraction of it. The old wall answered that with 48, which
- * also multiplied the four files that are a filled field with the type reversed
- * out of it: measured ink coverage inside the 24x24 box is XIAOMI 73.6 %,
- * MIKROTIK 55.2 %, HP 52.9 % and UBIQUITI 47.5 % against a set median of 16 %,
- * so at 48 those four came out as solid slabs beside every wordmark. They are
- * treated by name here, the way brand-marks.ts already treats Zebra's unusable
- * black: a declared exception, drawn at 30 pixels rather than 40. In a 40-pixel
- * box those four paint 760 to 1 178 square pixels of ink against the set
- * median's 256, three to four and a half times it; at 30 they paint 428 to 662,
- * under two to two and a half times, which is the range every other mark in the
- * set already lives in. Nothing is invented; the numbers are the files'.
+ * square, so `contain` binds the mark to the box and a wordmark like PANASONIC,
+ * 6.25 wide for 1 tall inside its file, is drawn across 40 by 6.4 of it. The old
+ * wall answered with 48, which multiplied whatever the file already painted, and
+ * the heaviest files paint a great deal: the ink measurement that decides which
+ * ones are cut back to 30 is written out over the constant below. At 48 they
+ * came out as black slabs beside every wordmark, which is the audit finding this
+ * page was rebuilt to answer.
  *
  * THE LEADER LINE IS GONE, AND IT WAS MEASURED BEFORE IT WENT. Each row used to
  * end in a rule whose filled part was the brand's share of the deepest one.
@@ -108,16 +104,54 @@ interface Params {
 const PER_PAGE = 36
 
 /**
- * The four mark files that are a filled field with the type reversed out.
+ * The mark files that outweigh the set, and the measured rule that picks them.
  *
- * Measured, not judged: ink coverage inside the 24x24 box, over the whole set
- * of 33, runs from 5.8 % (KASPERSKY) to 73.6 % (XIAOMI) with a median of 16 %.
- * These four sit at 73.6, 55.2, 52.9 and 47.5. Painted at the same height as a
- * wordmark they carry three to five times its ink and read as black slabs in a
- * grid of hairline logotypes. Keyed by file name, because what is being
- * corrected is a property of the artwork and not of the manufacturer.
+ * MEASURED, NOT JUDGED, AND RE-RUNNABLE. Every file in `public/brands` is a
+ * 24x24 square painted with `mask-size: contain` inside a box of one size, so
+ * the only thing deciding how much ink lands in a tile is the share of that
+ * 24x24 box the artwork paints. Each of the 33 was rasterised at 200x200 in the
+ * browser and every pixel over alpha 24 counted: the set runs from KASPERSKY at
+ * 6.8 % to XIAOMI at 74.5 %, median INTEL 17.8 %.
+ *
+ * THE RULE IS TWO AND A HALF TIMES THE MEDIAN, 44.5 %, and it takes seven:
+ * XIAOMI 74.5, MIKROTIK 56.8, HP 54.6, APPLE 52.3, LINKSYS 51.5, UBIQUITI 48.6,
+ * TP-LINK 46.0. HUAWEI at 42.9 and FORTINET at 41.0 sit just under it and stay
+ * where they are. A hand-picked four is what this replaces, and it was picked
+ * wrong: it cut UBIQUITI while leaving APPLE and LINKSYS, both of which paint
+ * more ink than UBIQUITI does.
+ *
+ * WHY 30 PIXELS AND NOT 40. Area falls with the square, so a 30-pixel box is
+ * 900 square pixels against 1 600 and the ink drops to 56 % of what it was.
+ * XIAOMI goes from 1 192 painted pixels to 671, and the heaviest mark left in
+ * the grid becomes HUAWEI at 686, which is 2.4 times the median's 285 where it
+ * used to be XIAOMI at 4.2 times. Nothing is ever enlarged: a mark can only be
+ * too loud on this page, never too quiet, because the name set above it is what
+ * identifies the brand and the mark is an ornament on a tile that already reads.
+ *
+ * LENOVO IS NOT IN THE LIST AND IT IS THE ONE THAT LOOKS LIKE IT SHOULD BE. Its
+ * file is a filled bar with the word reversed out of it, so it reads darker than
+ * anything near it, but it paints 28.8 % of the box, 460 square pixels, 1.6
+ * times the median and well inside the range the rest of the set lives in.
+ * Shrinking it would not make it less of a bar, only a smaller one. The rule is
+ * ink, because ink is the thing that unbalances a grid.
+ *
+ * Keyed by file name, because what is corrected is a property of the artwork and
+ * not of the manufacturer.
  */
-const DENSE_MARKS: ReadonlySet<string> = new Set(['xiaomi', 'mikrotik', 'hp', 'ubiquiti'])
+const DENSE_MARKS: ReadonlySet<string> = new Set([
+  'xiaomi',
+  'mikrotik',
+  'hp',
+  'apple',
+  'linksys',
+  'ubiquiti',
+  'tplink',
+])
+
+/** The stamp box, in rem: 40 pixels, or 30 for a file that paints too much. */
+function stampSize(file: string): string {
+  return DENSE_MARKS.has(file) ? '1.875rem' : '2.5rem'
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const brands = getBrandIndex()
@@ -212,18 +246,17 @@ function BrandTile({ brand, index }: { brand: BrandEntry; index: number }) {
           {place ? <span className="clamp-1 text-micro text-ink-3">{place}</span> : null}
         </span>
 
-        {/* The stamp. A real box the size of the mark, because `contain` on a
-            24x24 file centres the mark in whatever it is given and a wide box
-            would float it away from the corner it belongs in. */}
+        {/* The stamp. A real square box the size of the mark, because `contain`
+            on a 24x24 file centres the mark in whatever it is given and a wide
+            box would float it away from the corner it belongs in. Height and
+            width come from one number so the two can never drift apart. */}
         {brand.file ? (
           <span
             aria-hidden
-            className={DENSE_MARKS.has(brand.file) ? 'block size-[1.875rem] shrink-0' : 'block size-10 shrink-0'}
+            className="block shrink-0"
+            style={{ width: stampSize(brand.file), height: stampSize(brand.file) }}
           >
-            <span
-              className="brand-mark"
-              style={{ height: DENSE_MARKS.has(brand.file) ? '1.875rem' : '2.5rem' }}
-            />
+            <span className="brand-mark" style={{ height: stampSize(brand.file) }} />
           </span>
         ) : null}
       </span>
