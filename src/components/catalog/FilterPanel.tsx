@@ -48,13 +48,31 @@ import {
  *
  * A filter panel without counts is a row of doors with no windows: the reader
  * opens one to find out whether it was worth opening, and half the time it was
- * not. Which is why NO ROW ON THIS PANEL LEADS TO AN EMPTY GRID. The three slug
- * groups drop their empty values upstream; the price ladder and the three
- * availability boxes are built here, were rendered whatever their count, and are
- * now dropped by the same rule. Measured on `?marque=apple`: four controls with
- * a bare "0" beside them, all four clickable, all four landing on "aucune
- * référence". The panel never disables a row, because there are no dead rows
- * left to disable.
+ * not. Which is why NO ROW ON THIS PANEL LEADS TO AN EMPTY GRID, AND NO ROW
+ * LEADS TO THE GRID THE READER IS ALREADY LOOKING AT. Those are the same defect
+ * twice: a control that costs a tap, a page load and a place in the reader's
+ * attention, and hands back a screen they had before they touched it.
+ *
+ * The empty half was measured on `?marque=apple` — seven references, all above
+ * 500 000 FCFA, none discounted: three price steps and one availability box
+ * drawn with a bare "0" beside them, all four clickable, all four landing on
+ * "aucune référence".
+ *
+ * The identical half was measured by walking 77 filtered addresses and following
+ * every control on each: 45 of them, 58 %, offered at least one row that gave
+ * back exactly the list already on screen. "Avec photographie" was 38 of them
+ * and "En stock au comptoir" 17, because on a narrow selection nearly everything
+ * is photographed and in stock. `?famille=ordinateurs-portables-laptop` offered
+ * "Ordinateurs & Accessoires 307" over a grid of 307.
+ *
+ * ONE RULE COVERS BOTH, AND IT IS ARITHMETIC RATHER THAN JUDGEMENT. Every
+ * control that intersects — a price step with no bracket set, an availability
+ * box, any value of a group where nothing is chosen yet — is counted against the
+ * current selection, so its count can never exceed the total. `count === 0`
+ * means it empties the grid; `count === total` means the whole selection is
+ * already inside it and the grid cannot move. Both are dropped. What survives
+ * is exactly the set of rows that change something. The panel never disables a
+ * row, because there are no dead rows left to disable.
  *
  * WHY SORTING LIVES IN HERE. It is not a filter, and it is in the panel anyway.
  * `SortBar` builds its links as `basePath?tri=…`, which cannot carry a query
@@ -285,6 +303,19 @@ function Value({
  * a checkbox is on or off — so for those the count beside a value IS the grid it
  * produces, and no note is drawn.
  *
+ * THE NOTE SAYS "ÉLARGIT", SO EVERY VALUE UNDER IT HAS TO ACTUALLY ENLARGE, AND
+ * ONE FAMILY IN THREE DID NOT. Families nest, and the filter reads a family the
+ * way the counter reads a shelf: everything filed on the term or anywhere under
+ * it. So a sub-family of a family already chosen is contained in it, and adding
+ * it adds nothing at all. Measured: `?famille=ordinateurs-portables-laptop`
+ * renders 307 and offered "Laptop HP 188" promising the list would widen —
+ * checking it renders 307. `?famille=imprimantes-copieurs&marque=hp` renders 96
+ * and offered "Imprimantes HP 96", which renders 96. Those rows are dropped by
+ * `offered` before this component sees them, on the category tree rather than on
+ * the counts, because no arithmetic on a union can tell containment from
+ * coincidence. Rayons and marques cannot nest — one universe and one brand per
+ * reference — so the tree only has to be walked for families.
+ *
  * WHY THE COUNTS STAY AS THEY ARE AND THE WORDS MOVE INSTEAD. The honest
  * alternative was to print, beside each unchecked value, the total the reader
  * would land on: 24 brands, 24 families and 12 departments re-queried against the
@@ -305,6 +336,7 @@ function Group({
   values,
   state,
   more,
+  capped = false,
 }: {
   title: string
   group: FacetGroup
@@ -312,6 +344,15 @@ function Group({
   state: CatalogueState
   /** Where the values that did not fit in 24 can still be found. */
   more?: { href: string; label: string }
+  /**
+   * The tally upstream ran out of room, so there are values not on this list.
+   *
+   * READ BEFORE THE SIEVE, NOT AFTER. `values` has had its dead rows taken out
+   * here, so counting it would put the group at 22 and swallow the line that
+   * says where the other 77 brands are — the cap is a fact about the tally, not
+   * about what survived it.
+   */
+  capped?: boolean
 }) {
   if (values.length === 0) return null
 
@@ -368,10 +409,19 @@ function Group({
 
       {/* The list is capped upstream at 24. Saying where the other 77 brands or
           194 families are is the difference between a bounded list and a list
-          that quietly stops. */}
-      {more && values.length >= 24 ? (
+          that quietly stops.
+
+          IT USED TO SAY "LES 24", AND THE ROW ABOVE IT NOW COUNTS SOMETHING
+          ELSE. The tally is capped at 24; the sieve then takes out the rows that
+          cannot change the grid, so on `?famille=cameras-de-surveillance` the
+          fold reads "Voir les 21" directly over "Les 24 plus fournies", and on
+          `?famille=ordinateurs-portables-laptop` it reads 22 over 24. A reader
+          can count a list of twenty-one. The sentence keeps the fact that
+          matters — this is the head of a longer list, and here is the rest — and
+          drops the number that two different rules now disagree about. */}
+      {more && capped ? (
         <p className="mt-2 text-micro leading-[1.55] text-ink-3">
-          Les 24 plus fournies de cette sélection.{' '}
+          Les plus fournies de cette sélection.{' '}
           <Link href={more.href} className="draw-under text-accent hover:text-accent-ink">
             {more.label}
           </Link>
@@ -379,6 +429,41 @@ function Group({
       ) : null}
     </section>
   )
+}
+
+/**
+ * The rows of a group that are worth offering.
+ *
+ * THE COUNT CAN NEVER EXCEED THE TOTAL, WHICH IS WHAT MAKES THIS PROVABLE RATHER
+ * THAN A HEURISTIC. While a group holds nothing, choosing one of its values
+ * intersects: the count beside it is `|selection ∩ value|`, so `count === 0` is
+ * a value that empties the grid and `count === total` is a value that contains
+ * the whole selection and therefore cannot remove a single card from it. Neither
+ * is a control. Both go.
+ *
+ * ONCE THE GROUP HOLDS SOMETHING THE ARITHMETIC STOPS WORKING AND THE TEST HAS
+ * TO CHANGE. A second value is unioned in, so the result is at least the current
+ * total and the counts say nothing about whether the value is already inside the
+ * selection — a count equal to the total is then a coincidence of size, not
+ * containment. `implied` is that test, done on the structure instead: it is the
+ * only reason this function takes a callback, and only the family group passes
+ * one.
+ *
+ * A CHOSEN VALUE IS NEVER DROPPED, whatever its count says. The reader who
+ * checked "En stock" and emptied the grid needs the box they checked still on
+ * screen to uncheck it; its count reads 0 and that is the truth of it.
+ */
+function offered(
+  values: readonly FacetValue[],
+  total: number,
+  implied?: (value: FacetValue) => boolean,
+): readonly FacetValue[] {
+  const chosen = values.some((value) => value.selected)
+  return values.filter((value) => {
+    if (value.selected) return true
+    if (value.count === 0) return false
+    return chosen ? !implied?.(value) : value.count !== total
+  })
 }
 
 /** A removable summary of one active filter. */
@@ -428,34 +513,59 @@ export function FilterPanel({
   /**
    * The ladder, and the boxes, reduced to what actually leads somewhere.
    *
-   * A CONTROL THAT LANDS ON AN EMPTY GRID IS A CONTROL THAT LIES, and these two
-   * groups were the last on the panel still drawing them. Rayon, famille and
-   * marque have their empty values dropped in `getFilteredCatalogue` before they
-   * ever reach this file; the five price steps and the three availability boxes
-   * are assembled here from a fixed list, so they were rendered whatever their
-   * count said. Measured on `?marque=apple` — seven references, all above
-   * 500 000 FCFA, none discounted: the panel offered "Moins de 50 000 FCFA 0",
-   * "50 000 à 150 000 FCFA 0", "150 000 à 500 000 FCFA 0" and "Remisé de 40 % ou
-   * plus 0", four full-width tap targets whose only destination was the
-   * dead-end screen. Now four rows shorter and every remaining row has stock
-   * behind it.
+   * These two groups are assembled here from a fixed list rather than counted
+   * upstream, so they were rendered whatever their count said. Both now obey the
+   * rule stated over `offered`, written out by hand because a price step and a
+   * checkbox are not `FacetValue`s.
    *
-   * A SELECTED VALUE SURVIVES ITS OWN ZERO, which is the one exception and it is
-   * not a nicety: the reader who checked "En stock" and emptied the grid needs
-   * the box they checked still on screen to uncheck it. Its count reads 0 and
-   * that is the truth of it.
+   * A STEP IS ONLY SAFE TO DROP FOR BEING THE WHOLE SELECTION WHILE NO BRACKET
+   * IS SET, and that qualifier is the difference between a rule and a bug. With
+   * a bracket already set, every other step is counted with that bracket REMOVED
+   * — otherwise choosing one step would zero the other four — so a step's count
+   * is no longer bounded by the total, and a step that happens to hold as many
+   * references as the current bracket holds a completely DIFFERENT 46 of them.
+   * Dropping it would take away the one control that changes the price. The
+   * boxes need no such qualifier: a checkbox only ever intersects, so its count
+   * is bounded by the total whatever else is on.
    *
-   * The ladder can only empty completely when nothing matches at any price, so
-   * the price section keeps its two fields either way: it is the escape hatch,
-   * and a reader standing on a dead end should still be able to widen their
-   * bracket by hand.
+   * The ladder can empty completely — nothing matches at any price, or one step
+   * holds the lot — so the price section keeps its two fields either way: they
+   * are the escape hatch, and a reader standing on a dead end should still be
+   * able to widen their bracket by hand.
    */
-  const steps = bands.filter(
-    (band) =>
-      band.count > 0 || (filters.prixMin === band.min && filters.prixMax === band.max),
+  const bracketed = filters.prixMin !== null || filters.prixMax !== null
+  const steps = bands.filter((band) => {
+    if (filters.prixMin === band.min && filters.prixMax === band.max) return true
+    if (band.count === 0) return false
+    return bracketed || band.count !== total
+  })
+  const flags = FLAGS.filter((flag) => {
+    const facet = facets[flag.key]
+    return facet.selected || (facet.count > 0 && facet.count !== total)
+  })
+
+  /**
+   * The three slug groups, put through the same sieve.
+   *
+   * `getFilteredCatalogue` already drops the values that would empty the grid,
+   * which is why this file only ever had to handle the ladder and the boxes. It
+   * does not drop the values that would leave the grid untouched, and it cannot
+   * drop the sub-families that are already inside a chosen family, because both
+   * tests need the total and the category tree rather than one tally.
+   *
+   * A FAMILY SLUG THAT NO LONGER EXISTS RESOLVES TO NOTHING AND IS TREATED AS
+   * NESTED UNDER NOTHING, so a stale URL loses a row from the panel rather than
+   * the whole group.
+   */
+  const chosenFamilies = new Set(
+    filters.familles
+      .map((slug) => getCategoryBySlug(slug)?.id)
+      .filter((id): id is number => id !== undefined),
   )
-  const flags = FLAGS.filter(
-    (flag) => facets[flag.key].count > 0 || facets[flag.key].selected,
+  const rayons = offered(facets.rayons, total)
+  const marques = offered(facets.marques, total)
+  const familles = offered(facets.familles, total, (value) =>
+    (getCategoryBySlug(value.value)?.ancestorIds ?? []).some((id) => chosenFamilies.has(id)),
   )
 
   /* The price is one filter to the reader even when it is two bounds in the
@@ -797,7 +907,7 @@ export function FilterPanel({
                       autoComplete="off"
                       defaultValue={filters.prixMin ?? ''}
                       placeholder={formatAmount(facets.prixPlancher)}
-                      aria-label={`Prix minimum en FCFA, à partir de ${formatAmount(facets.prixPlancher)}`}
+                      aria-label={`Prix minimum en FCFA. Le catalogue entier va de ${formatAmount(facets.prixPlancher)} à ${formatAmount(facets.prixPlafond)}`}
                       className="t-num min-w-0 flex-1 bg-transparent px-3 text-[1rem] text-ink outline-none placeholder:text-ink-3 md:text-small"
                     />
                   </div>
@@ -817,7 +927,7 @@ export function FilterPanel({
                       autoComplete="off"
                       defaultValue={filters.prixMax ?? ''}
                       placeholder={formatAmount(facets.prixPlafond)}
-                      aria-label={`Prix maximum en FCFA, jusqu’à ${formatAmount(facets.prixPlafond)}`}
+                      aria-label={`Prix maximum en FCFA. Le catalogue entier va de ${formatAmount(facets.prixPlancher)} à ${formatAmount(facets.prixPlafond)}`}
                       className="t-num min-w-0 flex-1 bg-transparent px-3 text-[1rem] text-ink outline-none placeholder:text-ink-3 md:text-small"
                     />
                   </div>
@@ -831,22 +941,32 @@ export function FilterPanel({
                 </button>
               </div>
 
+              {/* THE TWO NUMBERS ARE THE SHOP'S, AND EVERY OTHER NUMBER ON THIS
+                  PANEL IS THE SELECTION'S, so the sentence has to say which one
+                  it is speaking about. `prixPlancher` and `prixPlafond` are the
+                  floor and ceiling of the whole catalogue, computed over all
+                  4 254 references and never re-counted against the filters. Read
+                  under `?marque=apple` — seven references, none under 500 000
+                  FCFA — "de 100 à 11 800 000" described a range holding none of
+                  what was on screen. Naming the catalogue costs four words and
+                  is the difference between a bound and a claim. */}
               <p className="mt-2 text-micro leading-[1.55] text-ink-3">
-                En FCFA, de {formatAmount(facets.prixPlancher)} à{' '}
+                En FCFA. Le catalogue entier va de {formatAmount(facets.prixPlancher)} à{' '}
                 {formatAmount(facets.prixPlafond)}. Laissez un champ vide pour ne borner que
                 d’un côté.
               </p>
             </form>
           </section>
 
-          <Group title="Rayon" group="rayon" values={facets.rayons} state={state} />
+          <Group title="Rayon" group="rayon" values={rayons} state={state} />
 
           <div className="mt-5">
             <Group
               title="Famille"
               group="famille"
-              values={facets.familles}
+              values={familles}
               state={state}
+              capped={facets.familles.length >= 24}
               more={{ href: '/catalogue#index', label: `L’index des ${familyCount} familles` }}
             />
           </div>
@@ -855,8 +975,9 @@ export function FilterPanel({
             <Group
               title="Marque"
               group="marque"
-              values={facets.marques}
+              values={marques}
               state={state}
+              capped={facets.marques.length >= 24}
               more={{ href: '/marques', label: `Les ${brandCount} marques` }}
             />
           </div>

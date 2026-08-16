@@ -32,6 +32,22 @@ import { PACKSHOT_BLUR } from '@/constants/blur'
  *              which is E-shop's arrangement and the one that reads as a
  *              gallery rather than as a form control under a picture.
  *
+ * THE PLATE IS CAPPED AT 480 BETWEEN md AND lg, AND THAT WAS THE WORST NUMBER ON
+ * THE PAGE. From 768 to 1023 the page is still ONE column — the spread only
+ * splits at lg — so this frame was taking the whole shell and staying square.
+ * Measured on the Ideapad before this cap: 653 square at 768, and 765 square at
+ * 900. The supplier files behind it are 425 to 576 pixels a side, so at 900 the
+ * packshot was being enlarged 1.42 times to fill a white box that then pushed
+ * the product's own NAME to y 1186 and the basket button to y 1437, on a screen
+ * 900 tall. That is the same failure the phone was rewritten to remove — a
+ * screenful of white before the name — reproduced at tablet width, where nobody
+ * had looked. 30rem is 480, which sits INSIDE the 425 to 576 band the files
+ * actually are, so nothing is enlarged before the reader points at it. The cap
+ * is dropped again at lg, where the two-column grid is what limits the frame:
+ * 390 at 1024, 624 at 1440. It sits on the component's root so the thumbnail
+ * line under the plate is cut to the same 480 and stays a caption on it rather
+ * than a rule running past its edge.
+ *
  * THE DOM IS THE SAME IN ALL THREE. Every packshot is rendered once; only the
  * flow direction, the order and the visibility change. There is no second
  * component to keep in step and no markup written twice.
@@ -260,9 +276,17 @@ export function ProductGallery({
     [],
   )
 
+  /* 41 of 4 254 references reached us with no photograph at all. This well used
+     to take the frame's own footprint — `aspect-square` with nothing capping it
+     — which drew 712 by 712 of empty grey at 1440 and 332 by 332 before the
+     name on a phone: the largest object on the page, on the one page with
+     nothing to look at. It states the absence instead of reserving room for it.
+     352 by 264 says "no photograph" in a quarter of the pixels, and the column
+     is then allowed to simply end early, which is what an editorial column does
+     when it has run out of things to print. */
   if (images.length === 0) {
     return (
-      <div className="grid aspect-square place-items-center rounded-well bg-space">
+      <div className="grid aspect-[4/3] max-w-[22rem] place-items-center rounded-well border border-rule bg-space">
         <span className="t-label text-ink-3">Photo à venir</span>
       </div>
     )
@@ -271,7 +295,7 @@ export function ProductGallery({
   const many = images.length > 1
 
   return (
-    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:gap-4">
+    <div className="flex flex-col gap-4 md:max-w-[30rem] lg:max-w-none xl:flex-row xl:items-start xl:gap-4">
       {/* The index. Under the frame until xl, standing beside it after, and
           never drawn on a phone, where the marks under the rail say the same
           thing in 13 pixels instead of 156. */}

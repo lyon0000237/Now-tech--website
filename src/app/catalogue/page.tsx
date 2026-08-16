@@ -351,7 +351,7 @@ export default async function CataloguePage({ searchParams }: Params) {
           title={filtering ? 'Les références retenues' : 'Toutes les références'}
           context={
             filtering
-              ? 'Chaque compte du panneau est calculé contre les autres filtres déjà posés, jamais contre le magasin entier : c’est la taille de cette valeur seule. Cochez-en une dans un groupe et c’est exactement la liste que vous obtenez ; cochez-en une seconde dans le même groupe et la liste réunit les deux, donc elle s’élargit. Une valeur qui ne donnerait rien n’est pas proposée.'
+              ? 'Chaque compte du panneau est calculé contre les autres filtres déjà posés, jamais contre le magasin entier : c’est la taille de cette valeur seule. Cochez-en une dans un groupe et c’est exactement la liste que vous obtenez ; cochez-en une seconde dans le même groupe et la liste réunit les deux, donc elle s’élargit. Une valeur qui ne donnerait rien, ou qui rendrait exactement la liste déjà affichée, n’est pas proposée : le panneau ne montre que ce qui change quelque chose.'
               : 'Le catalogue entier, dans l’ordre que vous choisissez. « Arrivage » classe par date de mise en ligne de la photographie, seule date que l’export porte.'
           }
           action={filtering ? undefined : { href: '#index', label: `Les ${familyCount} familles` }}

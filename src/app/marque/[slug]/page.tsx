@@ -48,13 +48,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
  * that failed to load. The mark is painted with the mask used everywhere else,
  * so it is the page's own ink and never a second colour on the page.
  *
- * AND IT IS DRAWN AT 56 HERE WHILE THE INDEX STAMPS IT AT 40 OR 30. /marques
- * has to hold thirty-three marks in one grid, where the four files that are a
- * filled field with the type reversed out of them — XIAOMI at 73.6 % ink inside
- * the 24x24 box, MIKROTIK 55.2, HP 52.9, UBIQUITI 47.5, against a set median of
- * 16 — outweigh every wordmark beside them, so that page cuts them down. Weight
- * is a comparison, and there is nothing here to compare against: one brand, one
- * mark, its own page. It is drawn at its own size.
+ * AND IT IS DRAWN AT 56 HERE WHILE THE INDEX STAMPS IT AT 40, OR 30, OR LESS ON
+ * A NARROW PHONE. /marques holds thirty-three marks in one grid, and seven of
+ * the files paint so much of their 24x24 box that they outweigh every wordmark
+ * beside them: XIAOMI at 74.5 % of the box, MIKROTIK 56.8, HP 54.6, APPLE 52.3,
+ * LINKSYS 51.5, UBIQUITI 48.6 and TP-LINK 46.0, against a set median of 17.8.
+ * That page cuts those seven down, on the rule written out over its own
+ * constant. Weight is a comparison, and there is nothing here to compare
+ * against: one brand, one mark, its own page, so it is drawn at its own size.
+ * Even XIAOMI, which is a filled squircle, reads as a logo beside a paragraph
+ * rather than as the black slab it becomes in a grid of thirty-three.
  *
  * THE DEPARTMENTS ARE STATED, NOT LINKED, AND ONLY ONCE. HP spans six of the
  * twelve, which is the fact worth printing here; it used to be printed twice,

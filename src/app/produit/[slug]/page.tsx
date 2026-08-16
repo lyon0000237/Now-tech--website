@@ -106,9 +106,22 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
  * 293 to 1059, which is 766 pixels against 803 of usable viewport under a
  * 157-pixel chrome, and the longest names in this export are 211 characters and
  * push it well past that. Pinning a column taller than the screen pins nothing
- * and scrolls the price away from the picture it belongs to. The photograph is
- * pinned instead, which is the same idea applied to the column that actually
- * fits.
+ * and scrolls the price away from the picture it belongs to.
+ *
+ * NOTHING IS PINNED HERE NOW. The photograph was, as the same idea applied to
+ * the column that actually fits, and it has been given up to put the caption
+ * back under the plate; the arithmetic of that trade is written out at point 6.
+ * The short version is that this spread is 752 pixels tall at 1440 against 803
+ * of viewport, so on more than nine references in ten there is nothing to pin it
+ * against.
+ *
+ * ALSO NOT TAKEN: E-SHOP'S SECOND MOVEMENT, AND THERE IS NO HONEST SUBSTITUTE
+ * FOR IT. Under its control E-shop prints `product.lead`, a hand-written line
+ * about when the piece will reach you, and under that a paragraph about how it
+ * was made. The only lead time this export knows is the shop's own, which is the
+ * same four sentences on all 4 254 references and is already printed one rule
+ * below under "Retrait et livraison". Printing it twice in eighty pixels would
+ * be dressing a repetition as a promise.
  *
  * ALSO NOT TAKEN: its rule above the related run. E-shop closes the spread with
  * a hairline and opens the next section under it. `SectionHeader` already draws
@@ -228,15 +241,20 @@ export default async function ProduitPage({ params }: Params) {
       <Breadcrumb path={product.path} current={product.name} />
 
       <article className="shell pt-5 sm:pt-7 md:pt-10">
-        <div className="grid gap-x-16 gap-y-7 sm:gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] xl:gap-x-24">
-          {/* Sticky on a tall screen only. On a laptop the buy column is taller
-              than the viewport, and pinning the photograph there would mean the
-              price scrolls away from the picture it belongs to. */}
-          <div className="lg:sticky lg:top-32 lg:col-start-1 lg:row-start-1 lg:self-start">
+        <div className="grid gap-x-16 gap-y-7 sm:gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:grid-rows-[auto_1fr] xl:gap-x-24">
+          {/* THE ROWS ARE DECLARED, AND THAT DECLARATION IS WHAT PUTS THE
+              CAPTION BACK ON THE PHOTOGRAPH. See point 6. */}
+          <div className="lg:col-start-1 lg:row-start-1 lg:self-start">
             <ProductGallery images={product.images} name={product.name} />
           </div>
 
-          <div className="enter lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          {/* THE MEASURE IS CAPPED WHERE THE PAGE IS ONE COLUMN. From lg up this
+              column is a 416-pixel track and the cap never binds. From 768 to
+              1023 it was the whole shell: 653 pixels at 768 and 765 at 900, so
+              a ninety-character name set at about 100 characters to the line and
+              the basket button drew 623 pixels wide. 34rem is 544, which is the
+              same measure the ruled blocks below it are read at on a laptop. */}
+          <div className="enter md:max-w-[34rem] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:max-w-none">
             {/* 1. CLASSIFICATION. The brand when the export knows it, the family
                    when it does not, and nothing at all when neither is known —
                    1 212 of 4 254 references carry no brand. */}
@@ -246,7 +264,21 @@ export default async function ProduitPage({ params }: Params) {
               <p className="e-text t-label mb-4 text-ink-3">{product.category.name}</p>
             ) : null}
 
-            {/* 2. THE NAME. The darkest and largest thing in the column. */}
+            {/* 2. THE NAME. The darkest thing in the column, and the second
+                   largest, which is where this page parts company with E-shop
+                   and does it deliberately. There a name is two or three words
+                   and is set at 48px above a 26px price. Here the median name is
+                   49 characters and the longest is 211: at 48px in a 416-pixel
+                   column that one sets to eleven lines and puts its own price
+                   below the fold. Sizing the name by its length was measured and
+                   refused for a different reason — it makes the same piece of
+                   furniture change size between two references of one family,
+                   which reads as a rendering fault rather than as an editorial
+                   decision. So the name holds one size, 32px from md, and the
+                   price is the larger of the two. On a catalogue reached mostly
+                   from a search result, where the reader already knows what the
+                   thing is and is asking what it costs, that is the honest
+                   order. */}
             <h1 className="text-sub leading-[1.25] font-bold tracking-[-0.02em] text-balance md:text-title md:leading-[1.15]">
               {product.name}
             </h1>
@@ -348,8 +380,34 @@ export default async function ProduitPage({ params }: Params) {
               the basket button back at y 982 on an 844-pixel screen, which is
               the exact number `BuyBlock` was rewritten to get rid of. Placed
               here it costs the name, the price and the button nothing at all,
-              and the block it replaces takes 150 pixels off the column. */}
-          <dl className="enter e-item flex flex-wrap items-baseline gap-x-3 gap-y-1 text-micro text-ink-3 lg:col-start-1 lg:row-start-2 lg:-mt-6">
+              and the block it replaces takes 150 pixels off the column.
+
+              IT HAD COME UNSTUCK FROM THE PHOTOGRAPH, AND THE `-mt-6` WAS NOT
+              THE REASON. The grid's rows were both automatic, and an item that
+              spans two automatic rows hands its own leftover height to both of
+              them. The buy column spans both, so on every reference whose column
+              outran its picture the rows grew underneath it and carried the
+              caption away from the plate it captions: 46 pixels at 1440 on the
+              ThinkPad, 114 on the longest name in the export, 130 at 1280.
+              `lg:grid-rows-[auto_1fr]` fixes row 1 to the photograph's own
+              height — a spanning item contributes nothing to a track it crosses
+              when it also crosses a flexible one — and hands the slack to row 2,
+              where `lg:self-start` keeps the caption at the top of it. The gap
+              is now the grid's 40 less the 24 pulled back, which is 16, on every
+              reference at every width from lg up.
+
+              THE PLATE IS NO LONGER PINNED, AND THAT IS WHAT THE FIX COST.
+              Declaring row 1 as the photograph's height leaves a sticky element
+              a containing block exactly its own size, so it cannot travel: the
+              rule was worth 0 pixels of movement afterwards and 68 before, on
+              the tail of long names only. Measured against what it was holding:
+              at 1440 the whole spread is 752 pixels for the ThinkPad and 861 for
+              the 211-character name, against 803 of viewport under a 157-pixel
+              chrome, so more than nine references in ten never scroll this
+              article at all and the pin had nothing to do. A caption that sits
+              on its picture on 4 254 pages is worth more than 68 pixels of
+              travel on a few hundred. */}
+          <dl className="enter e-item flex flex-wrap items-baseline gap-x-3 gap-y-1 text-micro text-ink-3 lg:col-start-1 lg:row-start-2 lg:-mt-6 lg:self-start">
             {credit.map((fact, index) => (
               <div key={fact.label} className="flex items-baseline gap-3">
                 {index > 0 ? (

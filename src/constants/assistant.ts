@@ -40,13 +40,14 @@ import {
 /**
  * What Bod decided the question was.
  *
- * The panel prints it as the answer's own label, which is the cheapest possible
+ * The panel prints it beside the datum rule, which is the cheapest possible
  * form of honesty: a reader who asked for a price and sees `Recherche` knows
  * immediately that the question was not understood, and does not have to read
  * four product rows to find that out.
  */
 export type AssistantIntent =
   | 'accueil'
+  | 'budget'
   | 'capacites'
   | 'comptoir'
   | 'comparaison'
@@ -56,6 +57,8 @@ export type AssistantIntent =
   | 'panier'
   | 'prix'
   | 'recherche'
+  | 'reference'
+  | 'remise'
   | 'stock'
   | 'main'
 
@@ -79,6 +82,12 @@ export interface AssistantProduct {
  * avons plusieurs" is worth nothing next to `23 références · 45 000 à 195 000`,
  * and the second one is free because the scan that found the products already
  * knew it.
+ *
+ * THE UNIT BELONGS IN THE LABEL, NOT IN THE VALUE. Measured at 390 the strip
+ * printed `7 500 à 200 000 FCFA` in a 110-pixel column and broke it over three
+ * lines while the column beside it held the two characters `87`. The currency
+ * moved into the label, the strip went to two columns on a phone, and the same
+ * fact now sits on one line.
  */
 export interface AssistantFigure {
   readonly label: string
@@ -96,6 +105,51 @@ export interface AssistantLink {
   readonly href: string
   readonly label: string
   readonly count?: number
+}
+
+/**
+ * A question Bod offers to ask himself next, carrying the query that answers it.
+ *
+ * THIS REPLACED A LIST OF SENTENCES AND THE DIFFERENCE IS CORRECTNESS, NOT
+ * CONVENIENCE. A follow-up used to be a string that got re-typed into the field
+ * and re-parsed, so a chip reading "En HIKVISION" produced a search for the word
+ * "hikvision" across the whole shop, which is 544 references, while the tally it
+ * was printed beside said 99. Two numbers a customer can see, four pixels apart,
+ * disagreeing. A follow-up now carries the exact scope it was counted with, so
+ * the count on the chip and the count in the answer are the same arithmetic.
+ *
+ * `scope` REPLACES the carried scope rather than merging into it. A band of the
+ * price ladder has to be able to lift the ceiling the previous answer set, and a
+ * merge can add a bound but never remove one.
+ */
+export interface AssistantFollow {
+  /** What the button says. */
+  readonly label: string
+  /** What the docket records as the question. */
+  readonly ask: string
+  readonly scope?: AssistantScope
+}
+
+/**
+ * One rung of the price ladder.
+ *
+ * `share` is the band's part of the counted set, drawn as a hairline of that
+ * width in the mark's own green. NEVER as a filled track with a bar on top:
+ * that is dashboard furniture, and this panel has one green and hairlines.
+ */
+export interface AssistantBand {
+  readonly label: string
+  readonly count: number
+  /** 0 to 1. */
+  readonly share: number
+  readonly follow: AssistantFollow
+}
+
+/** A counted facet of the answer: a brand inside the set, with the query that isolates it. */
+export interface AssistantTally {
+  readonly label: string
+  readonly count: number
+  readonly follow: AssistantFollow
 }
 
 /** One side of a comparison. */
@@ -117,6 +171,45 @@ export interface AssistantCompare {
 }
 
 /**
+ * One line of the reader's own basket, re-read against today's catalogue.
+ *
+ * THE BASKET IS THE ONE THING THE BROWSER KNOWS AND THE SERVER DOES NOT, and it
+ * is also the one thing in this session that goes stale. `lib/cart.tsx` stores a
+ * slug, a name, a price and a quantity in `localStorage` and joins them against
+ * the catalogue only at render time, so a basket left open for a week carries
+ * the price it was added at. That is the right trade for a shop that reprices at
+ * the counter, and it is exactly why someone about to ask for a proforma needs
+ * the two figures side by side: what they were quoted in their own browser, and
+ * what the shelf says today.
+ *
+ * `was` IS ONLY EVER PRINTED WHEN IT DIFFERS. A second price beside every line
+ * of an unchanged basket is noise that teaches the reader to stop looking.
+ */
+export interface AssistantBasketLine {
+  readonly slug: string
+  readonly name: string
+  readonly qty: number
+  /** The catalogue's price today. `null` when the reference has left the shop. */
+  readonly price: number | null
+  /** What this browser stored when the line was added. */
+  readonly was: number
+  readonly inStock: boolean
+}
+
+export interface AssistantBasket {
+  readonly lines: readonly AssistantBasketLine[]
+  /** Priced at TODAY's figures, and the sentence says so. */
+  readonly total: number
+  readonly count: number
+  /** Lines whose price has moved since they were added here. */
+  readonly moved: number
+  /** Lines the catalogue no longer carries. */
+  readonly gone: number
+  /** Lines that are not at the counter today. */
+  readonly ordered: number
+}
+
+/**
  * The resolved query, carried between turns.
  *
  * THIS IS THE WHOLE OF BOD'S MEMORY, AND IT IS DELIBERATELY THIN. It is not a
@@ -129,12 +222,13 @@ export interface AssistantCompare {
 export interface AssistantScope {
   /** The words that were actually searched, cues and amounts removed. */
   readonly q?: string
+  /** A brand name as the export spells it. Set by the brand tally, never guessed. */
   readonly marque?: string
-  readonly famille?: string
-  readonly rayon?: string
   readonly min?: number
   readonly max?: number
   readonly stock?: boolean
+  /** Only the references genuinely marked down 40 % or more. */
+  readonly remise?: boolean
 }
 
 export interface AssistantReply {
@@ -145,8 +239,14 @@ export interface AssistantReply {
   readonly families?: readonly AssistantLink[]
   readonly links?: readonly AssistantLink[]
   readonly compare?: AssistantCompare
-  /** Follow-ups computed from THIS answer, and answerable with THIS scope. */
-  readonly next?: readonly string[]
+  /** The reader's own basket, re-read against today's catalogue. */
+  readonly basket?: AssistantBasket
+  /** How the counted set spreads across price. Offered on a broad answer only. */
+  readonly bands?: readonly AssistantBand[]
+  /** Which manufacturers the counted set is made of. */
+  readonly tallies?: readonly AssistantTally[]
+  /** Follow-ups computed from THIS answer, and answerable with THEIR scope. */
+  readonly next?: readonly AssistantFollow[]
   readonly scope?: AssistantScope
   /** The honest "I do not know". The panel answers it with WhatsApp. */
   readonly handoff?: boolean
@@ -235,7 +335,7 @@ export const TOPICS: readonly Topic[] = [
   {
     id: 'tva',
     label: 'Prix et TVA',
-    cues: ['tva', 'taxe', 'ht', 'ttc', 'remise', 'reduction', 'negocier', 'normalisee'],
+    cues: ['tva', 'taxe', 'ht', 'ttc', 'negocier', 'normalisee'],
     answer:
       `Les prix affichés sont en FCFA, TVA de ${(VAT_RATE * 100).toLocaleString('fr-FR')} % ` +
       'comprise. Une facture normalisée est délivrée sur demande.',
@@ -329,6 +429,50 @@ export const HELP_CUES: readonly string[] = [
 ]
 
 /**
+ * The 513 references genuinely marked down 40 % or more.
+ *
+ * The same floor the catalogue's own `remise` facet uses and the same set the
+ * homepage files under "Affaires", because a discount that means one thing in
+ * this panel and another on `/catalogue?remise=1` is worse than no discount
+ * answer at all. Nothing here invents a sale: `discountPct` is the difference
+ * between the supplier's list price and the shelf price, exported as it stands.
+ */
+export const PROMO_CUES: readonly string[] = [
+  'promo', 'promos', 'promotion', 'promotions', 'remise', 'remises', 'solde',
+  'soldes', 'reduction', 'reductions', 'destockage', 'braderie', 'affaire', 'affaires',
+]
+
+/**
+ * A reference number, which is the one identifier a customer arrives holding.
+ *
+ * The product page prints `Réf.` and the counter reads it back over the
+ * telephone, so someone with a proforma in hand has a number and no words. It
+ * is the WooCommerce post id, it is unique, and looking it up is exact: there
+ * is no ranking, no near miss and no guessing involved.
+ */
+export const REFERENCE_CUES: readonly string[] = [
+  'reference', 'references', 'ref', 'refs', 'article', 'code', 'numero', 'no',
+]
+
+/** "quelles marques", "quel fabricant". Answered with a counted breakdown of the set. */
+export const BRAND_QUESTION_CUES: readonly string[] = [
+  'marque', 'marques', 'fabricant', 'fabricants', 'constructeur', 'constructeurs', 'fabrique',
+]
+
+/**
+ * A count of units, and only when the reader said it was one.
+ *
+ * "il me faut 12 caméras" is a quantity. "switch 24 ports" is a specification,
+ * and reading it as a quantity would be as wrong as reading it as a price. So a
+ * bare small integer becomes a quantity only when one of these words is
+ * somewhere in the question, and the answer always repeats the count it used.
+ */
+export const QUANTITY_CUES: readonly string[] = [
+  'faut', 'besoin', 'unites', 'unite', 'pieces', 'piece', 'postes', 'poste',
+  'exemplaires', 'lot', 'lots', 'quantite', 'commander', 'commande', 'equiper', 'installer',
+]
+
+/**
  * A number is a budget only when one of these stands in front of it, and that
  * rule is not a nicety.
  *
@@ -362,15 +506,18 @@ export const CURRENCY_WORDS: readonly string[] = ['fcfa', 'cfa', 'xaf', 'f', 'fr
  */
 export const OPENING =
   'Je lis le catalogue du magasin et les conditions de la maison. Je compte, je ' +
-  'compare et je filtre par budget. Je n’invente rien : ce que je ne sais pas ' +
-  'part au comptoir sur WhatsApp, avec votre question déjà écrite.'
+  'compare, je filtre par budget, je retrouve une référence par son numéro et je ' +
+  'relis votre panier au prix d’aujourd’hui. Je n’invente rien : ce que je ne ' +
+  'sais pas part au comptoir sur WhatsApp, avec votre question déjà écrite.'
 
 /**
  * What Bod can do, in the reader's own terms.
  *
- * Shown before the first question and again on demand. Each line is a real
- * capability with a real example, and there is nothing here that the catalogue
- * or `site.ts` cannot answer.
+ * THE PANEL PREFERS THE SERVER'S VERSION OF THIS LIST. `mode=ouverture` builds
+ * the same seven rows out of the live export, so the reference number in the
+ * example is a reference that exists today and the brand named is one the shop
+ * actually holds. This copy is the fallback for a first open with no network,
+ * which is why its examples name nothing that could go out of stock.
  */
 export interface Capability {
   readonly title: string
@@ -380,11 +527,12 @@ export interface Capability {
 export const CAPABILITIES: readonly Capability[] = [
   { title: 'Chercher et compter', example: 'onduleur 1500 VA' },
   { title: 'Filtrer par budget', example: 'caméra à moins de 50 000' },
+  { title: 'Répartir un budget par rayon', example: 'j’ai 500 000 francs' },
+  { title: 'Voir la répartition des prix', example: 'quel budget pour une caméra' },
   { title: 'Comparer deux références', example: 'différence entre Tenda CP7 et Hikvision DS-2CD' },
-  { title: 'Dire ce qui est au comptoir', example: 'switch 24 ports en stock' },
-  { title: 'Compter une marque', example: 'vous avez du Mikrotik' },
+  { title: 'Lister les marques d’un rayon', example: 'quelles marques de switch' },
+  { title: 'Relire le panier au prix du jour', example: 'relis mon panier' },
   { title: 'Trouver le comptoir le plus proche', example: 'je suis à Bonapriso' },
-  { title: 'Reprendre votre panier', example: 'que vaut mon panier' },
 ]
 
 export const FALLBACK =

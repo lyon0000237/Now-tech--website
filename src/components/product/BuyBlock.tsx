@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import { IconBasket, IconPhone } from '@/components/brand/Icons'
+import { Action } from '@/components/ui/Action'
 import { useCart } from '@/lib/cart'
 import { WHATSAPP, dialable } from '@/constants/site'
 
@@ -70,6 +71,15 @@ import { WHATSAPP, dialable } from '@/constants/site'
  *
  * At 1440 both come back to exactly what they were: stepper 130 by 50 with the
  * count 32 wide, button 274 by 50.
+ *
+ * THE BASKET IS STILL A HAND-ROLLED `button` AND THE WHATSAPP LINE IS NOT.
+ * `Action` is the one button in the system and it renders a `Link`, because
+ * every other button on this site navigates. This one does not: it calls `add`
+ * and opens the drawer, and an anchor that acts is a lie told to a keyboard.
+ * Giving `Action` an `as` prop to make it render a `button` would put a second
+ * element type inside the component every page reaches for, to serve one caller.
+ * So the acting control keeps its own element and the navigating one — the
+ * WhatsApp line, which really is a link out — uses the system's button.
  */
 export function BuyBlock({
   product,
@@ -95,17 +105,26 @@ export function BuyBlock({
   if (!product.inStock) {
     return (
       <div>
-        <a
+        {/* `Action` and not a hand-rolled anchor. This control carried
+            seventeen utility classes that spelled out, character for character,
+            what `variant="primary"` already is: the same ground, the same
+            `--fill-to`, the same radius, the same 14px bold, the same press.
+            A second copy of a button is how a design system loses an argument it
+            never had — the day the primary fill moves off #008013, only one of
+            the two moves with it. What is passed is only what is true HERE and
+            nowhere else: the 48-pixel floor and the full width a phone needs.
+            Measured identical before and after at 1440, 266 by 48. */}
+        <Action
           href={`https://wa.me/${dialable(WHATSAPP)}?text=${encodeURIComponent(
             `Bonjour, je cherche : ${product.name}`,
           )}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="press fill inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-control bg-accent px-7 py-3 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent-ink)] sm:w-auto"
+          className="min-h-12 w-full sm:w-auto"
         >
           <IconPhone className="text-[1.125rem]" />
           Demander cette référence
-        </a>
+        </Action>
         {/* The measure is held to 52 characters. This paragraph is the widest
             run of prose in the column and at 416 pixels it sets at about 62,
             which is past the point a three-line block stops being scanned. */}
