@@ -18,6 +18,22 @@ import { useState } from 'react'
  * every card in this grid already mounts `AddToCart`, which is a client
  * component, so the card is hydrated either way.
  *
+ * THE SKELETON IS BEHIND THE PHOTOGRAPH, NOT OVER IT, AND THAT ORDER IS THE
+ * WHOLE DESIGN. It was the other way round and the shop caught it: a second
+ * visit showed a white cell before the picture even though the picture was in
+ * the browser's cache. It was, and this component was holding it. The image was
+ * served at `opacity-0` and only allowed to appear once React had hydrated, so
+ * the wait a reader saw on every page after the first was not the network, it
+ * was our own JavaScript booting on a phone. With scripts off it never appeared
+ * at all.
+ *
+ * So the photograph is opaque from the first byte of HTML and needs nothing to
+ * run. A cached one paints in the first frame, exactly like an ordinary `<img>`.
+ * A pending one paints nothing yet, and the skeleton underneath shows through
+ * the hole until the pixels arrive and cover it. Nothing is gated, nothing
+ * fades in late, and the only thing JavaScript still does here is take the
+ * skeleton away afterwards.
+ *
  * The shimmer is removed on load AND on error. An image that 404s would
  * otherwise shimmer for ever, which is a lie that never stops.
  */
@@ -58,22 +74,20 @@ export function Packshot({
         fill
         sizes={sizes}
         priority={priority}
-        // THE REF IS NOT BELT AND BRACES, IT IS THE ONLY THING THAT WORKS FOR
-        // HALF OF THEM. `onLoad` fires when the browser finishes decoding, and
-        // an image already in cache is finished before React ever attaches the
-        // handler: measured on /catalogue, 12 of 24 cards never fired it, so
-        // they kept a shimmer over a photograph held at opacity 0. The product
-        // was invisible. Asking the element whether it is already `complete` at
-        // the moment it is attached catches exactly those, and it runs during
-        // commit rather than in an effect, which this repository forbids.
+        // THE REF CATCHES THE ONES `onLoad` CANNOT. It fires when the browser
+        // finishes decoding, and an image already in cache is finished before
+        // React ever attaches the handler: measured on /catalogue, 12 of 24
+        // cards never fired it. Asking the element whether it is already
+        // `complete` at the moment it is attached catches exactly those, and it
+        // runs during commit rather than in an effect, which this repository
+        // forbids. It no longer decides whether the reader sees the product,
+        // only whether a skeleton is left behind it.
         ref={(node) => {
           if (node?.complete) setSettled(true)
         }}
         onLoad={() => setSettled(true)}
         onError={() => setSettled(true)}
-        className={`transition-opacity duration-[var(--t-base)] ${
-          settled ? 'opacity-100' : 'opacity-0'
-        } ${className}`}
+        className={className}
       />
     </>
   )
