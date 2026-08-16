@@ -39,7 +39,18 @@ export function Packshot({
   return (
     <>
       {settled ? null : (
-        <span aria-hidden className="shimmer absolute inset-0 rounded-[inherit]" />
+        // TWO ELEMENTS, AND THE SECOND ONE IS NOT TIDINESS. `.shimmer` declares
+        // `position: relative` in globals.css, because its sweeping band is an
+        // `::after` and an absolute child needs a positioned parent. Plain CSS
+        // outside Tailwind's layers beats a utility, so putting the class and
+        // `absolute inset-0` on the same element left it relative, with no
+        // content and therefore no size: measured on a throttled connection, 36
+        // shimmers in the document and ZERO of them visible, which is exactly
+        // the white card the shop reported. The outer span does the filling, the
+        // inner one does the shimmering.
+        <span aria-hidden className="absolute inset-0 overflow-hidden rounded-[inherit]">
+          <span className="shimmer block h-full w-full" />
+        </span>
       )}
       <Image
         src={src}

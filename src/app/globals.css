@@ -1200,12 +1200,14 @@ body {
    nothing on the entry-level Android this shop is browsed on, and it is visibly
    smoother. -100% to 200% over 1.5s, the same numbers as the reference.
 
-   THE TINT IS --space-2 AND NOT A GREY. NVC sweeps over stone-300, which is
-   right on its own palette and would be a bruise on this one: every well here is
-   white because every packshot was shot on white, and a dark rectangle waiting
-   in a grid of white cells reads as an error state. --space-2 is the site's own
-   second surface, far enough from paper to say "not yet" and close enough not to
-   shout it.
+   THE TINT IS --rule-2, AND THE FIRST CHOICE WAS TOO POLITE. It was --space-2,
+   #e8ebe5, on the argument that a dark rectangle waiting in a grid of white
+   cells reads as an error state. That argument is sound and the value was still
+   wrong: against paper it is four points of lightness, which on a phone in
+   daylight is white, and the shop reported seeing a white card twice. --rule-2
+   is the site's own strongest hairline, #ccd0c9, so it is a colour this page
+   already draws with; it is unmistakably not paper, and it is still a tint
+   rather than the stone NVC sweeps over.
 
    It stops for a reader who asked for less motion and becomes a flat tint: a
    surface that pulses forever is exactly what that preference is about. */
@@ -1213,7 +1215,7 @@ body {
 .shimmer {
   position: relative;
   overflow: hidden;
-  background-color: var(--space-2);
+  background-color: var(--rule-2);
 }
 .shimmer::after {
   content: '';
