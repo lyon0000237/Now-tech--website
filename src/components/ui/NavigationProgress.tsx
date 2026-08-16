@@ -37,14 +37,46 @@ import { useEffect, useState } from 'react'
  *
  * IT DOES NOT CLAIM A PERCENTAGE. Nobody measured one. The bar travels rather
  * than fills, which says "still working" without inventing how much is left.
+ *
+ * AND IT STAYS LONG ENOUGH TO BE SEEN, WHICH IT DID NOT. The shop reported the
+ * indicator had disappeared. It had not: measured frame by frame on a real
+ * click, it appeared for THREE FRAMES, seven milliseconds, and was gone. Nothing
+ * was broken, there was simply nothing left to wait for. Every `Link` on this
+ * site is prefetched when the pointer reaches it, so by the time the button goes
+ * down the next page is already in the client, and the honest duration of that
+ * navigation really is seven milliseconds.
+ *
+ * Seven milliseconds is not feedback, it is a flicker, and a flicker is worse
+ * than silence. So once the bar is up it stays up for `FLOOR_MS`, whether or not
+ * the page beat it there. This is the one concession to appearance in the whole
+ * component and it is worth naming: for a fast navigation the bar outlives the
+ * wait it describes. It is defensible because the bar never claimed to measure
+ * anything, only to say that a press was received and the site is going
+ * somewhere, and because the alternative on a prefetched route is a press that
+ * produces no visible response at all. On the connections this shop is actually
+ * used over, the route is the slower of the two and the floor never binds.
  */
+/** Below this, a reader sees a glitch rather than an answer. */
+const FLOOR_MS = 500
+
 export function NavigationProgress() {
   const pathname = usePathname()
   const params = useSearchParams()
   const here = `${pathname}?${params.toString()}`
   const [startedAt, setStartedAt] = useState<string | null>(null)
+  // Set with the click and cleared by a timer, never by the route: this is the
+  // half of the bar's life that the network does not control.
+  const [holding, setHolding] = useState(false)
 
-  const pending = startedAt !== null && startedAt === here
+  const waiting = startedAt !== null && startedAt === here
+  const pending = waiting || holding
+
+  // The page arrived before the floor did. Keep the bar for what is left of it.
+  useEffect(() => {
+    if (!holding) return
+    const timer = window.setTimeout(() => setHolding(false), FLOOR_MS)
+    return () => window.clearTimeout(timer)
+  }, [holding])
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -68,11 +100,14 @@ export function NavigationProgress() {
       if (url.pathname === window.location.pathname && url.search === window.location.search) return
 
       setStartedAt(`${window.location.pathname}?${window.location.search.replace(/^\?/, '')}`)
+      setHolding(true)
     }
 
     // Back and forward are navigations the reader also waits through.
-    const onPop = () =>
+    const onPop = () => {
       setStartedAt(`${window.location.pathname}?${window.location.search.replace(/^\?/, '')}`)
+      setHolding(true)
+    }
 
     document.addEventListener('click', onClick, { capture: true })
     window.addEventListener('popstate', onPop)

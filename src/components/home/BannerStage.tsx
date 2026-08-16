@@ -73,6 +73,31 @@ import { BANNERS, type Banner } from '@/constants/banners'
  * lands on the department page. The indicators become 44px cells on the phone
  * and keep their 6px mark.
  *
+ * THE MOUSE DRAGS TOO NOW, AND IT USED TO BE TURNED AWAY AT THE DOOR. The
+ * handler opened with `if (event.pointerType === 'mouse') return`, on the
+ * reasoning that the desktop already had two arrows and that a click on the
+ * artwork has to stay a click. The first half was true and the second half was
+ * already solved: the click suppression below is not a touch feature, it reads
+ * the same `swiped` flag whatever moved. So the strip takes a cursor exactly as
+ * it takes a thumb, which is what anyone who has used a carousel since 2010
+ * tries first, and the pointer is captured on the way down so a drag that
+ * carries off the edge of the section still lands rather than freezing the strip
+ * mid-slide.
+ *
+ * ONE DIFFERENCE BETWEEN THE TWO, AND IT IS NOT COSMETIC. The axis guard, which
+ * hands a gesture steeper than it is wide back to the page, exists because a
+ * finger has one movement for two jobs: swiping the strip and scrolling the
+ * document. A mouse does not scroll by dragging, so a slightly diagonal pull
+ * from a cursor is a swipe with a shaky hand, and cancelling it is the software
+ * arguing with the reader. The guard is now a touch's alone.
+ *
+ * AND THE TOUR HOLDS STILL WHILE ANYONE IS HOLDING THE STRIP. It did not: only
+ * a mouse hovering paused the autoplay, so a finger part-way through a swipe
+ * could have the panel changed underneath it by the five-second tick, and a
+ * cursor dragged past the section's edge fired `pointerleave` and restarted the
+ * clock mid-gesture. A hand on the artwork is now its own brake, separate from
+ * the hover brake and unaffected by it.
+ *
  * AND THE PAUSE IS A MOUSE'S, WHICH IS WHY IT USED TO KILL THE PHONE'S TOUR.
  * `pointerenter` fires for a finger as well as for a cursor, and `pointerleave`
  * does not follow it: a thumb set down on the artwork to scroll the page raised
@@ -107,6 +132,20 @@ function phoneCrop(focus: number): string {
 
 /** A drag shorter than this is a tap, not a swipe. */
 const SWIPE_MIN = 44
+/** Where the strip starts following the hand. Below it, nothing has happened. */
+const DECLARE_MIN = 8
+/**
+ * Where a press stops being a click.
+ *
+ * IT IS NOT `DECLARE_MIN`, AND THAT COST THE SHOP ITS LINKS. It was: any travel
+ * past eight pixels suppressed the click, so a cursor that drifted ten pixels
+ * between pressing and releasing navigated nowhere and paged nothing either, and
+ * measured on the running page 8 to 43 pixels was a band where the banner simply
+ * did not answer. Eight pixels is the right number for "start moving the strip",
+ * because the strip should track a hand immediately, and the wrong number for
+ * "this person did not mean to click", because hands shake and trackpads slide.
+ */
+const CLICK_MAX = 16
 /** How far the strip follows a finger before it stops giving ground. */
 const DRAG_MAX = 110
 
@@ -114,6 +153,10 @@ export function BannerStage() {
   const [tick, setTick] = useState(0)
   const [visible, setVisible] = useState(false)
   const [held, setHeld] = useState(false)
+  // Hovering and holding are two different brakes and they must not share a
+  // switch. A cursor dragged past the left edge of the section fires
+  // `pointerleave`, which would lift a hover brake while the hand is still down.
+  const [holding, setHolding] = useState(false)
   // Once the reader has steered, the strip stops steering itself. A carousel
   // that resumes its own tour four seconds after someone chose a panel is
   // taking the choice back.
@@ -135,10 +178,10 @@ export function BannerStage() {
   }, [])
 
   useEffect(() => {
-    if (!visible || held || reduced || taken) return
+    if (!visible || held || holding || reduced || taken) return
     const timer = window.setInterval(() => setTick((current) => current + 1), AUTOPLAY_MS)
     return () => window.clearInterval(timer)
-  }, [visible, held, reduced, taken])
+  }, [visible, held, holding, reduced, taken])
 
   if (BANNERS.length === 0) return null
 
@@ -165,6 +208,7 @@ export function BannerStage() {
       <Track
         tick={tick}
         reduced={reduced}
+        onHold={setHolding}
         onPick={(next) => {
           setTaken(true)
           setTick(next)
@@ -192,16 +236,21 @@ export function BannerStage() {
 function Track({
   tick,
   reduced,
+  onHold,
   onPick,
 }: {
   tick: number
   reduced: boolean | null
+  onHold: (holding: boolean) => void
   onPick: (tick: number) => void
 }) {
   const index = tick % BANNERS.length
   const layer = useRef<HTMLDivElement>(null)
-  const from = useRef<{ x: number; y: number } | null>(null)
+  const from = useRef<{ x: number; y: number; mouse: boolean; id: number } | null>(null)
+  /** Travel has passed `CLICK_MAX`: whatever happens next, it is not a click. */
   const swiped = useRef(false)
+  /** The strip is following the hand. */
+  const moving = useRef(false)
 
   const settle = () => {
     const node = layer.current
@@ -210,57 +259,137 @@ function Track({
     node.style.transform = ''
   }
 
-  // A mouse is left alone: the desktop already has two arrows and a click that
-  // must stay a click.
+  const stop = () => {
+    from.current = null
+    moving.current = false
+    onHold(false)
+    settle()
+  }
+
   const grab = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse') return
-    from.current = { x: event.clientX, y: event.clientY }
+    // The middle and right buttons belong to the browser: one opens the slide in
+    // a tab, the other opens a menu, and neither is a drag.
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+    from.current = {
+      x: event.clientX,
+      y: event.clientY,
+      mouse: event.pointerType === 'mouse',
+      id: event.pointerId,
+    }
     swiped.current = false
+    moving.current = false
+    onHold(true)
   }
 
   const drag = (event: ReactPointerEvent<HTMLDivElement>) => {
     const start = from.current
     if (!start) return
+    // A MOUSE THAT IS NO LONGER PRESSED IS NOT DRAGGING, AND THE STRIP USED TO
+    // DISAGREE. If a press ended somewhere this element never heard about, the
+    // next bare pass of the cursor over the artwork hauled the strip sideways
+    // and left it there. The button state travels on every move; it is cheaper
+    // to believe than to reconstruct.
+    if (start.mouse && event.buttons === 0) {
+      stop()
+      return
+    }
     const moved = event.clientX - start.x
     const fell = event.clientY - start.y
-    // Below eight pixels the gesture has not declared itself yet; past that, a
-    // steeper travel than it is wide belongs to the page, not to the strip.
-    if (!swiped.current) {
-      if (Math.abs(moved) < 8) return
-      if (Math.abs(fell) > Math.abs(moved)) {
-        from.current = null
-        settle()
+
+    if (!moving.current) {
+      if (Math.abs(moved) < DECLARE_MIN) return
+      // A steeper travel than it is wide belongs to the page, not to the strip.
+      // THIS IS A FINGER'S RULE AND ONLY A FINGER'S: a thumb has one movement
+      // for two jobs, swiping the strip and scrolling the document, so the strip
+      // has to give the ambiguous ones back. A mouse does not scroll by
+      // dragging, so a diagonal pull from a cursor is a swipe from an ordinary
+      // hand and cancelling it is the software arguing with the reader.
+      if (!start.mouse && Math.abs(fell) > Math.abs(moved)) {
+        stop()
         return
       }
-      swiped.current = true
+      moving.current = true
     }
+
+    // CAPTURE AND CLICK SUPPRESSION ARE THE SAME MOMENT, AND SPLITTING THEM
+    // BROKE THE LINK. Capture was claimed at `DECLARE_MIN`, where the strip
+    // starts following the hand, while the click was only suppressed at
+    // `CLICK_MAX`. Between the two, capture had already moved the click's target
+    // off the slide's image and onto this container, so a press that travelled
+    // ten pixels navigated nowhere while the code believed it was still a click:
+    // measured, the click's target came back as DIV with no href. Claiming the
+    // pointer is itself the decision that this is no longer a click, so it is
+    // made once, here, at the one threshold.
+    if (Math.abs(moved) > CLICK_MAX && !swiped.current) {
+      swiped.current = true
+      // CAPTURE IS THE MOUSE'S ALONE, AND HANDING IT TO A FINGER BROKE THE
+      // SWIPE OUTRIGHT. A touch pointer already has capture: the browser pins it
+      // to whatever element the finger landed on, which here is the slide's
+      // image. Calling `setPointerCapture` on this wrapper TAKES it off that
+      // image, and the `lostpointercapture` that fires there bubbles straight
+      // back into this same wrapper. Measured as a timeline on a 390px screen:
+      // capture moved at 22ms, the strip had followed the thumb by twenty
+      // pixels, and at 88ms our own handler read that bubbled event as the
+      // gesture ending and cancelled it. Every later move and the release then
+      // returned early, so the finger swipe this component already had stopped
+      // working the moment the mouse was let in.
+      //
+      // A mouse has no implicit capture and genuinely needs this, or the events
+      // stop the instant the cursor crosses out of a band that is 130 pixels
+      // tall and flush to both edges of the window. It is claimed here rather
+      // than on the way down because a captured pointer can move the `click`
+      // target off the slide's link and onto this container, and that is the
+      // shop's navigation traded for a gesture that had not started yet.
+      if (start.mouse) event.currentTarget.setPointerCapture(event.pointerId)
+    }
+
     const node = layer.current
     if (!node) return
     node.style.transition = 'none'
     node.style.transform = `translate3d(${Math.max(-DRAG_MAX, Math.min(DRAG_MAX, moved))}px,0,0)`
   }
 
-  const release = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const start = from.current
-    from.current = null
-    settle()
-    if (!start) return
-    const moved = event.clientX - start.x
-    if (Math.abs(moved) < SWIPE_MIN) return
-    onPick(moved < 0 ? index + 1 : index - 1 + BANNERS.length)
-  }
+  // THE RELEASE IS HEARD ON THE WINDOW, BECAUSE ON THIS ELEMENT IT WAS MISSED.
+  // `pointerdown` raises the brake and arms the gesture, but capture is only
+  // claimed once the drag declares itself, so every press that ends before that
+  // released somewhere else: on the dots, on an arrow, below the section, or
+  // simply straight down. All three resets lived on the wrapper, so none of them
+  // ran. Measured: the autoplay never ticked again for the rest of the visit,
+  // and the strip could then be dragged by a cursor with no button held. The
+  // window hears every release there is.
+  useEffect(() => {
+    const end = (event: PointerEvent) => {
+      const start = from.current
+      if (!start || event.pointerId !== start.id) return
+      const moved = event.clientX - start.x
+      stop()
+      if (Math.abs(moved) < SWIPE_MIN) return
+      onPick(moved < 0 ? index + 1 : index - 1 + BANNERS.length)
+    }
+    const cancel = (event: PointerEvent) => {
+      if (from.current && event.pointerId === from.current.id) stop()
+    }
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', cancel)
+    return () => {
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', cancel)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, onPick])
 
   return (
     <div className="relative">
       <div
-        className="touch-pan-y overflow-hidden"
+        // `touch-pan-y` gives the vertical axis back to the page so the document
+        // still scrolls under a thumb. `select-none` is the cursor's equivalent:
+        // without it a drag across artwork sweeps a text selection through the
+        // slide and the browser paints a highlight over the picture. The two
+        // grab cursors are the only affordance a mouse gets, and they are the
+        // convention every carousel of this kind has used for fifteen years.
+        className="touch-pan-y cursor-grab overflow-hidden select-none active:cursor-grabbing"
         onPointerDown={grab}
         onPointerMove={drag}
-        onPointerUp={release}
-        onPointerCancel={() => {
-          from.current = null
-          settle()
-        }}
         // The slides are links, so a swipe would otherwise end on a department
         // page. The capture phase is where that click is stopped.
         onClickCapture={(event) => {
@@ -288,7 +417,20 @@ function Track({
                 aria-hidden={position !== index}
                 draggable={false}
                 style={{ width: `${100 / BANNERS.length}%` }}
-                className="relative block shrink-0"
+                // THE GRAB CURSOR HAS TO BE REPEATED HERE, AND MEASURING IS THE
+                // ONLY WAY ANYONE FINDS THAT OUT. It is declared on the wrapper
+                // above and every slide is an `<a>`, so the browser's own
+                // stylesheet sets `cursor: pointer` DIRECTLY on the link, and a
+                // declaration that matches an element beats a value it would
+                // otherwise inherit, whoever wrote it. Measured on the running
+                // page: wrapper `grab`, slide `pointer`. The affordance existed
+                // in the source and on no pixel of the screen.
+                //
+                // Grab rather than pointer, on a link, on purpose: the click
+                // still navigates and always will, and every banner already
+                // carries its own call to action in the artwork, so what the
+                // cursor has left to say is the thing nothing else announces.
+                className="relative block shrink-0 cursor-grab active:cursor-grabbing"
               >
                 {/* THE PHONE TAKES A SHORTER WINDOW, NOT A TALLER ONE, AND THAT
                     IS THE PART THAT IS EASY TO GET BACKWARDS. These pieces are
@@ -353,15 +495,25 @@ function Track({
           to mean structure. Six pixels: they are a position readout, not a
           control anyone hunts for, and the arrows beside them are the control.
 
-          THE MARK AND THE TARGET ARE NOW TWO ELEMENTS, BECAUSE THEY WERE ONE
-          AND IT COST THE PHONE ITS CONTROLS. A 6px button with `-inset-4`
-          reaches 38px, under the hand's 44, and five of them 14px apart made
-          five hit areas that overlapped each other by 24 pixels: on a phone
-          every tap in that row was a coin toss. The button is a 44px cell
-          below sm, spaced 8px clear of its neighbours, and the span inside it
-          keeps the 6px mark. From sm the button is the mark again, at exactly
-          its old size, and the pseudo-element carries the pointer's hit area. */}
-      <div className="absolute inset-x-0 bottom-4 z-[1] flex items-center justify-center gap-2 md:bottom-5">
+          A HIT AREA WIDER THAN THE SPACE BETWEEN TWO DOTS IS NOT A HIT AREA,
+          IT IS A LOTTERY, AND THIS ROW HELD ONE ON EVERY SCREEN. The dots were
+          6px marks 8px apart, a pitch of 14, each carrying a square
+          pseudo-element inflated by `-inset-4` to 38px across. Each target
+          therefore covered its neighbours, later siblings paint over earlier
+          ones, and the row resolved to whichever dot came last. Measured with
+          `elementFromPoint` at each dot's OWN centre, at 1440 and at 390 alike:
+          Cuisine hit Réseaux, Réseaux hit TV et audio, TV et audio hit
+          Électroménager, Électroménager hit Impression. Four of the five
+          indicators could not be pressed at all, and pressing the one labelled
+          TV et audio brought up Électroménager.
+
+          The fix is arithmetic, not judgement. The gap is 20px, so the pitch is
+          26; the target is inflated by 8px a side, so it is 22 across and clears
+          its neighbour by 4. It keeps the full 38px of height, which costs
+          nothing because there is nothing above or below it. Same mark, same
+          size, same behaviour at every width, and each one now answers for
+          itself. */}
+      <div className="absolute inset-x-0 bottom-4 z-[1] flex items-center justify-center gap-5 md:bottom-5">
         {BANNERS.map((banner, position) => {
           const current = position === index
           return (
@@ -371,7 +523,7 @@ function Track({
               onClick={() => onPick(position)}
               aria-label={banner.label}
               aria-current={current}
-              className={`press relative grid size-1.5 place-items-center rounded-full transition-transform duration-[var(--t-base)] ease-brand after:absolute after:-inset-4 after:content-[''] ${
+              className={`press relative grid size-1.5 place-items-center rounded-full transition-transform duration-[var(--t-base)] ease-brand after:absolute after:-inset-x-2 after:-inset-y-4 after:content-[''] ${
                 current ? 'sm:scale-150' : ''
               }`}
             >
