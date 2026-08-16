@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { CartDrawer } from '@/components/layout/CartDrawer'
 import { Reveal } from '@/components/ui/Reveal'
+import { NavigationProgress } from '@/components/ui/NavigationProgress'
 import { ScrollOnQuery } from '@/components/ui/ScrollOnQuery'
 import { AccountProvider } from '@/lib/account'
 import { CartProvider } from '@/lib/cart'
@@ -113,6 +114,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             it is wrapped, and this component renders nothing, so the boundary
             costs nothing and keeps the rest of the document static. */}
         <Suspense fallback={null}>
+          <NavigationProgress />
           <ScrollOnQuery />
         </Suspense>
       </body>
