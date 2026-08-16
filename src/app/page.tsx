@@ -16,11 +16,12 @@ import {
   getFamilyCount,
   getMeta,
   getPromoPanels,
+  getUniverses,
   getRecentBySubcategory,
   getSelections,
   summarise,
 } from '@/lib/catalog'
-import { formatAmount } from '@/lib/format'
+import { formatAmount, formatCount } from '@/lib/format'
 
 /**
  * The homepage.
@@ -60,6 +61,12 @@ export default function HomePage() {
   const familyCount = getFamilyCount()
   const panels = getHeroPanels()
   const promos = getPromoPanels()
+  // The band's own heading states the rule it is sorted by, so the two numbers
+  // in that sentence are counted here rather than typed: hard-coding 869 and 514
+  // would be right today and wrong the first time the export moves.
+  const depths = getUniverses()
+    .map((universe) => universe.totalCount)
+    .sort((a, b) => b - a)
   // Twelve, not ten: the grid runs 2, 3 and 4 columns, and twelve is the only
   // count under fifteen that fills whole rows at all three. Ten left two empty
   // cells, 613 by 474 pixels each, on every screen between 768 and 1279.
@@ -96,6 +103,23 @@ export default function HomePage() {
         <HeroDeck panels={panels} />
 
         <div className="mt-stack">
+          {/* THE BAND HAD NO HEADING AT ALL, AND A BAND OF FOUR PANELS THAT DOES
+              NOT SAY WHAT IT IS reads as advertising. It is not: these four are
+              the four deepest departments in the shop, 869, 747, 704 and 514
+              references against 351 for the fifth, so the heading states the
+              rule and the rule is a count anyone can check.
+
+              IT IS NOT "BEST SELLER", WHICH WAS ASKED FOR AND CANNOT BE WRITTEN.
+              This export carries no order history: not one row of it says what
+              sells. Printing those two words would be the first invented claim
+              on the site, on the page most people see first, and it is the exact
+              rule that took "les équipes interviennent à Douala" off /services.
+              Depth is the true thing this band happens to be sorted by. */}
+          <SectionHeader
+            title="Là où le magasin est le plus profond"
+            context={`Les ${formatCount(promos.length, 'rayon')} qui portent le plus de références, de ${formatAmount(depths[0] ?? 0)} à ${formatAmount(depths[promos.length - 1] ?? 0)}. Le suivant en compte ${formatAmount(depths[promos.length] ?? 0)}.`}
+            action={{ href: '/catalogue', label: 'Ouvrir le catalogue' }}
+          />
           <PromoBand panels={promos} />
         </div>
       </section>
