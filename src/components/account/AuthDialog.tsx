@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 
-import { IconClose } from '@/components/brand/Icons'
+import { IconChevronLeft, IconClose, IconPhone } from '@/components/brand/Icons'
 import { SHOWROOMS } from '@/constants/site'
 import { formatCount } from '@/lib/format'
 import { hasBeenGreeted, normalisePhone, useAccount, type Account } from '@/lib/account'
@@ -452,6 +452,12 @@ function CardForm({
   const [phone, setPhone] = useState(account?.phone ?? '')
   const [counter, setCounter] = useState(account?.counter ?? '')
   const [errors, setErrors] = useState<Errors>({})
+  // TWO STEPS, BECAUSE THE FIRST QUESTION IS NOT A FIELD. A reader who opens
+  // this on arrival is being asked to fill a form before being told what it is
+  // for. Asking how they want to be reached first is one tap, it is the only
+  // choice this shop actually has to offer, and it turns the second screen from
+  // an interrogation into the consequence of an answer they already gave.
+  const [step, setStep] = useState<'choix' | 'fiche'>(account ? 'fiche' : 'choix')
   const form = useRef<HTMLFormElement>(null)
   const ids = useId()
 
@@ -488,8 +494,59 @@ function CardForm({
     onSubmit({ name: trimmed, phone: dialled, counter })
   }
 
+  if (step === 'choix') {
+    return (
+      <div className="mt-5 flex flex-1 flex-col md:mt-8">
+        <p className="text-small leading-[1.6] text-ink-2">
+          Comment préférez-vous qu’on vous réponde ? Le comptoir renvoie la facture
+          proforma par le canal que vous choisissez ici.
+        </p>
+
+        <div className="mt-6 grid gap-3">
+          <button
+            type="button"
+            onClick={() => setStep('fiche')}
+            className="press fill inline-flex min-h-12 items-center justify-center gap-2.5 rounded-control bg-accent px-7 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent-ink)]"
+          >
+            <IconPhone className="text-[1.125rem]" />
+            Par WhatsApp
+          </button>
+          <button
+            type="button"
+            onClick={() => setStep('fiche')}
+            className="press inline-flex min-h-12 items-center justify-center gap-2.5 rounded-control border border-rule-2 px-7 text-[0.875rem] font-bold text-ink transition-colors duration-[var(--t-fast)] hover:border-ink"
+          >
+            Par téléphone
+          </button>
+        </div>
+
+        {/* WHY THERE IS NO "CONTINUER AVEC GOOGLE" HERE, AND IT IS NOT AN
+            OVERSIGHT. Google sign-in needs an OAuth client, a secret, a library
+            and a server session. This project has no authentication dependency,
+            no environment file, and two API routes that both do nothing but read
+            the catalogue. A button carrying Google's name that signs nobody in is
+            the one kind of control this site refuses: it asks for a credential
+            and it cannot honour it. The day there is a provider it drops into
+            this exact slot, above the two below, and nothing else here changes. */}
+        <p className="mt-6 text-micro leading-[1.6] text-ink-3">
+          Aucun mot de passe, aucun compte à créer. La fiche reste dans ce
+          navigateur et sert à remplir vos devis.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <form ref={form} onSubmit={submit} noValidate className="mt-5 flex flex-1 flex-col md:mt-8">
+      <button
+        type="button"
+        onClick={() => setStep('choix')}
+        className="press mb-5 inline-flex min-h-11 items-center gap-2 self-start text-small text-ink-3 transition-colors duration-[var(--t-fast)] hover:text-ink"
+      >
+        <IconChevronLeft className="text-[1rem]" />
+        Retour
+      </button>
+
       <label className="block">
         <span className={LABEL}>Nom et prénom</span>
         <span className={FIELD}>

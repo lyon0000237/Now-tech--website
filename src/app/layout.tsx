@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { IBM_Plex_Mono, Poppins } from 'next/font/google'
 
 import './globals.css'
@@ -8,6 +9,7 @@ import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { CartDrawer } from '@/components/layout/CartDrawer'
 import { Reveal } from '@/components/ui/Reveal'
+import { ScrollOnQuery } from '@/components/ui/ScrollOnQuery'
 import { AccountProvider } from '@/lib/account'
 import { CartProvider } from '@/lib/cart'
 import { getMeta } from '@/lib/catalog'
@@ -107,6 +109,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </AccountProvider>
         <Assistant />
         <Reveal />
+        {/* `useSearchParams` opts its whole subtree into client rendering unless
+            it is wrapped, and this component renders nothing, so the boundary
+            costs nothing and keeps the rest of the document static. */}
+        <Suspense fallback={null}>
+          <ScrollOnQuery />
+        </Suspense>
       </body>
     </html>
   )

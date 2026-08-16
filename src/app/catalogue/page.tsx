@@ -432,7 +432,13 @@ export default async function CataloguePage({ searchParams }: Params) {
         </section>
       )}
 
-      <section className={`shell ${filtering ? '' : 'mt-band'}`}>
+      {/* `data-results` is what ScrollOnQuery carries the reader back to when a
+          filter, a sort or a page number changes the set under them. It is on
+          the section rather than on the grid so the heading and the count, which
+          are what actually answer the tap, arrive on screen first. This page
+          draws its own listing instead of using the shared `Listing`, so it
+          needs its own anchor. */}
+      <section data-results className={`shell ${filtering ? '' : 'mt-band'}`}>
         <SectionHeader
           title={filtering ? 'Les références retenues' : 'Toutes les références'}
           context={

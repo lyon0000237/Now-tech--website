@@ -857,17 +857,31 @@ body {
 }
 
 /* An underline drawn from the leading edge, for a link inside a card. */
+/* --- A link answering the pointer ----------------------------------------
+   IT CHANGES COLOUR. IT USED TO DRAW ITSELF A LINE, AND THE LINE HAD TO GO.
+
+   The gesture was a rule growing left to right under the words, on the site's
+   own drawing curve, and it was used on every product name, every family, every
+   brand and every quiet link: several hundred of them on a listing page. Seen
+   once it reads as craft. Seen on every text on the site it reads as a tic, and
+   the client named it for what it had become.
+
+   A colour change says the same thing in less: this is a link, the pointer is on
+   it. It is also the only answer that survives being everywhere, because it adds
+   no geometry to a page built out of hairlines that already mean structure. The
+   class is kept rather than removed from three hundred call sites, and it now
+   carries the transition every other control on the site uses.
+
+   `currentColor` is deliberately not touched here: a link inside the green rail,
+   inside a card, or on paper each has its own hover colour declared where it
+   lives, and this rule only makes the change smooth. */
 .draw-under {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-repeat: no-repeat;
-  background-position: 0 100%;
-  background-size: 0% 1px;
-  transition: background-size var(--e-rule) var(--ease-draw);
+  transition: color var(--t-base) var(--ease-brand);
 }
 .group:hover .draw-under,
 .draw-under:hover,
 .draw-under:focus-visible {
-  background-size: 100% 1px;
+  color: var(--accent);
 }
 
 /* ----------------------------------------------------------------------------
@@ -1085,7 +1099,7 @@ body {
     transform: none;
   }
   .draw-under {
-    background-size: 100% 1px;
+    transition: none;
   }
   .lift,
   .travel,

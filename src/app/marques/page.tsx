@@ -636,7 +636,18 @@ export default async function MarquesPage({ searchParams }: Params) {
             {shelf.map((brand, index) => (
               <li
                 key={brand.slug}
-                className="w-[62%] max-w-[15rem] shrink-0 snap-start md:w-auto md:max-w-none md:shrink"
+                /* A HAIRLINE BETWEEN EACH, AND ONLY ON THE ROLLED ROW.
+                   Side by side, a brand's photograph, its name and its count sit
+                   directly against the next brand's photograph with nothing but
+                   a gap of 16 pixels between them, and at a glance the eye pairs
+                   a name with the picture on its right as readily as with the one
+                   above it. Every other list on this site is separated by a rule
+                   and this was the one that was not. `first:border-l-0` because
+                   a rule before the first card is a rule against the edge of the
+                   screen, and `pl-4` gives the line something to stand off from.
+                   From md it is a grid, the rows align on their own, and the
+                   rules come off. */
+                className="w-[62%] max-w-[15rem] shrink-0 snap-start border-l border-rule pl-4 first:border-l-0 first:pl-0 md:w-auto md:max-w-none md:shrink md:border-l-0 md:pl-0"
               >
                 <ShelfCard brand={brand} picture={brandPicture(brand.slug)} index={index} />
               </li>

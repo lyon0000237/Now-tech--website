@@ -102,7 +102,18 @@ export default function HomePage() {
       <section className="shell mt-stack">
         <HeroDeck panels={panels} />
 
-        <div className="mt-stack">
+        {/* THE BAND IS A DESKTOP OBJECT NOW, AND `hidden` IS ENOUGH TO MAKE IT
+            FREE. Six panels of a department that the twelve tiles above already
+            offer, each with a photograph, is a second table of contents on the
+            screen that can least afford one: the tiles are the shop's entrance
+            and the band repeats six twelfths of it, 900 pixels further down.
+            The images cost nothing while it is hidden, because `next/image` is
+            lazy by default and an element that is `display: none` never enters
+            a viewport, so the observer never fires and the file is never
+            fetched. From md, where the band sits beside itself in two columns
+            and the reader is not scrolling past it one card at a time, it
+            returns untouched. */}
+        <div className="mt-stack hidden md:block">
           {/* THE BAND HAD NO HEADING AT ALL, AND A BAND OF FOUR PANELS THAT DOES
               NOT SAY WHAT IT IS reads as advertising. It is not: these four are
               the four deepest departments in the shop, 869, 747, 704 and 514

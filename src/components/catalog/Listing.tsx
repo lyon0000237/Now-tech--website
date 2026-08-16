@@ -82,7 +82,11 @@ export function Listing({
   sort: SortKey
 }) {
   return (
-    <>
+    // `data-results` is the anchor ScrollOnQuery carries the reader back to when
+    // a filter, a sort or a page number changes the set under them. It sits on
+    // the whole listing rather than on the grid so the count and the sort row,
+    // which are what actually answer the reader's tap, arrive on screen first.
+    <div data-results>
       {listing.children.length > 0 ? (
         <nav aria-label="Familles de ce rayon" className="enter mb-6 md:mb-stack">
           {/* The negative inline margin is written as a calc and not as
@@ -121,6 +125,6 @@ export function Listing({
         page={listing.page}
         pages={listing.pages}
       />
-    </>
+    </div>
   )
 }
