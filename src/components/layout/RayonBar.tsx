@@ -55,6 +55,12 @@ import type { DepartmentNav } from '@/types/summary'
  * the whole of what the workshop does and not only the installing part.
  */
 const SECTIONS = [
+  // ACCUEIL OWNS ONLY ITSELF, AND THAT IS NOT A DETAIL. `owns` matches a root or
+  // anything under it, and "/" is the prefix of every route on the site: listed
+  // like the others it would light up on all of them and the bar would say the
+  // reader is on the home page while they read a product sheet. The empty list
+  // means "no descendants", and the exact match below is what turns it on.
+  { href: '/', label: 'Accueil', owns: [] },
   {
     href: '/catalogue',
     label: 'Catalogue',
@@ -68,7 +74,10 @@ const SECTIONS = [
   { href: '/contact', label: 'Nous joindre', owns: ['/contact'] },
 ] as const
 
-function owns(roots: readonly string[], pathname: string): boolean {
+function owns(roots: readonly string[], pathname: string, href: string): boolean {
+  // The tab's own address always counts, which is what lets a section declare no
+  // descendants at all. Everything else is a root and the routes beneath it.
+  if (pathname === href) return true
   return roots.some((root) => pathname === root || pathname.startsWith(`${root}/`))
 }
 
@@ -121,7 +130,7 @@ export function RayonBar({
 
         <nav aria-label="Sections" className="hidden items-stretch md:flex">
           {SECTIONS.map((section) => {
-            const current = owns(section.owns, pathname)
+            const current = owns(section.owns, pathname, section.href)
 
             return (
               <Link
