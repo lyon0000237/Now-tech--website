@@ -1250,8 +1250,22 @@ body {
    one is several seconds of nothing. The bar travels rather than filling,
    because a filling bar claims to know a proportion nobody measured. */
 
+/*
+ * IT MUST NOT DECLARE A POSITION, AND DECLARING ONE PUT IT AT THE FOOT OF THE
+ * PAGE. This rule carried `position: relative`, so that its travelling `::after`
+ * had something to resolve against. Plain CSS outside Tailwind's layers beats a
+ * utility, so `relative` overrode the `fixed` the component asks for, and the
+ * bar stopped being pinned to the top of the window and became an ordinary 3px
+ * strip in normal flow at the very end of the body. Measured while a navigation
+ * was actually running: top 1700px on a 900px-tall desktop window, top 7553px on
+ * a phone. It was rendering, it was the right colour, it was animating, and no
+ * reader has ever seen it. This is the second time the same collision has cost
+ * this site a feature; `.shimmer` was the first.
+ *
+ * `fixed` is itself a positioning scheme, so the `::after` has its containing
+ * block either way and nothing here needs to say so.
+ */
 .route-bar {
-  position: relative;
   overflow: hidden;
   background: var(--rule);
 }
