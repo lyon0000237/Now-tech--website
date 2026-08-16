@@ -1265,32 +1265,52 @@ body {
  * `fixed` is itself a positioning scheme, so the `::after` has its containing
  * block either way and nothing here needs to say so.
  */
+/*
+ * NO TRACK BEHIND IT, AND THE TRACK WAS WHY IT LOOKED GREY. This carried
+ * `background: var(--rule)`, so a full-width pale grey rule was painted across
+ * the top of every page the instant a link was pressed, and the brand green sat
+ * on eight per cent of it. The colour was right the whole time and the reader
+ * saw the other ninety-two per cent. NProgress has never drawn a track, and
+ * neither does the `nextjs-toploader` the reference site uses: there is only the
+ * coloured bar, growing out of nothing. That is also the more honest picture,
+ * because a track states a total, and nothing here knows one.
+ */
 .route-bar {
   overflow: hidden;
-  background: var(--rule);
-}
-.route-bar::after {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  inline-size: 40%;
-  background: var(--accent);
-  animation: route-travel 1100ms var(--ease-draw) infinite;
+  background: transparent;
 }
 
-@keyframes route-travel {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(350%);
-  }
+/*
+ * IT FILLS NOW, AND IT USED TO ONLY TRAVEL. The segment slid across the track on
+ * a loop and then the whole bar was removed, so the bar never ARRIVED anywhere:
+ * it was there, and then it was not. The shop read that as the indicator giving
+ * up part way through, which is exactly what it looked like. A bar that runs to
+ * the end and closes says the page got here; a bar that vanishes mid-stride says
+ * something went wrong. NVC's reference does the same thing through
+ * `nextjs-toploader`, which is NProgress: start at 8 per cent, creep while the
+ * wait lasts, then take the last of it in one move and fade.
+ *
+ * The glow is NVC's too, at a quarter of the strength. Three pixels of flat
+ * green on a white masthead is easy to miss; three pixels with a little light
+ * under them is not, and this is the one element on the site whose whole job is
+ * to be noticed from the corner of an eye.
+ */
+.route-bar > span {
+  display: block;
+  block-size: 100%;
+  inline-size: 100%;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: var(--accent);
+  box-shadow:
+    0 0 10px rgb(0 128 19 / 0.5),
+    0 0 4px rgb(0 128 19 / 0.4);
+  transition: transform 220ms var(--ease-draw);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .route-bar::after {
-    animation: none;
-    inline-size: 100%;
-    opacity: 0.4;
+  .route-bar > span {
+    transition-duration: 0ms;
+    box-shadow: none;
   }
 }

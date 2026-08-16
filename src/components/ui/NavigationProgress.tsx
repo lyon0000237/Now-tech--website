@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /**
  * The bar that runs while the next page is actually being fetched.
@@ -35,48 +35,98 @@ import { useEffect, useState } from 'react'
  * the current one. When the new route commits the two stop matching and the bar
  * is gone, with no effect to write it and no render with the wrong value first.
  *
- * IT DOES NOT CLAIM A PERCENTAGE. Nobody measured one. The bar travels rather
- * than fills, which says "still working" without inventing how much is left.
+ * IT COULD NOT BE SEEN AT ALL, TWICE, FOR TWO DIFFERENT REASONS. The first was
+ * that it was not where it said it was: `.route-bar` declared `position:
+ * relative` in the stylesheet, plain CSS beat the `fixed` utility below, and the
+ * bar drew itself as an ordinary strip at the FOOT of the document, measured at
+ * top 1700px in a 900px window. The second was duration. Frame by frame on a
+ * real click it lasted THREE FRAMES, seven milliseconds, because every `Link`
+ * here is prefetched on hover, so by the time the button goes down the next page
+ * is already in the client and seven milliseconds is the honest length of that
+ * navigation.
  *
- * AND IT STAYS LONG ENOUGH TO BE SEEN, WHICH IT DID NOT. The shop reported the
- * indicator had disappeared. It had not: measured frame by frame on a real
- * click, it appeared for THREE FRAMES, seven milliseconds, and was gone. Nothing
- * was broken, there was simply nothing left to wait for. Every `Link` on this
- * site is prefetched when the pointer reaches it, so by the time the button goes
- * down the next page is already in the client, and the honest duration of that
- * navigation really is seven milliseconds.
+ * AND THEN IT ENDED WITHOUT ARRIVING, WHICH READ AS FAILING. A first attempt
+ * simply held the bar up for half a second whatever happened. The shop saw
+ * through it immediately: the bar appeared and vanished mid-stride, "alors que
+ * la navigation n'est pas finie". They were right, and the fault was in the
+ * shape rather than the timing. A segment sliding back and forth on a loop never
+ * gets anywhere, so removing it looks like abandonment however long it ran.
  *
- * Seven milliseconds is not feedback, it is a flicker, and a flicker is worse
- * than silence. So once the bar is up it stays up for `FLOOR_MS`, whether or not
- * the page beat it there. This is the one concession to appearance in the whole
- * component and it is worth naming: for a fast navigation the bar outlives the
- * wait it describes. It is defensible because the bar never claimed to measure
- * anything, only to say that a press was received and the site is going
- * somewhere, and because the alternative on a prefetched route is a press that
- * produces no visible response at all. On the connections this shop is actually
- * used over, the route is the slower of the two and the floor never binds.
+ * SO IT IS NPROGRESS'S SHAPE, WHICH IS THE REFERENCE'S TOO. NVC reaches this
+ * with `nextjs-toploader`, configured at three pixels with `crawl: true` and a
+ * glow; that package is NProgress. The behaviour, not the package, is what
+ * matters and it is thirty lines: open at 8 per cent so a press is answered
+ * before anything is known, creep with a shrinking step while the wait lasts,
+ * never past `CEILING` on its own, and when the route really commits take the
+ * whole remaining track in one move and fade. A bar that reaches the end says
+ * the page got here. A bar that disappears says something went wrong. Only one
+ * of those is true, and it is now the only one the reader is shown.
+ *
+ * IT STILL CLAIMS NO PERCENTAGE. Nobody measured one, and `creep` is not a
+ * measurement: it is a curve chosen so that a short wait moves the bar a long
+ * way and a long wait leaves it inching. The only honest instant in the whole
+ * animation is the last one, and that one is real.
  */
-/** Below this, a reader sees a glitch rather than an answer. */
-const FLOOR_MS = 500
+/** Where the bar starts, so a press is answered before anything is known. */
+const START = 0.08
+/** The creep never reaches the end on its own; only arriving does that. */
+const CEILING = 0.94
+const CRAWL_MS = 180
+/** The close: fill to the end, hold it a moment, then go. */
+const CLOSE_MS = 320
+
+/**
+ * NProgress's curve, which is the whole reason this reads as progress.
+ *
+ * The step shrinks as the bar advances, so it covers ground quickly at first and
+ * then slows to a crawl near the end. That shape is what lets an indicator that
+ * measures NOTHING still feel like it is describing something: a wait that ends
+ * quickly gets a bar that moved a lot, and a wait that drags gets one that is
+ * still inching forward rather than one that has stopped.
+ */
+function creep(at: number): number {
+  const step = at < 0.3 ? 0.09 : at < 0.6 ? 0.045 : at < 0.85 ? 0.018 : 0.005
+  return Math.min(CEILING, at + step)
+}
 
 export function NavigationProgress() {
   const pathname = usePathname()
   const params = useSearchParams()
   const here = `${pathname}?${params.toString()}`
   const [startedAt, setStartedAt] = useState<string | null>(null)
-  // Set with the click and cleared by a timer, never by the route: this is the
-  // half of the bar's life that the network does not control.
-  const [holding, setHolding] = useState(false)
+  // Raised by the click and lowered by the closing timer, so the bar's last
+  // moments belong to the animation rather than to the router.
+  const [running, setRunning] = useState(false)
+  const fill = useRef<HTMLSpanElement>(null)
+  const at = useRef(0)
 
   const waiting = startedAt !== null && startedAt === here
-  const pending = waiting || holding
+  const paint = (value: number) => {
+    at.current = value
+    if (fill.current) fill.current.style.transform = `scaleX(${value})`
+  }
 
-  // The page arrived before the floor did. Keep the bar for what is left of it.
+  // WHILE THE PAGE IS COMING. The bar is written straight to the node, not
+  // through state: this ticks five times a second and a re-render of the whole
+  // tree to move three pixels of green is a cost the reader pays for in the
+  // page they are actually waiting for.
   useEffect(() => {
-    if (!holding) return
-    const timer = window.setTimeout(() => setHolding(false), FLOOR_MS)
+    if (!running || !waiting) return
+    paint(START)
+    const timer = window.setInterval(() => paint(creep(at.current)), CRAWL_MS)
+    return () => window.clearInterval(timer)
+  }, [running, waiting])
+
+  // AND WHEN IT HAS. The route has changed under us, so the wait is genuinely
+  // over: take the rest of the track in one move and leave. `setRunning` runs
+  // from the timer rather than from the effect body, so no state is written
+  // during an effect.
+  useEffect(() => {
+    if (!running || waiting) return
+    paint(1)
+    const timer = window.setTimeout(() => setRunning(false), CLOSE_MS)
     return () => window.clearTimeout(timer)
-  }, [holding])
+  }, [running, waiting])
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -100,13 +150,13 @@ export function NavigationProgress() {
       if (url.pathname === window.location.pathname && url.search === window.location.search) return
 
       setStartedAt(`${window.location.pathname}?${window.location.search.replace(/^\?/, '')}`)
-      setHolding(true)
+      setRunning(true)
     }
 
     // Back and forward are navigations the reader also waits through.
     const onPop = () => {
       setStartedAt(`${window.location.pathname}?${window.location.search.replace(/^\?/, '')}`)
-      setHolding(true)
+      setRunning(true)
     }
 
     document.addEventListener('click', onClick, { capture: true })
@@ -117,7 +167,7 @@ export function NavigationProgress() {
     }
   }, [])
 
-  if (!pending) return null
+  if (!running) return null
 
   return (
     <span
@@ -127,6 +177,8 @@ export function NavigationProgress() {
       // on purpose. `route-bar` is in globals.css: a travelling segment, not a
       // filling one, and it holds still under prefers-reduced-motion.
       className="route-bar fixed inset-x-0 top-0 z-50 block h-[3px]"
-    />
+    >
+      <span ref={fill} />
+    </span>
   )
 }
