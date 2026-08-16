@@ -3,10 +3,11 @@ import Link from 'next/link'
 
 import { IconPhone } from '@/components/brand/Icons'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { Packshot } from '@/components/product/Packshot'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Action } from '@/components/ui/Action'
 import { PHONES, PICKUP_LINE, WHATSAPP, dialable } from '@/constants/site'
-import { TRADES, isPrestation, readable, tradeOf } from '@/constants/services'
+import { PHOTO_NOTE, TRADES, isPrestation, readable, tradeOf } from '@/constants/services'
 import { getCategoryBySlug, getServices, getUniverse } from '@/lib/catalog'
 import type { ProductSummary } from '@/types/summary'
 import { formatCount, formatPrice } from '@/lib/format'
@@ -84,6 +85,57 @@ export const metadata: Metadata = {
  *
  * The nameless record is dropped. A row with no name is not a service the shop
  * declines to describe, it is a hole in the export.
+ *
+ * ---------------------------------------------------------------------------
+ * THE SECOND COMPLAINT, AND THE SECOND REWRITE: "visuellement c'est fade", "on
+ * a l'impression de ne pas tomber sur l'essentiel".
+ *
+ * MEASURED AT 390 x 844 BEFORE THIS PASS: 679 words, ZERO images, 5 680 pixels
+ * tall. The most text and the least picture of any page on this storefront, and
+ * the numbers say why it reads as fade: a reader arrived at a wall of type and
+ * had to travel six and a half screens through it to learn that this shop knows
+ * how to run cable. The five trades were the answer to his question and they
+ * were buried in prose he had no reason to finish.
+ *
+ * WHAT CHANGED, IN THREE MOVES.
+ *
+ * 1. THE LEAD IS NOW THE SOURCE SENTENCE AND NOTHING ELSE. It ran to 55 words
+ *    and its last two sentences restated, in the reader's first screen, exactly
+ *    what the green rail one screen later says with a heading and a button:
+ *    that a prestation is not put in a basket. Saying it twice did not make it
+ *    twice as clear, it made the top of the page an essay. The lead is now the
+ *    `installation` answer from `constants/assistant.ts` verbatim, both
+ *    sentences of it, which is the one public claim this shop makes about its
+ *    own workshop and the same words Bod speaks on every page of this site.
+ *    26 words. The panier boundary is not lost: it is the rail's own heading.
+ *
+ * 2. THE FIVE TRADES COME FIRST, AS PICTURES, AND ON A PHONE THEY SCROLL
+ *    SIDEWAYS. A shelf and not a stack, because a stack of five photographs is
+ *    five screens of scrolling before the second one and the whole complaint
+ *    was about scrolling past the essential. It is a shelf in the strict sense
+ *    the house rule sets: it snaps, it lets the next card show past the right
+ *    edge so the eye knows there is a sixth thing to reach for, it contains its
+ *    own overscroll so a horizontal flick never steals the page's vertical
+ *    travel, and it exists ONLY below `md`. From `md` it is a grid, three then
+ *    five across, because a desktop reader comparing five trades wants them all
+ *    on one line and a mouse has no inertia to flick with. Each tile jumps to
+ *    that trade's own list further down, so the five headings are one gesture
+ *    away instead of 679 words away.
+ *
+ * 3. THE PICTURES ARE THE ONLY DOWNLOADED PHOTOGRAPHS ON THIS STOREFRONT, and
+ *    `constants/services.ts` carries the whole argument for why this page is
+ *    the exception and what the five are forbidden from showing. The short
+ *    version: the workshop sells labour, labour has no packshot, and the
+ *    fourteen pieces of hardware that share the supplier's term are the exact
+ *    confusion this page was written to remove. `PHOTO_NOTE` prints under the
+ *    shelf so no reader can take a stock camera wall for the counter in Akwa.
+ *
+ * WHAT DID NOT CHANGE, AND WAS NOT ALLOWED TO. Not one prestation, rate, delay,
+ * guarantee or service area is added by this pass. Not one link on this page
+ * reaches `/produit`. The nineteen rows still open WhatsApp with the request
+ * already written, the rail still hands over two telephone numbers and the
+ * three counters from `PICKUP_LINE`, and the fourteen pieces of hardware are
+ * still stated as a fact and not printed as a list.
  */
 
 /** The one message this page sends, wherever it is sent from. */
@@ -147,9 +199,141 @@ export default function ServicesPage() {
     <>
       <PageHeader
         title="Ce que fait l’atelier"
-        lead="L’atelier installe et configure ce qu’il vend : vidéosurveillance, réseau, contrôle d’accès, onduleurs et solaire. Cette page ne vend rien : une prestation se chiffre après un relevé sur site, elle ne se met pas au panier. Le panier, lui, sert au matériel."
+        /* THE `installation` ANSWER FROM `constants/assistant.ts`, WORD FOR
+           WORD, AND THE TWO SENTENCES THAT USED TO FOLLOW IT ARE GONE. They
+           said that this page sells nothing and that the basket is for
+           material, which is true, sourced, and already the heading and the
+           first paragraph of the green rail one screen below. Printed twice it
+           cost 29 of the 55 words a phone reader had to cross before the page
+           showed him anything, and it pushed the first photograph 220 pixels
+           further down a 844-pixel screen. Once is enough, and the rail is
+           where it lands hardest because that is where the button is. */
+        lead="L’atelier installe et configure ce qu’il vend : vidéosurveillance, réseau, contrôle d’accès, onduleurs et solaire. La prestation se chiffre après un relevé sur site."
         aside={prestations.length > 0 ? formatCount(prestations.length, 'prestation') : undefined}
       />
+
+      {/* THE SHELF OF TRADES, AND IT IS THE FIRST THING UNDER THE TITLE ON
+          PURPOSE.
+
+          The question this page is opened with is "savez-vous faire ceci", and
+          for six months the answer was 679 words below the fold. Five
+          photographs answer it in the first screen: measured at 390 x 844, the
+          first one now lands at y=440 with 34 words in front of it, where the
+          page used to carry 679 words and no picture at all.
+
+          It is drawn from `groups` and not from `TRADES`, so a heading that has
+          no records under it has no tile either. The rule is the same one the
+          lists below already follow: a trade is a heading over records that
+          exist, never a promise. */}
+      {groups.length > 0 ? (
+        <section className="shell">
+          <SectionHeader title="Les métiers de l’atelier" />
+
+          {/* THE RAIL, AND EVERY CLASS ON IT IS LOAD-BEARING BELOW `md`.
+
+              `snap-x snap-mandatory` with `snap-start` on the tiles so a flick
+              lands a card against the gutter instead of halfway off it.
+              `overscroll-x-contain` so a horizontal gesture that runs out of
+              rail stops there rather than being handed to the page, which on
+              iOS is what turns a shelf into a back-navigation. `no-scrollbar`
+              because the peeking sixth of the next card is the affordance, not
+              a grey bar.
+
+              THE BLEED IS WRITTEN `mx-[calc(var(--gutter)*-1)]`, NOT WITH THE
+              MINUS PREFIX. `-mx-[var(--gutter)]` compiles to nothing in this
+              Tailwind, which is a bug this repository has already paid for
+              once. The pair of it, `px-[var(--gutter)]`, puts the first card
+              back on the page's own left edge, and `scroll-px` makes the snap
+              stop there too rather than under the gutter.
+
+              FROM `md` IT IS A GRID AND NONE OF THAT SURVIVES. Every rail class
+              is undone by name: `md:mx-0 md:px-0 md:overflow-visible`. A
+              desktop reader comparing five trades wants five on one line, and
+              Tailwind being mobile-first, an un-prefixed class here would have
+              shipped the phone's rail to 1440 as well. */}
+          <ul className="no-scrollbar mx-[calc(var(--gutter)*-1)] flex snap-x snap-mandatory scroll-px-[var(--gutter)] gap-4 overflow-x-auto overscroll-x-contain px-[var(--gutter)] md:mx-0 md:grid md:grid-cols-3 md:gap-x-6 md:gap-y-10 md:overflow-visible md:px-0 lg:grid-cols-5">
+            {groups.map((group, index) => (
+              // 70vw is 273 pixels at 390. Measured, that leaves 72 pixels of
+              // the second card showing past the right edge: enough to read as
+              // a card there is more of, rather than as a rendering fault. The
+              // cap stops the same tile becoming a 500-pixel poster on a
+              // 720-wide tablet just under `md`.
+              <li
+                key={group.trade.id}
+                className="w-[70vw] max-w-[19rem] shrink-0 snap-start md:w-auto md:max-w-none"
+              >
+                <Link
+                  href={`#metier-${group.trade.id}`}
+                  style={{ '--enter-index': index } as React.CSSProperties}
+                  className="group enter block"
+                >
+                  {/* 4:5. A portrait tile is 341 pixels tall at 273 wide, so
+                      the first photograph runs from y=440 to y=781 and its
+                      caption closes inside the 844-pixel screen: the reader
+                      sees one whole thing rather than the top of five. A wider
+                      3:2 frame fits too, and shows a third as much picture.
+                      `rounded-space` and not `well`, because at this size the
+                      tile is a panel rather than a chip.
+
+                      NO PADDING ON THIS BOX. `Packshot` fills it, and `fill`
+                      insets to the padding box, so padding here would push the
+                      photograph out of its own frame. */}
+                  <span className="e-media relative block aspect-[4/5] overflow-hidden rounded-space bg-space">
+                    {/* `Packshot` AND NOT A BARE `next/image`, THOUGH THESE ARE
+                        NOT PACKSHOTS. What it owns is the shimmer, and the
+                        reason the shimmer exists applies here twice over: this
+                        audience is on a phone connection and a tile that is
+                        blank until the photograph lands reads as a page that
+                        failed, not as a page that is loading. The component
+                        takes a className, so the fit is ours: `object-cover`,
+                        since these five are 3:2 and 2:3 and the frame is 4:5.
+
+                        Only the first is `priority`. It is the page's LCP
+                        candidate on a phone; the other four are off the right
+                        edge of the rail and preloading them would spend the
+                        reader's data on cards he may never flick to. */}
+                    <Packshot
+                      src={`/metiers/${group.trade.photo.file}`}
+                      alt={group.trade.photo.alt}
+                      sizes="(max-width: 767px) 70vw, (max-width: 1023px) 31vw, 19rem"
+                      priority={index === 0}
+                      className="object-cover transition-transform duration-[var(--t-base)] ease-[var(--ease-brand)] group-hover:scale-[1.05]"
+                    />
+                  </span>
+
+                  <span className="e-item mt-4 block">
+                    {/* TWO LINES RESERVED FROM `md`, AND ONLY FROM `md`. Two of
+                        the five labels wrap at 225 pixels and three do not, so
+                        in a row of five the counts sat on three different
+                        baselines and the band read as five loose captions
+                        rather than one shelf. 2.7em is two lines of this
+                        leading. Below `md` the tiles are read one at a time as
+                        the rail passes them, nothing is compared to anything,
+                        and a reserve there would only be white. */}
+                    <span className="block text-small font-semibold leading-[1.35] text-pretty transition-colors duration-[var(--t-fast)] group-hover:text-accent md:min-h-[2.7em]">
+                      {group.trade.label}
+                    </span>
+                    <span className="t-num mt-1 block text-micro text-ink-3">
+                      {formatCount(group.rows.length, 'ligne')}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {/* THE CAPTION THAT STOPS FIVE PHOTOGRAPHS FROM BECOMING FIVE CLAIMS,
+              and the credit that makes the licence checkable. The names are
+              read off the tiles actually drawn, so a trade that lost its
+              records loses its credit line with it rather than crediting a
+              photograph nobody can see. `PHOTO_NOTE` is the sentence itself,
+              kept beside the files it describes. */}
+          <p className="mt-6 max-w-[62ch] text-micro leading-[1.6] text-ink-3">
+            {PHOTO_NOTE} Clichés de{' '}
+            {listFrench.format(groups.map((group) => group.trade.photo.author))}.
+          </p>
+        </section>
+      ) : null}
 
       {/* THE BUY BOX OF A PAGE THAT DOES NOT SELL. It sits where a product sheet
           puts its basket button, on purpose: the reader arriving from a tab
@@ -157,7 +341,11 @@ export default function ServicesPage() {
           finding a telephone number there instead of a basket is the whole
           answer to "le panier sert à quoi". The dark rail is the same block the
           homepage already uses to hand over a number. */}
-      <section className="shell">
+      {/* The band above it is the shelf, and the band above THAT is the page
+          header, whose own bottom padding used to be all the air this block
+          needed. With a section between them the rail owes itself a `band`,
+          and owes itself nothing when the shelf did not draw. */}
+      <section className={groups.length > 0 ? 'shell mt-band' : 'shell'}>
         <div className="on-rail enter rounded-space bg-rail p-6 text-rail-ink sm:p-10 lg:p-12">
           <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
             <div>
@@ -235,8 +423,13 @@ export default function ServicesPage() {
 
       {groups.length > 0 ? (
         <section className="shell mt-band">
+          {/* THE TITLE MOVED UP TO THE SHELF, SO THIS ONE SAYS WHAT IS LEFT.
+              Two sections cannot both be called "les métiers de l'atelier": the
+              tiles are the métiers, this is what each one contains, and a
+              reader who has just pressed a tile has to land on a heading that
+              agrees with the gesture he made. */}
           <SectionHeader
-            title="Les métiers de l’atelier"
+            title="Le détail, ligne par ligne"
             context={`${formatCount(prestations.length, 'ligne')} de prestation, telles que l’atelier les a déclarées, regroupées par métier d’après leur propre libellé. Le montant est le prix d’entrée porté par la fiche, pas un devis. Chaque ligne ouvre WhatsApp avec la demande déjà écrite.`}
           />
 
@@ -245,10 +438,17 @@ export default function ServicesPage() {
               to three lines and the price column stops being a column. */}
           <div className="grid gap-x-16 gap-y-12 lg:grid-cols-2">
             {groups.map((group, index) => (
+              // THE LANDING PAD FOR ITS OWN TILE, AND THE OFFSET IS MEASURED
+              // RATHER THAN GUESSED. The masthead is sticky and lands its
+              // bottom edge at 56 pixels on a phone and at 121 on the desktop,
+              // both measured on this page. Without a scroll margin the
+              // heading a reader just asked for arrives underneath it. 80 and
+              // 144 clear those two by a comfortable line.
               <section
                 key={group.trade.id}
+                id={`metier-${group.trade.id}`}
                 style={{ '--enter-index': index } as React.CSSProperties}
-                className="enter e-item"
+                className="enter e-item scroll-mt-20 md:scroll-mt-36"
               >
                 <h3 className="flex items-baseline justify-between gap-4 border-b border-rule pb-3">
                   <span className="t-label text-accent">{group.trade.label}</span>

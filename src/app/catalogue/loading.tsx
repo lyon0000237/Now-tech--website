@@ -21,11 +21,24 @@
  */
 export default function Loading() {
   return (
-    <div className="shell pt-band" aria-busy="true">
-      <span className="route-bar block h-[3px] w-full rounded-pill" />
+    <>
+      {/* AT THE VERY TOP OF THE VIEWPORT, ABOVE THE MASTHEAD, NOT INSIDE THE
+          PAGE. It was rendered where the page's first section would be, which on
+          a phone is 116 pixels down and on a desktop 157: under the chrome, in
+          the one place the reader is not looking when they have just tapped
+          something. A progress indicator belongs on the edge of the window,
+          because the window is what is being replaced.
+
+          `z-50` clears the masthead's 40 and stays under the basket drawer's 70
+          and the modal's 80: it must be visible over the header and must never
+          cover a panel the reader opened on purpose. */}
+      <span
+        aria-hidden
+        className="route-bar fixed inset-x-0 top-0 z-50 block h-[3px]"
+      />
       <span className="sr-only" role="status">
         Chargement de la page
       </span>
-    </div>
+    </>
   )
 }

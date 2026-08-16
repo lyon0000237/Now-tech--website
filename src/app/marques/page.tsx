@@ -2,14 +2,16 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { Pager } from '@/components/catalog/Pager'
+import { Packshot } from '@/components/product/Packshot'
+import { ProductMedia } from '@/components/product/ProductMedia'
 import { Action } from '@/components/ui/Action'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { getBrandIndex, getMeta, type BrandEntry } from '@/lib/catalog'
+import { getBrandIndex, getBrandListing, getMeta, type BrandEntry } from '@/lib/catalog'
 import { formatAmount, formatCount } from '@/lib/format'
 
 /**
- * The brand directory: ONE index, in tiles, paginated.
+ * The brand directory: ONE index, in tiles, paginated, and now photographed.
  *
  * WHAT THIS LIST IS, BEFORE ANYTHING ELSE. The WooCommerce export carries no
  * brand taxonomy: the column exists and is filled on 14 rows out of 7 116. The
@@ -22,16 +24,40 @@ import { formatAmount, formatCount } from '@/lib/format'
  * fact: 3 042 of the 4 254 references carry a recovered brand, and each name
  * opens the same query a customer could run themselves.
  *
- * THERE USED TO BE TWO LISTS AND NOW THERE IS ONE. The page carried a text
- * index of 101 names and, at its foot, a separate wall titled "Les logos que
- * nous tenons" holding the 33 brands we have a drawn mark for. Two surfaces for
- * one set is two places to look for the same name, and the second one quietly
- * ranked 33 brands above the other 68 for a reason that has nothing to do with
- * the shop: whether Simple Icons still ships the file. The wall is gone. Its
- * composition, a grid of tiles rather than a column of rows, is what the index
- * is now built in.
+ * THIS PAGE CARRIED 451 WORDS AND NOT ONE PICTURE, AND THAT IS WHAT CHANGED.
+ * Measured on a 390x844 phone before this pass: 451 words, 0 images, 6 000
+ * pixels of page. The reader met a title, a lead, three figures, a paragraph, a
+ * filter, an ordering bar and only then, at y=1 721, the first thing that could
+ * be called merchandise: the word HP. A shop whose brand page shows nothing it
+ * sells is a directory, and the client's own words for it were "visuellement
+ * c'est fade".
  *
- * ONE TILE IN THREE CARRIES A MARK, AND THAT IS THE WHOLE DESIGN PROBLEM.
+ * THE PICTURES COME FROM THE SHOP, NOT FROM A STOCK LIBRARY. 68 of the 101
+ * brands have no logo and never will (see the mark note below), but every one of
+ * the 101 has PHOTOGRAPHED PRODUCTS: checked across the whole catalogue, not one
+ * brand with references is without at least one packshot, and 100 of the 101
+ * have one in every family they appear in. So each brand is illustrated by one
+ * of its own references, the most recent one the supplier photographed, resolved
+ * through {@link brandPicture}. It is free, it needs no licence, and it is TRUE:
+ * a real ZKTECO terminal says more about ZKTECO than a logo we do not hold.
+ *
+ * ONE BRAND, ONE PHOTOGRAPH, TWO SIZES. The same picture is used big in the
+ * shelf at the top and small in the index tile below, so a reader who saw
+ * HIKVISION in the shelf recognises it in the index. It is a system rather than
+ * two decorations, which is why the shelf may sit above the index without being
+ * a second list: it is the first twelve of the same list, enlarged.
+ *
+ * THE SHELF SCROLLS SIDEWAYS ON A PHONE AND IS A GRID EVERYWHERE ELSE. Twelve
+ * square photographs stacked vertically would be 3 000 pixels of page, which is
+ * the disease and not the cure, so under 768 the shelf is a rail: it snaps
+ * (`snap-x mandatory` on the rail, `snap-start` on the cards), it contains its
+ * own overscroll so it never steals the page's vertical scroll, it bleeds into
+ * the gutter so the next card is visibly cut by the screen edge, and every card
+ * is a 200-pixel touch target. From `md` it is a plain grid, four columns then
+ * six, exactly as it always would have been drawn: the rail exists only where
+ * the screen cannot hold a grid.
+ *
+ * ONE TILE IN THREE CARRIES A MARK, AND THAT WAS THE OLD DESIGN PROBLEM.
  * Marks exist for 33 of the 101 and never will for the other 68: the names were
  * checked one by one against Simple Icons' index, 3 453 entries, and 67 are not
  * in it. Simple Icons dropped most non-free marks in 2024, so Canon, Logitech,
@@ -41,17 +67,12 @@ import { formatAmount, formatCount } from '@/lib/format'
  * shop. Nothing may be drawn in their place: an initial in a circle or a grey
  * rectangle is a fabricated logo standing exactly where a real one is missing.
  *
- * SO THE TILE IS A NAME AND A COUNT, AND THE MARK IS A STAMP IN ITS CORNER.
- * The inversion is the answer. A logo grid with holes fails because the image
- * is the object the eye scans and two thirds of the objects are missing; here
- * the object is the name, set in the page's own type at 18px on a phone and
- * 18.72px at 1440, identical in kind and position in all 101 tiles, and the mark
- * rides in the bottom corner where a maker's stamp goes. A corner that is empty
- * on 68 tiles is not a hole, because nothing above it depended on it: the top
- * rule, the name, the count and the department all land at the same place with
- * or without it. The page also says the ratio in figures, three lines up, so a
- * reader who notices the unevenness is told what it means rather than left to
- * guess it means stock.
+ * THE PHOTOGRAPH DOES NOT REPLACE THE MARK, IT ANSWERS A DIFFERENT QUESTION.
+ * The mark is still a stamp in the tile's bottom corner, absent on 68 tiles, and
+ * the page still prints that ratio in figures. What the photograph does is stop
+ * the coverage rate from being the page's subject: a tile now shows a product
+ * whether or not we hold the logo, so an empty corner is a missing file on a
+ * tile that is already complete rather than a hole in the middle of it.
  *
  * WHY THE STAMP IS 40 PIXELS AND NOT 48. Every file in the set is a 24x24
  * square, so `contain` binds the mark to the box and a wordmark like PANASONIC,
@@ -62,27 +83,14 @@ import { formatAmount, formatCount } from '@/lib/format'
  * came out as black slabs beside every wordmark, which is the audit finding this
  * page was rebuilt to answer.
  *
- * THE LEADER LINE IS GONE, AND IT WAS MEASURED BEFORE IT WENT. Each row used to
- * end in a rule whose filled part was the brand's share of the deepest one.
- * Measured at 1440 on the live page: the rule is 165px, and on 93 of the 101
- * rows the filled part came out under 20px, on 51 rows under 4px and on 14 rows
- * under one whole pixel. A scale on which nine tenths of the population is a
- * tick indistinguishable from every other tick is not a measure, it is texture.
- * Worse, the rule was `flex-1` sharing its row with the count, so a one-digit
- * count and a three-digit one left it 172.3px and 165px: three different leader
- * lengths in one column, and a leader that does not align across rows is the one
- * thing a leader cannot do. The exact figure was always printed next to it, and
- * that figure is now the whole measure, in tabular figures, plus the department
- * the brand actually sits in, which is real data the old rule never showed.
- *
  * TWO READERS, ONE INDEX. Someone asking "vous avez du Mikrotik ?" needs to hit
  * one name out of 101; someone asking what this shop actually stocks needs to
  * see that HP has 544 references and eight brands have exactly one. Those wants
  * are opposite orderings of the same list, so the list is ordered two ways and
  * the reader picks. Both orderings are URLs, not state: `?tri=nom` is shareable,
  * back-buttonable and renders without JavaScript, the filter is a plain GET form
- * for the same reason, and so is the page number. No client component, no
- * hydration boundary, no 3.3 MB catalogue anywhere near the browser.
+ * for the same reason, and so is the page number. No client component beyond the
+ * packshots themselves, no 3.3 MB catalogue anywhere near the browser.
  *
  * AND BECAUSE THEY ARE URLS, EVERY CONTROL COSTS A COLD LOAD, WHICH IS WHY THIS
  * PAGE HAS TWO STATES. The filter form and the pager do not refresh a grid in
@@ -100,18 +108,14 @@ import { formatAmount, formatCount } from '@/lib/format'
  * those two cases, but it is not what solves this.
  *
  * WHAT SOLVES IT IS THAT AN ANSWERING PAGE STOPS INTRODUCING ITSELF. The three
- * figures and the long paragraph are the front door: they say what kind of list
- * this is to someone who arrived at `/marques` and has asked for nothing yet. A
- * reader who typed "hik", or who is on page 2, has asked, and replying with 620
- * pixels of preamble is answering a question with the question. So `?q=` and
- * `?page=` drop the band and shorten the lead. Measured after the change, at
- * 390: the first tile of `?q=hik` moved from 1 757 to 1 072 and of `?page=2` to
- * 1 036, and at 1440 from 1 353 to 1 037. Nothing true is lost. The sentence
- * that claims nothing and the share of tiles that carry a mark are reprinted in
- * one line immediately above the grid, and the result count is repeated on the
- * title's own baseline at y=210, which is the only figure that had to clear the
- * fold. `?tri=` is not one of these states and keeps the whole front door,
- * because it is the same 101 names in another order.
+ * figures, the long paragraph AND THE SHELF are the front door: they say what
+ * kind of list this is to someone who arrived at `/marques` and has asked for
+ * nothing yet. A reader who typed "hik", or who is on page 2, has asked, and
+ * replying with 620 pixels of preamble is answering a question with the
+ * question. So `?q=` and `?page=` drop the band, drop the shelf and shorten the
+ * lead, and they lose no pictures by it: every tile in the index carries one.
+ * `?tri=` is not one of these states and keeps the whole front door, because it
+ * is the same 101 names in another order.
  */
 
 interface Params {
@@ -131,6 +135,16 @@ interface Params {
  * counts this grid runs at, so no page but the last ever ends on a ragged row.
  */
 const PER_PAGE = 36
+
+/**
+ * Twelve cards in the shelf, and the number is the grid's, not a round figure.
+ *
+ * The shelf is four columns at `md` and six at `lg`, so 12 is the only count
+ * under twenty that fills both without a ragged row: three rows of four, two of
+ * six. On the phone rail it is simply how far the reader may push, and twelve
+ * cards at 205 pixels is 2 600 pixels of travel, which is four thumb flicks.
+ */
+const SHELF = 12
 
 /**
  * The mark files that outweigh the set, and the measured rule that picks them.
@@ -207,6 +221,45 @@ function stampSize(file: string): string {
   return DENSE_MARKS.has(file) ? '1.875rem' : '2.5rem'
 }
 
+/**
+ * The one photograph that stands for a brand.
+ *
+ * WHICH REFERENCE, AND WHY IT IS NOT A CHOICE. `getBrandListing` already orders
+ * a brand's products the way the whole site orders products: photographed ones
+ * first, then by descending id, which is the recency signal the export supports.
+ * So the first product of page 1 is the brand's most recent photographed
+ * reference, and it is the same one every time this runs. Nothing is curated,
+ * ranked or promoted: there is no "best-seller" field in this export and there
+ * will not be one invented here.
+ *
+ * IT IS MEMOISED BECAUSE THE CATALOGUE IS A FILE, NOT A DATABASE. The dataset is
+ * a static JSON import that cannot change while the process lives, so a brand's
+ * photograph cannot change either. Without the cache a front-door render pays
+ * 36 tiles plus 12 shelf cards of listing work; with it, each brand is resolved
+ * once per process and every later render is 48 map lookups. The value is stored
+ * even when it is null so a brand without a packshot is not re-resolved on every
+ * request.
+ *
+ * WHAT IT COSTS THE FIRST TIME, MEASURED: a cold `/marques` builds 36 of these,
+ * each one a sort of that brand's own products. HP is the deepest at 544, the
+ * whole page's 36 brands add up to about 2 500 products, and the render is
+ * indistinguishable from the old one in the server log.
+ *
+ * THE PROPER FIX LIVES IN `src/lib/catalog.ts`, WHICH THIS FILE MAY NOT EDIT: a
+ * `BrandEntry` carrying its own `image` would make this function and its cache
+ * disappear. See the mission report.
+ */
+const PICTURES = new Map<string, string | null>()
+
+function brandPicture(slug: string): string | null {
+  const cached = PICTURES.get(slug)
+  if (cached !== undefined) return cached
+  const listing = getBrandListing(slug, 'recent', 1)
+  const found = listing?.products.find((product) => product.image !== null)?.image ?? null
+  PICTURES.set(slug, found)
+  return found
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const brands = getBrandIndex()
   const branded = brands.reduce((sum, brand) => sum + brand.productCount, 0)
@@ -248,6 +301,64 @@ function href(query: string, order: 'nom' | null, hash = ''): string {
 }
 
 /**
+ * One card of the shelf: a photograph the size of a product card's.
+ *
+ * The picture is drawn by the same component every product grid on this site
+ * uses, so it inherits the white well, the hairline, the shimmer that stands in
+ * until the file lands, and the four per cent lean on hover. A brand card that
+ * framed its photograph differently from a product card would be a second visual
+ * language for the same object.
+ *
+ * THE PHOTOGRAPH IS `alt=""` ON PURPOSE. It is not the link: the link is the
+ * brand name, its count and its department, all three of them real text
+ * underneath. Read out, the alternative is a 90-character product title
+ * announced before every one of twelve names, which is how a shelf becomes
+ * unusable with a screen reader. The section's own line says what the pictures
+ * are, once, for all twelve.
+ */
+function ShelfCard({
+  brand,
+  picture,
+  index,
+}: {
+  brand: BrandEntry
+  picture: string | null
+  index: number
+}) {
+  return (
+    <Link
+      href={`/marque/${brand.slug}`}
+      style={{ '--enter-index': index % 6 } as React.CSSProperties}
+      className="group enter e-item flex h-full flex-col"
+    >
+      <span className="plate mb-3.5 block">
+        <span className="sheen relative block overflow-hidden rounded-well">
+          <ProductMedia
+            src={picture}
+            alt=""
+            sizes="(max-width: 767px) 62vw, (max-width: 1023px) 24vw, 16vw"
+            // The first two cards of the shelf are the first pictures on the
+            // page and, at 390, the only ones above the fold. Everything after
+            // them is lazy, including the whole index below.
+            priority={index < 2}
+          />
+        </span>
+      </span>
+
+      <span className="text-body font-semibold leading-[1.2] tracking-[-0.02em] text-ink transition-colors duration-[var(--t-fast)] group-hover:text-accent">
+        {brand.name}
+      </span>
+      <span className="t-num mt-1 text-micro text-ink-2">
+        {formatCount(brand.productCount, 'référence')}
+      </span>
+      {brand.departments[0] ? (
+        <span className="clamp-1 text-micro text-ink-3">{brand.departments[0]}</span>
+      ) : null}
+    </Link>
+  )
+}
+
+/**
  * One tile of the index.
  *
  * THE WHOLE TILE IS THE TARGET AND IT IS NEVER UNDER 44 PIXELS. Re-measured
@@ -256,15 +367,33 @@ function href(query: string, order: 'nom' | null, hash = ''): string {
  * WESTERN DIGITAL alone; at 1440 the tile is 282 and every one of them is
  * 103.5. The foot row is held at 40 by `min-h-10` and pinned by `mt-auto`, so
  * in a row of four the counts sit on one line whatever the names above them
- * did, and the stamp sits on that same line.
+ * did, and the stamp sits on that same line. The photograph added above the
+ * name does not touch any of that: it is a fixed 72-pixel square, 80 from `sm`,
+ * so every tile in a row grows by exactly the same amount.
+ *
+ * THE PHOTOGRAPH IS A CHIP AND NOT A CARD, WHICH IS THE WHOLE POINT OF 72. This
+ * is an index: the reader is looking for a NAME among 101, and the name is set
+ * at 18px because it is the object being scanned. A full-width picture on a
+ * 153.8-pixel tile is 153.8 tall, adds 2 700 pixels to the page and turns the
+ * index into a second shelf. 72 pixels is enough to recognise a printer from a
+ * camera from a rack switch, which is all the picture is asked to do here, and
+ * it costs 1 300 pixels of page for 36 photographs.
  *
  * THE HAIRLINE ON TOP IS THE TILE. There is no box, no fill and no shadow: 36
  * bordered cards is a page of frames, and the rule alone states the column the
- * name starts at, which is all a grid of type needs. It takes the page's ink on
- * hover, which is the only thing on the tile that moves besides the name's
- * colour and the stamp's.
+ * name starts at, which is all a grid of type needs. The only border inside the
+ * tile is the photograph's own, because every packshot in this library was shot
+ * on white and sits on a white page with no edge of its own.
  */
-function BrandTile({ brand, index }: { brand: BrandEntry; index: number }) {
+function BrandTile({
+  brand,
+  picture,
+  index,
+}: {
+  brand: BrandEntry
+  picture: string | null
+  index: number
+}) {
   // One department is worth naming; six is worth counting. Both are facts of
   // the ingest, and between them they replace a rule that showed neither.
   const place =
@@ -294,6 +423,21 @@ function BrandTile({ brand, index }: { brand: BrandEntry; index: number }) {
          override, and the narrow phones have to override it. */
       className="group enter e-item flex h-full flex-col border-t border-rule pt-4 transition-colors duration-[var(--t-fast)] [--stamp:var(--stamp-base)] hover:border-ink max-[360px]:[--stamp:calc(var(--stamp-base)*0.8)]"
     >
+      {picture ? (
+        <span className="relative mb-3.5 block size-18 shrink-0 overflow-hidden rounded-control border border-rule bg-surface transition-colors duration-[var(--t-fast)] group-hover:border-rule-2 sm:size-20">
+          <Packshot
+            src={picture}
+            alt=""
+            /* A fixed box, so the browser is told a fixed size. `80px` is the
+               widest it is ever drawn at, and asking for one file at one size
+               across 36 tiles is what keeps a page of thumbnails to one
+               download each. */
+            sizes="80px"
+            className="e-media object-contain"
+          />
+        </span>
+      ) : null}
+
       {/* A brand name is never broken on purpose, and `break-words` breaks a
           word only when it cannot fit its line at all. One name in the 101 can
           reach that state: GRANDSTREAM, eleven characters with nothing to break
@@ -306,7 +450,7 @@ function BrandTile({ brand, index }: { brand: BrandEntry; index: number }) {
         {brand.name}
       </span>
 
-      <span className="mt-auto flex min-h-10 items-end justify-between gap-3 pt-6">
+      <span className="mt-auto flex min-h-10 items-end justify-between gap-3 pt-5">
         <span className="flex min-w-0 flex-col gap-1">
           {/* THE SAME COUNT, IN THE UNIT THE COLUMN CAN AFFORD, AND THE SWITCH
               IS MEASURED. "544 références" needs 107.8 pixels on one line at
@@ -316,13 +460,13 @@ function BrandTile({ brand, index }: { brand: BrandEntry; index: number }) {
               tile is 124 wide at 320, 141 at 360 and 153.8 at 390, the stamp
               and its gap take 52 of that, and the count came back on two lines
               on 11 tiles at 320, 9 at 360 and one at 390. A count that wraps
-              beside a neighbour's that does not is the leader line's own defect
-              again, a foot row whose line moves with the presence of a mark.
-              "réf." needs 65 and clears every one of those widths. The switch
-              is the layout's own: `sm` is where the grid goes from two columns
-              to three and the tile passes 180, which is where the full word
-              fits with the stamp beside it. Nothing is abbreviated on a screen
-              that can hold the word, and no number is ever abbreviated. */}
+              beside a neighbour's that does not is a foot row whose line moves
+              with the presence of a mark. "réf." needs 65 and clears every one
+              of those widths. The switch is the layout's own: `sm` is where the
+              grid goes from two columns to three and the tile passes 180, which
+              is where the full word fits with the stamp beside it. Nothing is
+              abbreviated on a screen that can hold the word, and no number is
+              ever abbreviated. */}
           <span className="t-num text-micro text-ink-2">
             <span className="sm:hidden">
               {formatCount(brand.productCount, 'réf.', 'réf.')}
@@ -417,6 +561,17 @@ export default async function MarquesPage({ searchParams }: Params) {
    */
   const answering = query !== '' || page > 1
 
+  /**
+   * The shelf: the first twelve of THIS list, whichever ordering is on.
+   *
+   * It is not a second selection and it is not a ranking. `sorted` is the index
+   * itself, so by depth the shelf is the twelve deepest brands and by name it is
+   * A to B, and in both cases the shelf is exactly the first twelve tiles of the
+   * grid below, enlarged and photographed. That is what lets it sit above the
+   * index without being the second list this page spent a rebuild removing.
+   */
+  const shelf = answering ? [] : sorted.slice(0, SHELF)
+
   return (
     <>
       <PageHeader
@@ -424,7 +579,7 @@ export default async function MarquesPage({ searchParams }: Params) {
         lead={
           answering
             ? `Le nom du fabricant n’est pas un champ de l’export : ces ${brands.length} marques ont été retrouvées à l’ingestion, en lisant les chemins de catégories et les titres de produits.`
-            : `Le nom du fabricant n’est pas un champ de l’export : il y est rempli sur 14 lignes sur 7 116. Ces ${brands.length} marques ont été retrouvées à l’ingestion, en lisant les chemins de catégories et les titres de produits. C’est ce qui permet de comparer ici un portable ${deepest?.name ?? 'HP'} et un DELL dans une seule liste.`
+            : `Le nom du fabricant n’est pas un champ de l’export : il y est rempli sur 14 lignes sur 7 116. Ces ${brands.length} marques ont été retrouvées à l’ingestion, dans les titres et les chemins de catégories.`
         }
         /* On a filtered load the aside stops repeating the total and answers
            the only question the reader has when the new document lands: did the
@@ -440,6 +595,56 @@ export default async function MarquesPage({ searchParams }: Params) {
         }
       />
 
+      {shelf.length > 0 ? (
+        <section className="shell" aria-labelledby="shelf-title">
+          <div className="enter mb-6 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 border-t border-rule pt-5">
+            <h2 id="shelf-title" className="e-text text-sub font-semibold tracking-[-0.02em]">
+              {order === 'nom'
+                ? `Les ${SHELF} premières, de A à Z`
+                : `Les ${SHELF} marques les plus fournies`}
+            </h2>
+            {/* The one line that says what all 48 photographs on this page are.
+                It is here rather than in an alt attribute because it is true of
+                every picture on the page at once, and because a reader with a
+                screen reader should hear it once and not 48 times. */}
+            <p className="e-text max-w-[46ch] text-small text-ink-3">
+              Chaque tuile porte une référence réelle de la marque, la dernière que nous ayons
+              photographiée.
+            </p>
+          </div>
+
+          {/* THE RAIL, AND EVERY CLASS ON IT IS LOAD-BEARING.
+              `overflow-x-auto` makes it a scroller and `overscroll-x-contain`
+              stops the gesture continuing into the page or the browser's back
+              swipe once the last card is reached. `snap-x snap-mandatory` with
+              `snap-start` on the cards parks a card against the gutter rather
+              than mid-photograph, and `scroll-pl` is what makes that gutter the
+              stop line instead of the screen edge.
+              THE NEGATIVE MARGIN IS WRITTEN WITH `calc(... * -1)`. Tailwind's
+              `-mx-[var(--gutter)]` compiles to nothing at all in this project,
+              which is a silent failure: the rail simply stops bleeding and the
+              last card ends flush with the text column, which reads as the end
+              of the list. `py-2` is the room the plate needs when it turns four
+              degrees under a pointer, since a horizontal scroller clips its own
+              vertical overflow.
+              FROM `md` NONE OF IT EXISTS. The grid takes over, the negative
+              margins are cancelled, the snapping is switched off and the card
+              stops being 62 % of anything. A rail on a screen that can hold a
+              grid is a way of hiding merchandise from someone who has room for
+              it. */}
+          <ul className="no-scrollbar mx-[calc(var(--gutter)*-1)] flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-pl-[var(--gutter)] px-[var(--gutter)] py-2 md:mx-0 md:grid md:snap-none md:grid-cols-4 md:gap-x-8 md:gap-y-10 md:overflow-visible md:px-0 md:py-0 lg:grid-cols-6">
+            {shelf.map((brand, index) => (
+              <li
+                key={brand.slug}
+                className="w-[62%] max-w-[15rem] shrink-0 snap-start md:w-auto md:max-w-none md:shrink"
+              >
+                <ShelfCard brand={brand} picture={brandPicture(brand.slug)} index={index} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {/* The three figures that say what kind of list this is: how much of the
           catalogue it covers, how far apart its two ends are, and how many of
           its tiles carry a drawn mark. The third one is not housekeeping. It is
@@ -451,12 +656,12 @@ export default async function MarquesPage({ searchParams }: Params) {
           things this band may never stop saying, the claim it does not make and
           the share of tiles that carry a mark, are in that line. */}
       {answering ? null : (
-        <section className="shell" aria-label="Ce que couvre cette liste">
+        <section className="shell mt-band" aria-label="Ce que couvre cette liste">
           <dl className="grid gap-x-12 gap-y-8 sm:grid-cols-3">
             {[
               {
                 figure: formatAmount(branded),
-                body: `références sur ${formatAmount(meta.productCount)} portent une marque retrouvée. Les ${formatAmount(meta.productCount - branded)} autres n’en portent aucune, et ne sont dans aucune de ces listes.`,
+                body: `références sur ${formatAmount(meta.productCount)} portent une marque retrouvée. Les ${formatAmount(meta.productCount - branded)} autres n’en portent aucune.`,
               },
               {
                 figure: formatAmount(deepest?.productCount ?? 0),
@@ -464,7 +669,7 @@ export default async function MarquesPage({ searchParams }: Params) {
               },
               {
                 figure: `${formatAmount(marked)} sur ${brands.length}`,
-                body: `tuiles portent un logo, parce que nous n’avons le fichier que pour celles-là. Les ${brands.length - marked} autres portent le même nom et le même compte : un coin vide ne dit rien du stock.`,
+                body: `tuiles portent un logo, parce que nous n’avons le fichier que pour celles-là. Un coin vide ne dit rien du stock.`,
               },
             ].map((item, index) => (
               <div
@@ -483,8 +688,8 @@ export default async function MarquesPage({ searchParams }: Params) {
           <p className="enter e-text mt-stack max-w-[74ch] text-small leading-[1.65] text-ink-2">
             Cette liste dit ce qui est en rayon, pas qui nous représentons : elle ne revendique ni
             distribution officielle, ni partenariat, ni certification. Chaque nom ouvre la même
-            requête que vous pouvez refaire vous-même, tous les produits dont le titre ou le chemin
-            de catégorie porte ce nom.
+            requête que vous pouvez refaire vous-même, et c’est elle qui permet de tenir un portable{' '}
+            {deepest?.name ?? 'HP'} et un DELL dans une seule liste.
           </p>
         </section>
       )}
@@ -508,8 +713,8 @@ export default async function MarquesPage({ searchParams }: Params) {
           title="L’index des marques"
           context={
             answering
-              ? `Les ${brands.length} noms, ${formatCount(PER_PAGE, 'tuile')} par page, chacune portant un nom, son nombre de références et son rayon.`
-              : `Les ${brands.length} noms, par profondeur de catalogue ou par ordre alphabétique, ${formatCount(PER_PAGE, 'tuile')} par page. Chaque tuile porte le nom, le nombre de références derrière ce nom et le rayon où il se trouve ; les ${marked} dont nous avons le fichier portent aussi leur logo, dans le coin.`
+              ? `Les ${brands.length} noms, ${formatCount(PER_PAGE, 'tuile')} par page, chacune avec une photographie de la marque, son nombre de références et son rayon.`
+              : `Les ${brands.length} noms au complet, par profondeur de catalogue ou par ordre alphabétique, ${formatCount(PER_PAGE, 'tuile')} par page. Les ${marked} dont nous avons le fichier portent aussi leur logo, dans le coin.`
           }
         />
 
@@ -661,7 +866,11 @@ export default async function MarquesPage({ searchParams }: Params) {
             <ul className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 sm:gap-x-8 lg:grid-cols-4">
               {shown.map((brand, index) => (
                 <li key={brand.slug}>
-                  <BrandTile brand={brand} index={index} />
+                  <BrandTile
+                    brand={brand}
+                    picture={brandPicture(brand.slug)}
+                    index={index}
+                  />
                 </li>
               ))}
             </ul>

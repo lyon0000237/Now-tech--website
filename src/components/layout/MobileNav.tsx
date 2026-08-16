@@ -1,13 +1,10 @@
 'use client'
-
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-
 import {
-  DEPARTMENT_ICON,
   IconClose,
   IconMenu,
   IconPhone,
@@ -19,7 +16,6 @@ import { CartButton } from './CartButton'
 import { lockScroll } from '@/lib/scroll-lock'
 import { PHONES, PICKUP_LINE, WHATSAPP, dialable } from '@/constants/site'
 import type { DepartmentNav } from '@/types/summary'
-
 /**
  * The phone's whole navigation: one bar that never leaves, and one panel that
  * holds the entire shop.
@@ -63,6 +59,7 @@ import type { DepartmentNav } from '@/types/summary'
  * a shop and not a page; the counter's telephone numbers last, because that is
  * the answer to everything the site could not answer.
  */
+const EASE = [0.22, 1, 0.36, 1] as const
 export function MobileNav({ departments }: { departments: readonly DepartmentNav[] }) {
   // THE PANEL REMEMBERS WHICH ROUTE IT WAS OPENED ON, AND `open` IS DERIVED
   // FROM THAT. Closing on navigation is not optional: without it the panel stays
@@ -85,7 +82,6 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
     () => true,
     () => false,
   )
-
   useEffect(() => {
     if (!open) return
     const release = lockScroll()
@@ -101,12 +97,10 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
       release()
     }
   }, [open])
-
   return (
     <>
       {/* 56 pixels, sticky at the very top, four targets of at least 44. This is
           the entire mobile chrome.
-
           THE MARK ALONE ON THE LEFT, THE THREE CONTROLS TOGETHER ON THE RIGHT.
           The menu button opened on the left first, mirroring the desktop's
           "Tous les rayons" at the head of the green bar. On a phone that reads
@@ -116,7 +110,6 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
           can do, and the three things you can do sit under the same thumb. */}
       <div className="shell flex h-14 items-center justify-between gap-2 md:hidden">
         <Logo className="-ml-1 min-h-11 min-w-11 justify-center" />
-
         <div className="-mr-1 flex items-center">
           {/* Anchors the search row below rather than opening a second surface:
               the field is 56 pixels down the page, and sending the reader there
@@ -128,9 +121,7 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
           >
             <IconSearch className="text-[1.1875rem]" />
           </a>
-
           <CartButton />
-
           <button
             ref={trigger}
             type="button"
@@ -144,7 +135,6 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
           </button>
         </div>
       </div>
-
       {/* PORTALLED TO THE BODY, AND THAT IS NOT TIDINESS.
           The panel declares z-[--z-drawer], which is 70, and Bod's launcher
           declares 60, so the panel should win. Measured, it lost: the panel is a
@@ -154,7 +144,6 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
           took the search-scope listbox under the green bar a few days ago. A
           `fixed` element inherits its ancestors' stacking, so the only fix is to
           stop being their descendant.
-
           Mounted only on the client: `document` does not exist while this
           renders on the server, and useSyncExternalStore gives the right answer
           on the first client render without an effect that flips it. */}
@@ -163,134 +152,120 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
             <AnimatePresence>
                     {open ? (
                 <>
-                  <motion.button
-                    type="button"
-                    aria-label="Fermer le menu"
-                    onClick={() => setOpen(false)}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: reduced ? 0 : 0.2 }}
-                    className="fixed inset-0 z-[var(--z-drawer)] bg-[rgb(20_23_21_/_0.45)] md:hidden"
-                  />
-
                   <motion.div
                     ref={panel}
                     id={panelId}
                     role="dialog"
                     aria-modal="true"
                     aria-label="Menu"
-                    initial={reduced ? { opacity: 0 } : { x: '100%' }}
-                    animate={reduced ? { opacity: 1 } : { x: 0 }}
-                    exit={reduced ? { opacity: 0 } : { x: '100%' }}
-                    transition={reduced ? { duration: 0 } : { duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-                    // It arrives from the right because that is where its button is. A
-                    // panel that flies in from the opposite side of the screen to the
-                    // finger that called it reads as a second, unrelated object.
-                    className="fixed inset-y-0 right-0 z-[var(--z-drawer)] flex w-[min(21rem,88vw)] flex-col bg-paper md:hidden"
+                    initial={reduced ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reduced ? undefined : { opacity: 0 }}
+                    transition={{ duration: 0.28, ease: EASE }}
+                    className="fixed inset-0 z-[var(--z-drawer)] flex flex-col overflow-y-auto overscroll-contain bg-paper md:hidden"
                   >
-                    {/* Sticky head, so the way out is on screen at every scroll
-                        position of a panel that is taller than the phone. */}
-                    <div className="sticky top-0 z-[1] flex items-center justify-between gap-4 border-b border-rule bg-paper px-5 py-3">
-                      <Logo href={null} />
+                    {/* The panel opens with the bar still drawn on it, in the
+                        same place and at the same height, so the menu reads as
+                        the bar turning over rather than as a second object
+                        arriving from somewhere. Only the glyph changes. */}
+                    <div className="shell flex h-14 shrink-0 items-center justify-between gap-2">
+                      <Logo className="-ml-1 min-h-11 min-w-11 justify-center" />
                       <button
                         type="button"
                         onClick={() => {
-                          setOpen(false)
+                          setOpenedAt(null)
                           trigger.current?.focus()
                         }}
                         aria-label="Fermer le menu"
-                        className="press -mr-2 grid size-11 place-items-center rounded-control text-ink-3 transition-colors duration-[var(--t-fast)] hover:text-ink"
+                        className="press -mr-1 grid size-11 place-items-center rounded-control text-ink transition-colors duration-[var(--t-fast)] hover:text-accent"
                       >
-                        <IconClose className="text-[1.25rem]" />
+                        <IconClose className="text-[1.1875rem]" />
                       </button>
                     </div>
-
-                    <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-6 pb-10">
-                      <nav aria-label="Sections">
-                        <ul className="grid gap-1">
-                          {SECTIONS.map((section) => {
-                            const current = owns(section.owns, pathname)
-                            return (
-                              <li key={section.href}>
-                                <Link
-                                  href={section.href}
-                                  aria-current={current ? 'page' : undefined}
-                                  className={`press flex min-h-12 items-center rounded-control px-3 text-body font-semibold transition-colors duration-[var(--t-fast)] ${
-                                    current ? 'bg-accent-wash text-accent-ink' : 'text-ink hover:text-accent'
-                                  }`}
-                                >
-                                  {section.label}
-                                </Link>
-                              </li>
-                            )
-                          })}
-                        </ul>
-                      </nav>
-
-                      <p className="t-label mt-8 mb-3 px-3 text-ink-3">Les rayons</p>
-                      <nav aria-label="Rayons">
-                        <ul className="grid">
-                          {departments.map((department) => {
-                            const Icon = DEPARTMENT_ICON[department.id]
-                            return (
-                              <li key={department.id}>
-                                <Link
-                                  href={`/rayon/${department.slug}`}
-                                  className="press flex min-h-12 items-center gap-3.5 border-b border-rule px-3 text-small text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-accent"
-                                >
-                                  <Icon className="shrink-0 text-[1.125rem] text-accent" />
-                                  <span className="min-w-0 flex-1 truncate">{department.name}</span>
-                                  <span className="t-num shrink-0 text-micro text-ink-3">
-                                    {department.totalCount}
-                                  </span>
-                                </Link>
-                              </li>
-                            )
-                          })}
-                        </ul>
-                      </nav>
-
-                      {/* What the counter strip carried on a wide screen. It is the
-                          answer to every question this site cannot answer, so it is at
-                          the foot of the panel where a thumb rests. */}
-                      <div className="mt-8 border-t border-rule pt-6">
-                        <Link
-                          href="/devis"
-                          className="press mb-4 flex min-h-12 items-center gap-3 rounded-control px-3 text-small font-semibold text-ink transition-colors duration-[var(--t-fast)] hover:text-accent"
-                        >
-                          <IconUser className="shrink-0 text-[1.125rem] text-ink-3" />
-                          Mon devis
-                        </Link>
-                        <ul className="grid gap-1">
-                          {PHONES.map((phone) => (
-                            <li key={phone}>
-                              <a
-                                href={`tel:${dialable(phone)}`}
-                                className="press t-num flex min-h-12 items-center gap-3 rounded-control px-3 text-small text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-accent"
-                              >
-                                <IconPhone className="shrink-0 text-[1.125rem] text-ink-3" />
-                                {phone}
-                              </a>
-                            </li>
-                          ))}
-                          <li>
-                            <a
-                              href={`https://wa.me/${dialable(WHATSAPP)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="press flex min-h-12 items-center gap-3 rounded-control px-3 text-small font-semibold text-accent transition-colors duration-[var(--t-fast)] hover:text-accent-ink"
+                    <nav aria-label="Menu" className="shell flex flex-1 flex-col pt-8 pb-12">
+                      {SECTIONS.map((section, index) => {
+                        const current = owns(section.owns, pathname)
+                        return (
+                          <Row key={section.href} index={index} reduced={!!reduced}>
+                            <Link
+                              href={section.href}
+                              aria-current={current ? 'page' : undefined}
+                              className={`press block border-b border-rule py-4 text-title leading-[1.1] font-bold tracking-[-0.03em] transition-colors duration-[var(--t-fast)] ${
+                                current ? 'text-accent' : 'text-ink hover:text-accent'
+                              }`}
                             >
-                              <IconPhone className="shrink-0 text-[1.125rem]" />
-                              WhatsApp
-                            </a>
-                          </li>
-                        </ul>
-                        <p className="mt-4 px-3 text-micro leading-[1.6] text-ink-3">
-                          Retrait le jour même à {PICKUP_LINE}.
-                        </p>
+                              {section.label}
+                            </Link>
+                          </Row>
+                        )
+                      })}
+                      <Row index={SECTIONS.length} reduced={!!reduced}>
+                        <p className="t-label mt-10 mb-4 text-ink-3">Les rayons</p>
+                      </Row>
+                      {/* TWO COLUMNS, WHICH IS WHAT MAKES TWELVE ROOMS FIT ON
+                          ONE SCREEN. Stacked they were twelve rows and the last
+                          four sat below the fold on a 640-tall Android; side by
+                          side they are six, and the whole shop is visible at
+                          once, which is the one thing the desktop's department
+                          panel does that a phone had lost. */}
+                      <div className="grid grid-cols-2 gap-x-6">
+                        {departments.map((department, index) => (
+                          <Row
+                            key={department.id}
+                            index={SECTIONS.length + 1 + index}
+                            reduced={!!reduced}
+                          >
+                            <Link
+                              href={`/rayon/${department.slug}`}
+                              className="press flex min-h-12 items-baseline gap-2 border-b border-rule text-small text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-accent"
+                            >
+                              <span className="min-w-0 flex-1 truncate">
+                                {department.shortName}
+                              </span>
+                              <span className="t-num shrink-0 text-micro text-ink-3">
+                                {department.totalCount}
+                              </span>
+                            </Link>
+                          </Row>
+                        ))}
                       </div>
-                    </div>
+                      <Row
+                        index={SECTIONS.length + 1 + departments.length}
+                        reduced={!!reduced}
+                      >
+                        <div className="mt-auto pt-10">
+                          <Link
+                            href="/devis"
+                            className="press flex min-h-12 items-center gap-3 text-small font-semibold text-ink transition-colors duration-[var(--t-fast)] hover:text-accent"
+                          >
+                            <IconUser className="shrink-0 text-[1.125rem] text-ink-3" />
+                            Mon devis
+                          </Link>
+                          {PHONES.map((phone) => (
+                            <a
+                              key={phone}
+                              href={`tel:${dialable(phone)}`}
+                              className="press t-num flex min-h-12 items-center gap-3 text-small text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-accent"
+                            >
+                              <IconPhone className="shrink-0 text-[1.125rem] text-ink-3" />
+                              {phone}
+                            </a>
+                          ))}
+                          <a
+                            href={`https://wa.me/${dialable(WHATSAPP)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="press flex min-h-12 items-center gap-3 text-small font-semibold text-accent transition-colors duration-[var(--t-fast)] hover:text-accent-ink"
+                          >
+                            <IconPhone className="shrink-0 text-[1.125rem]" />
+                            WhatsApp
+                          </a>
+                          <p className="mt-3 text-micro leading-[1.6] text-ink-3">
+                            Retrait le jour même à {PICKUP_LINE}.
+                          </p>
+                        </div>
+                      </Row>
+                    </nav>
                   </motion.div>
                       </>
                     ) : null}
@@ -301,7 +276,6 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
     </>
   )
 }
-
 /** The same four the green bar carries on a wide screen, and the same rule. */
 const SECTIONS = [
   {
@@ -313,7 +287,38 @@ const SECTIONS = [
   { href: '/services', label: 'Services', owns: ['/services'] },
   { href: '/contact', label: 'Nous joindre', owns: ['/contact'] },
 ] as const
-
 function owns(roots: readonly string[], pathname: string): boolean {
   return roots.some((root) => pathname === root || pathname.startsWith(`${root}/`))
+}
+/**
+ * One row of the menu, arriving after the one above it.
+ *
+ * THE STAGGER IS THE CHARACTER OF THIS MENU, AND IT IS E-SHOP'S TO THE NUMBER:
+ * 420ms, 14 pixels of rise, 45ms between rows on a 50ms head start. A
+ * full-screen panel whose contents all appear at once reads as a page that
+ * replaced another page; the same contents arriving in order read as a drawer
+ * being pulled, and the eye is led down the list instead of being handed all of
+ * it at once.
+ *
+ * `reduced` removes the movement rather than shortening it. A reader who asked
+ * for no motion is not asking for less of it.
+ */
+function Row({
+  children,
+  index,
+  reduced,
+}: {
+  children: ReactNode
+  index: number
+  reduced: boolean
+}) {
+  return (
+    <motion.div
+      initial={reduced ? false : { opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.42, delay: 0.05 + index * 0.045, ease: EASE }}
+    >
+      {children}
+    </motion.div>
+  )
 }

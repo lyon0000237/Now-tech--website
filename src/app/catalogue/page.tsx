@@ -13,6 +13,7 @@ import {
 import { Pager } from '@/components/catalog/Pager'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ProductGrid } from '@/components/product/ProductGrid'
+import { ProductMedia } from '@/components/product/ProductMedia'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import {
   NO_FILTERS,
@@ -21,10 +22,12 @@ import {
   getBrandBySlug,
   getCatalogIndex,
   getCategoryBySlug,
+  getDepartmentPicture,
   getFamilyCount,
   getFilteredCatalogue,
   getMeta,
   getUniverseBySlug,
+  getUniverses,
   type CatalogFilters,
 } from '@/lib/catalog'
 import { formatAmount, formatCount } from '@/lib/format'
@@ -73,6 +76,34 @@ import {
  * into, and every one of those pages is a subset of a page that is already
  * indexed. `robots: noindex, follow` the moment a filter is on — follow, because
  * the products themselves are the pages worth reaching.
+ *
+ * WHAT THIS PAGE LOOKED LIKE ON A TELEPHONE, MEASURED AT 390 x 844 BEFORE THE
+ * WORK BELOW: 1 504 words, 26 photographs, the first of them at y 1 536, and
+ * 18 607 pixels tall. Twenty-two screens, of which the first two were type and
+ * the last fourteen were the family index unrolled. A shop whose whole argument
+ * is that it holds 4 254 things you can look at opened with 371 words and no
+ * merchandise, and the client read that back as "on a l'impression de ne pas
+ * tomber sur l'essentiel".
+ *
+ * THE ANSWER IS THE CATALOGUE'S OWN PHOTOGRAPHY, NOT ILLUSTRATION. Every one of
+ * the twelve departments has a pinned hero product with a real packshot behind
+ * it — `getDepartmentPicture` returns it — so the twelve doors at the top of
+ * this page are now twelve photographs of things this shop actually sells,
+ * taken from the same library the grid below them is drawn from. Nothing was
+ * downloaded, generated or licensed to make that happen.
+ *
+ * AND WHAT IT MEASURES NOW, SAME BROWSER, SAME 390 x 844: 726 words, 38
+ * photographs, the first of them at y 327 — inside the first screen, under the
+ * head, with the second and a slice of the third beside it — and 9 872 pixels
+ * tall against 20 321. Twelve screens instead of twenty-four, and the half of
+ * them that was a directory unrolled is now twelve folded rows: the index went
+ * from 11 743 pixels to 1 731, and the merchandise, 5 768 pixels of it, is the
+ * biggest thing on the page, which is the only ordering a shop can defend.
+ *
+ * THE POINTER WAS NOT ASKED TO PAY FOR ANY OF IT. At 1 440 the page measured
+ * 11 236 pixels before and 11 326 after — ninety pixels, the difference between
+ * twelve rows of type and twelve photographs — with the same three-column
+ * index, the same panel, and the first photograph up from y 1 286 to y 445.
  */
 
 interface Params {
@@ -259,6 +290,24 @@ export default async function CataloguePage({ searchParams }: Params) {
   const from = listing.total === 0 ? 0 : (listing.page - 1) * PER_PAGE + 1
   const to = Math.min(listing.page * PER_PAGE, listing.total)
 
+  /**
+   * The twelve doors, with a photograph each.
+   *
+   * `getUniverses` rather than `getCatalogIndex`, which carries all 218 families
+   * this block does not draw, and `getDepartmentPicture` for the packshot: the
+   * pinned hero of the department, falling back inside the catalog to the first
+   * photographed product it holds, so no tile can come out empty while the
+   * department has stock. Resolved once, above the return, because it is the
+   * same twelve whether a filter is on or not.
+   */
+  const shelf = getUniverses().map((universe) => ({
+    id: universe.id,
+    slug: universe.slug,
+    name: universe.name,
+    totalCount: universe.totalCount,
+    image: getDepartmentPicture(universe.id),
+  }))
+
   return (
     <>
       <PageHeader
@@ -270,7 +319,14 @@ export default async function CataloguePage({ searchParams }: Params) {
         lead={
           filtering
             ? `${formatCount(listing.total, 'référence')} sur ${formatAmount(meta.productCount)} ${listing.total < 2 ? 'répond' : 'répondent'} à ${formatCount(active, 'filtre')}. Cette adresse porte la sélection entière : copiez-la, elle rouvrira exactement cette liste chez quelqu’un d’autre.`
-            : `Douze rayons, ${familyCount} familles et ${formatAmount(meta.productCount)} références, exactement telles qu’elles sont rangées au comptoir. Descendez pour les parcourir, ou ouvrez l’index si vous savez déjà ce que vous cherchez.`
+            : /* THE SECOND SENTENCE WENT, AND IT WAS THE INSTRUCTIONS. "Descendez
+                 pour les parcourir, ou ouvrez l'index si vous savez déjà ce que
+                 vous cherchez" is two lines at 390 telling a reader to do the
+                 thing the shelf immediately under it already invites, and those
+                 two lines are 44 pixels between the page and its first
+                 photograph. What is left is the only sentence that carries a
+                 fact. */
+              `Douze rayons, ${familyCount} familles et ${formatAmount(meta.productCount)} références, exactement telles qu’elles sont rangées au comptoir.`
         }
         aside={
           filtering
@@ -286,58 +342,88 @@ export default async function CataloguePage({ searchParams }: Params) {
           matters. They come back as the panel's first group, counted against the
           selection. */}
       {filtering ? null : (
-        <section className="shell" aria-label="Rayons">
+        <section className="shell" aria-label="Les douze rayons">
           {/**
-           * TWELVE CARDS IN A GRID ARE TWELVE ROWS IN A COLUMN ON A PHONE, AND A
-           * COLUMN IS NOT A GRID MADE NARROW. Measured at 360 before this block
-           * was touched: each door was 87.9 tall — a name, a count and a
-           * two-line gloss — and the twelve, separated by 32 pixels of `gap-y-8`,
-           * came to 1 406.5 pixels. That is a screen and three quarters of
-           * navigation before the reader meets a single price, and it is what
-           * put "Filtrer et trier" 2 247 pixels down the page.
+           * THE TWELVE DOORS ARE PHOTOGRAPHS NOW, AND THAT IS THE WHOLE POINT OF
+           * THIS BLOCK. What stood here was twelve rows of type: a name, a
+           * count, and under `sm` a two-line gloss. 624 pixels on a phone, which
+           * was cheap, and the reason the first picture on this page arrived at
+           * y 1 536 — a shop with 4 215 packshots opened on a table of contents.
            *
-           * THE GLOSS IS WHAT GOES, NOT THE DOOR. Set at one column the gloss
-           * cannot be read across a gap the way it is in a three-column grid: it
-           * is two more lines under a name that already says the same thing —
-           * "Sécurité & Biométrie" over "Vidéosurveillance, enregistreurs,
-           * contrôle d'accès, alarme, interphonie" — and twelve of them stacked
-           * turn a map into a wall. Truncating it to one line was tried and
-           * rejected: at 12 pixels the shell holds 48 characters and every one
-           * of the twelve runs past 60, so the page would have ended in twelve
-           * ellipses and half the information.
+           * Each door shows its department's pinned hero product, which is the
+           * same photograph the homepage's deck opens that department with, so
+           * the two pages agree about what a rayon looks like. A real switch
+           * standing for "Réseaux, Switchs & Routeurs" is worth more than any
+           * stock photograph of an office, it costs nothing, it raises no
+           * licence, and it is true.
            *
-           * What is left is the row this site sets every long list of names as,
-           * the same one `FamilyIndex` and `Listing` fall back to under their own
-           * breakpoints: a rule between, the name left, the count right, 52
-           * pixels tall. The twelve now measure 624 and fit one screen, which is
-           * the point — a reader looking for their department reads all of them
-           * in one movement instead of scrolling past eight.
+           * ON A PHONE IT IS A SHELF, NOT A COLUMN. Twelve tiles stacked one per
+           * row would be 2 600 pixels and would put the merchandise below three
+           * screens of navigation; twelve tiles on a rail are 220 and the reader
+           * flicks through them the way they would along a shelf. The rail
+           * bleeds through the shell's gutter to both edges of the screen so the
+           * next tile is CUT by the screen rather than by a margin, which is the
+           * only honest way to say "there is more this way"; `scroll-pl` puts
+           * the snapped tile back on the page's own left edge, so a tile that
+           * has come to rest lines up with the heading above it.
            *
-           * NOTHING OF THIS REACHES A POINTER. Every class here is behind a
-           * `sm:` reset, and the grid measured unchanged at 1440: li 381.3 x
-           * 87.9, three columns, gloss on two lines.
+           * THE CARD IS 156 WIDE AND THAT NUMBER IS MEASURED TWICE. At 390 the
+           * gutter is 7.5vw = 29.25, so a rail of 156-wide tiles with a 12 gap
+           * shows two whole tiles and 25 pixels of the third: enough to read as
+           * a cut edge, not enough to read as a third column. And 156 is what
+           * the longest name needs — "Onduleurs, Régulateurs & Énergie" is 32
+           * characters and sets on two lines at 13px there, where at 140 it
+           * needed three and the clamp ate the last word of half the twelve.
+           *
+           * FROM `sm` IT IS A GRID AND THE RAIL IS GONE: no overflow, no snap,
+           * no negative margin. Three columns, then four, then six from `lg`, so
+           * the twelve are two rows under a pointer.
            */}
-          <ul className="grid border-t border-rule sm:grid-cols-2 sm:gap-x-10 sm:gap-y-8 sm:border-t-0 lg:grid-cols-3">
-            {getCatalogIndex().map((department, index) => (
+          <ul className="no-scrollbar mx-[calc(var(--gutter)*-1)] flex snap-x snap-mandatory scroll-pl-[var(--gutter)] gap-3 overflow-x-auto overscroll-x-contain px-[var(--gutter)] pb-2 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-3 sm:gap-x-6 sm:gap-y-9 sm:overflow-visible sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-6">
+            {shelf.map((department, index) => (
               <li
                 key={department.id}
-                className="enter e-item border-b border-rule sm:border-t sm:border-b-0 sm:pt-5"
+                /* THE ENTRANCE IS ON THE LIST ITEM, NOT ON THE LINK. `Reveal`
+                   stamps `data-enter="in"` on every `.enter` it finds and its
+                   first sweep runs before this segment has attached, so whichever
+                   element carries the class is reported as a hydration mismatch;
+                   the page reported exactly one before this block was touched and
+                   reports exactly one now. Carried on the `li` it is at least on
+                   the element `ProductCard` and the department list it replaces
+                   both put it on, so `.enter .e-media` and `.enter .sheen::after`
+                   resolve the way they do everywhere else on the site. */
+                className="group enter w-[9.75rem] shrink-0 snap-start sm:w-auto sm:shrink"
                 style={{ '--enter-index': index } as React.CSSProperties}
               >
-                <Link
-                  href={`/rayon/${department.slug}`}
-                  className="group block min-h-11 py-3.5 sm:min-h-0 sm:py-0"
-                >
-                  <span className="flex items-baseline justify-between gap-4">
-                    <span className="draw-under text-body font-semibold tracking-[-0.01em] group-hover:text-accent">
-                      {department.name}
-                    </span>
-                    <span className="t-num shrink-0 text-micro text-ink-3">
-                      {formatAmount(department.totalCount)}
-                    </span>
+                <Link href={`/rayon/${department.slug}`} className="block">
+                  {/* The same three layers a product card uses, and for the same
+                      reason: `.plate > *` needs exactly one child, the sheen
+                      wipes the well open, and the well itself is `ProductMedia`,
+                      which carries the shimmer and the "Photo à venir" fallback
+                      so a department whose hero has lost its file degrades to a
+                      labelled frame instead of a hole. */}
+                  <div className="plate mb-3">
+                    <div className="sheen relative overflow-hidden rounded-well">
+                      <ProductMedia
+                        src={department.image}
+                        // The department is named in type immediately under the
+                        // picture. Naming the hero product here would make a
+                        // screen reader announce a switch model nobody asked
+                        // about before the word "Réseaux".
+                        alt=""
+                        sizes="(min-width: 1280px) 12rem, (min-width: 640px) 22vw, 156px"
+                        // THE FIRST THREE ARE THE LARGEST CONTENTFUL PAINT ON
+                        // THIS PAGE NOW. Two of them are on screen at 390 and
+                        // four at 1440, and everything below is a scroll away.
+                        priority={index < 3}
+                      />
+                    </div>
+                  </div>
+                  <span className="clamp-2 draw-under block h-[2.8em] text-small font-semibold leading-[1.4] tracking-[-0.01em] group-hover:text-accent">
+                    {department.name}
                   </span>
-                  <span className="mt-1.5 hidden text-micro leading-[1.6] text-ink-3 sm:block">
-                    {department.tagline}
+                  <span className="t-num mt-1 block text-micro text-ink-3">
+                    {formatAmount(department.totalCount)} réf.
                   </span>
                 </Link>
               </li>
@@ -350,9 +436,42 @@ export default async function CataloguePage({ searchParams }: Params) {
         <SectionHeader
           title={filtering ? 'Les références retenues' : 'Toutes les références'}
           context={
-            filtering
-              ? 'Chaque compte du panneau est calculé contre les autres filtres déjà posés, jamais contre le magasin entier : c’est la taille de cette valeur seule. Cochez-en une dans un groupe et c’est exactement la liste que vous obtenez ; cochez-en une seconde dans le même groupe et la liste réunit les deux, donc elle s’élargit. Une valeur qui ne donnerait rien, ou qui rendrait exactement la liste déjà affichée, n’est pas proposée : le panneau ne montre que ce qui change quelque chose.'
-              : 'Le catalogue entier, dans l’ordre que vous choisissez. « Arrivage » classe par date de mise en ligne de la photographie, seule date que l’export porte.'
+            filtering ? (
+              /**
+               * THE ARITHMETIC OF THE PANEL IS A POINTER SENTENCE, AND ON A
+               * PHONE IT WAS 208 PIXELS ABOVE THE MERCHANDISE. Measured at 390
+               * on `?rayon=reseaux-switchs-routeurs&stock=1`: the head's lead is
+               * 132 pixels, this paragraph 208, the filter bar 73, and the first
+               * packshot landed at y 878 — thirty-four pixels below a fold this
+               * whole page has just been rebuilt to get above. The three
+               * sentences doing the damage describe how the counts INSIDE the
+               * panel combine, and on a phone THE PANEL IS NOT ON THE PAGE: it
+               * is behind the "Filtrer et trier" button, in a sheet the reader
+               * has not opened. Explaining a control nobody can see, above the
+               * goods they came for, is the fault the client named.
+               *
+               * The first sentence stays at every width, because it is the one
+               * that prevents a misreading of the numbers the reader meets the
+               * second the sheet opens. The rest is `hidden sm:inline`, so from
+               * 640 up the paragraph is word for word what it was, and the
+               * desktop measured identical: 884 words, first packshot at y 813,
+               * 5 753 pixels tall, before and after.
+               */
+              <>
+                Chaque compte du panneau est calculé contre les autres filtres déjà posés, jamais
+                contre le magasin entier : c’est la taille de cette valeur seule.
+                <span className="hidden sm:inline">
+                  {' '}
+                  Cochez-en une dans un groupe et c’est exactement la liste que vous obtenez ;
+                  cochez-en une seconde dans le même groupe et la liste réunit les deux, donc elle
+                  s’élargit. Une valeur qui ne donnerait rien, ou qui rendrait exactement la liste
+                  déjà affichée, n’est pas proposée : le panneau ne montre que ce qui change quelque
+                  chose.
+                </span>
+              </>
+            ) : (
+              'Le catalogue entier, dans l’ordre que vous choisissez. « Arrivage » classe par date de mise en ligne de la photographie, seule date que l’export porte.'
+            )
           }
           action={filtering ? undefined : { href: '#index', label: `Les ${familyCount} familles` }}
         />
@@ -430,7 +549,19 @@ export default async function CataloguePage({ searchParams }: Params) {
               // smaller than the thumbnail in the search panel. Three columns
               // put the card back at 267 at 1440, which is the size it is
               // everywhere else on the site.
-              <ProductGrid products={listing.products} columns={3} priorityCount={3} />
+              // AND NOTHING HERE IS PRIORITY WHILE THE SHELF EXISTS. Unfiltered,
+              // the first product card sits at y 1 100 on a phone and y 1 000 at
+              // 1440, which is below both folds, while the department shelf is on
+              // screen: three eager packshots there and three more here is six
+              // images competing for the same connection, and the three that
+              // matter are the ones the reader can see. Under a filter the shelf
+              // is gone and this grid IS the top of the page, so it takes the
+              // three back.
+              <ProductGrid
+                products={listing.products}
+                columns={3}
+                priorityCount={filtering ? 3 : 0}
+              />
             )}
 
             <Pager

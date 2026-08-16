@@ -12,6 +12,7 @@ import {
 } from 'react'
 
 import { DEPARTMENT_ICON, IconArrowRight, IconChevronRight } from '@/components/brand/Icons'
+import { ProductMedia } from '@/components/product/ProductMedia'
 import { Action } from '@/components/ui/Action'
 import type { HeroPanel } from '@/lib/catalog'
 
@@ -137,7 +138,15 @@ export function HeroDeck({ panels }: { panels: readonly HeroPanel[] }) {
           so every screen from 640 up is untouched. */}
       <nav
         aria-label="Rayons"
-        className="order-1 grid grid-cols-2 gap-x-8 sm:order-2 sm:grid-cols-3 lg:order-1 lg:h-full lg:grid-cols-1 lg:gap-x-0 lg:[grid-template-rows:repeat(12,minmax(0,1fr))]"
+        /* A SHELF ON A PHONE, THE SAME ONE THE CATALOGUE USES FOR THE
+            SAME TWELVE ROOMS. Stacked two-by-two the rail was 336 pixels of
+            links before the card it drives, which is half a screen spent on a
+            table of contents. Rolled sideways it is one row: the reader sees
+            where the shop begins, and the ones off the right edge announce
+            themselves by being cut rather than by being scrolled to.
+            The negative gutter margins let it run edge to edge, which is what
+            tells a thumb it moves. From sm it is the grid it always was. */
+        className="no-scrollbar order-1 mx-[calc(var(--gutter)*-1)] flex snap-x snap-mandatory scroll-pl-[var(--gutter)] gap-3 overflow-x-auto overscroll-x-contain px-[var(--gutter)] pb-1 sm:order-2 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-3 sm:gap-x-8 sm:overflow-visible sm:px-0 sm:pb-0 lg:order-1 lg:h-full lg:grid-cols-1 lg:gap-x-0 lg:[grid-template-rows:repeat(12,minmax(0,1fr))]"
       >
         {panels.map((panel, position) => {
           const Icon = DEPARTMENT_ICON[panel.id]
@@ -153,12 +162,36 @@ export function HeroDeck({ panels }: { panels: readonly HeroPanel[] }) {
               // marker bar would have to live in the page gutter to clear the
               // icon, and the rule is already there, already the right weight,
               // and already the language the rest of the page answers in.
-              className={`group/row flex min-h-14 items-center gap-4 border-b text-small transition-colors duration-[var(--t-fast)] lg:min-h-0 lg:pr-2 ${
-                isActive ? 'border-accent text-accent' : 'border-rule text-ink-2 hover:text-accent'
+              // A TILE ON A PHONE, A ROW FROM `sm`, AND THE TILE IS THE
+              // CATALOGUE'S OWN. That page shows the same twelve rooms as
+              // photographs on a plate, and a reader who meets them as icons on
+              // the home page and as pictures on the catalogue meets two
+              // different shops. Below `sm` this is the catalogue's tile, to the
+              // class: plate, sheen, ProductMedia, name underneath. From `sm`
+              // the rail is the row it has always been, because from `sm` it is
+              // beside a card it drives rather than being the content itself.
+              className={`group/row group flex w-[9.75rem] shrink-0 snap-start flex-col sm:w-auto text-small transition-colors duration-[var(--t-fast)] sm:min-h-14 sm:shrink sm:snap-align-none sm:flex-row sm:items-center sm:gap-3 sm:border-b lg:min-h-0 lg:pr-2 ${
+                isActive
+                  ? 'text-accent sm:border-accent'
+                  : 'text-ink-2 hover:text-accent sm:border-rule'
               }`}
             >
+              <span className="plate mb-2.5 block sm:hidden">
+                <span className="sheen relative block overflow-hidden rounded-well">
+                  <ProductMedia
+                    src={panel.image}
+                    // The department is named in type immediately under the
+                    // picture; naming the hero product here would make a screen
+                    // reader announce a switch model before the word "Réseaux".
+                    alt=""
+                    sizes="156px"
+                    priority={position < 3}
+                  />
+                </span>
+              </span>
+
               <Icon
-                className={`shrink-0 text-[1.25rem] transition-transform duration-[var(--t-base)] ease-brand ${
+                className={`hidden shrink-0 text-[1.25rem] transition-transform duration-[var(--t-base)] ease-brand sm:block ${
                   isActive ? 'scale-110' : 'group-hover/row:scale-110'
                 }`}
               />

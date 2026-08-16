@@ -1153,10 +1153,41 @@ export function getBrandListing(slug: string, sort: SortKey, page: number): List
     // The families this brand actually appears in, which on a brand page is a
     // more useful narrowing than its departments: "HP" spans six departments and
     // nobody browses HP by department, they browse it by what the thing is.
+    // EACH COUNT IS THE COUNT OF THE PAGE IT OPENS, AND IT WAS NOT.
+    //
+    // The brand page prints these beside a family and links to
+    // `/catalogue?famille=X&marque=Y`, whose facet accepts a product filed in
+    // that family OR ANYWHERE UNDER IT, which is how the counter reads a shelf.
+    // Counting only `primaryCategoryId` here said 177 HP laptops under a door
+    // that opened on 187. A number beside a door has to be the number of things
+    // behind the door; a number that is merely close is worse than none, because
+    // it looks like a fact.
+    //
+    // A product therefore counts for its own family and for every ancestor of
+    // it, which is the same set the destination accepts. It is the same fix the
+    // catalogue's own family facet needed, for the same reason.
     children: (() => {
       const counts = new Map<number, number>()
       for (const product of byBrandSlug().get(slug) ?? []) {
-        counts.set(product.primaryCategoryId, (counts.get(product.primaryCategoryId) ?? 0) + 1)
+        // EVERY CATEGORY THE PRODUCT BELONGS TO, NOT ONLY ITS PRIMARY ONE, AND
+        // THE ANCESTORS OF EACH. That is the exact set `matches()` accepts for
+        // the `famille` facet, which is where these tiles now lead. Counting the
+        // primary alone said 177 HP laptops under a door that opened on 187: the
+        // ten missing were HP laptops filed primarily elsewhere and tagged
+        // Laptop HP as a second category. WooCommerce lets a product sit on
+        // several terms and 4 254 of them do.
+        const seen = new Set<number>()
+        for (const start of [product.primaryCategoryId, ...product.categoryIds]) {
+          const own = categoriesById.get(start)
+          if (!own) continue
+          for (const id of [own.id, ...own.ancestorIds]) {
+            if (seen.has(id)) continue
+            seen.add(id)
+            const category = categoriesById.get(id)
+            if (!category || category.hidden || category.level === 0) continue
+            counts.set(id, (counts.get(id) ?? 0) + 1)
+          }
+        }
       }
       return [...counts.entries()]
         .map(([id, count]) => {

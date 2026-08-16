@@ -211,22 +211,37 @@ export function PromoBand({ panels }: { panels: readonly PromoPanel[] }) {
                 key={group}
                 inert={group !== page}
                 aria-hidden={group !== page}
-                className="grid w-full shrink-0 gap-5 sm:grid-cols-2 sm:gap-6"
+                /* ONE COLUMN ON A PHONE, AND THE CARD LIES DOWN.
+                   Two columns were tried and measured 160 by 259, which is a
+                   thumbnail with a caption: too narrow for the headline to set
+                   in fewer than four lines. One column stacked was worse, 332 by
+                   420, so two panels cost 840 pixels of scrolling to say two
+                   sentences. A card that is WIDE and SHORT is neither: the
+                   photograph takes a square on the left, the type takes the rest,
+                   and the whole thing is 332 by about 150. Full width to read,
+                   a third of the height to scroll past. */
+                className="grid w-full shrink-0 gap-3 sm:grid-cols-2 sm:gap-6"
               >
                 {panels.slice(group * PER_PAGE, group * PER_PAGE + PER_PAGE).map((panel) => (
                   <Link
                     key={panel.id}
                     href={panel.href}
-                    className="group flex flex-col items-start gap-6 rounded-space bg-space p-6 transition-colors duration-[var(--t-base)] hover:bg-space-2 sm:flex-row sm:items-center sm:gap-8 sm:p-8 xl:gap-10 xl:p-10"
+                    className="group flex flex-row-reverse items-center gap-4 rounded-space bg-space p-4 transition-colors duration-[var(--t-base)] hover:bg-space-2 sm:flex-col sm:items-start sm:gap-6 sm:p-6 md:flex-row md:items-center md:gap-8 md:p-8 xl:gap-10 xl:p-10"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sub font-semibold leading-[1.2] tracking-[-0.02em] text-balance">
+                      <p className="text-small leading-[1.25] font-semibold tracking-[-0.015em] text-balance sm:text-sub sm:leading-[1.2] sm:tracking-[-0.02em]">
                         {panel.headline}
                       </p>
-                      <p className="mt-3.5 text-small leading-[1.6] text-pretty text-ink-2">
+                      {/* THE SENTENCE IS A CASUALTY OF THE SECOND COLUMN, AND IT
+                          IS THE RIGHT ONE TO LOSE. In 160 pixels it sets four
+                          words a line and runs to seven lines, which is longer
+                          than the headline it was explaining. The headline and
+                          the count carry the panel on a phone; the sentence
+                          returns the moment there is room for it. */}
+                      <p className="mt-3.5 hidden text-small leading-[1.6] text-pretty text-ink-2 sm:block">
                         {panel.body}
                       </p>
-                      <span className="mt-7 inline-flex items-center gap-2.5 text-small font-semibold text-accent">
+                      <span className="mt-4 inline-flex items-center gap-2 text-micro font-semibold text-accent sm:mt-7 sm:gap-2.5 sm:text-small">
                         <span className="measure">Voir le rayon</span>
                         <IconArrowRight className="travel text-[1.0625rem]" />
                       </span>
@@ -235,13 +250,13 @@ export function PromoBand({ panels }: { panels: readonly PromoPanel[] }) {
                     {panel.image ? (
                       <span
                         aria-hidden
-                        className="relative block aspect-[16/10] w-full shrink-0 overflow-hidden rounded-well bg-surface sm:aspect-square sm:w-[30%] sm:max-w-[15rem] xl:w-[34%]"
+                        className="relative block aspect-square w-[7.5rem] shrink-0 overflow-hidden rounded-well bg-surface sm:aspect-[16/10] sm:w-full md:aspect-square md:w-[30%] md:max-w-[15rem] xl:w-[34%]"
                       >
                         <Image
                           src={panel.image}
                           alt=""
                           fill
-                          sizes="(max-width: 639px) 46vw, (max-width: 1279px) 26vw, 240px"
+                          sizes="(max-width: 639px) 120px, (max-width: 1279px) 26vw, 240px"
                           className="lift object-contain p-4"
                         />
                       </span>

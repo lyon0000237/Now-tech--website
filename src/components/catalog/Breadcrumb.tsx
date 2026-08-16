@@ -31,6 +31,16 @@ import Link from 'next/link'
  * THE LINK IS 44 PIXELS TALL ON A PHONE AND 26 FROM `sm` UP. WCAG 2.5.8 is
  * satisfied by 24, and 24 is not what a thumb needs in a moving taxi; a
  * pointer, which is what the 26 was drawn for, needs neither.
+ *
+ * THE TOP PAD IS 16 ON A PHONE AND 28 FROM `sm` UP, AND THAT IS PAID FOR BY
+ * WHAT SITS ABOVE IT. Measured at 390 on /categorie/ordinateurs-portables-
+ * laptop: the masthead ends at y=116, this nav ran 116 to 188 — 72 pixels, of
+ * which 28 were pure air — and the page's own title only started at 220. Under
+ * a pointer the 28 separates the trail from a masthead 157 pixels tall; under a
+ * thumb it separates it from a search field whose own bottom padding is already
+ * there, so the same gap is being drawn twice. 16 gives the 12 back with the
+ * 44-pixel target untouched, and `sm:pt-7 md:pt-9` leaves 640 and above at the
+ * exact numbers they were measured at (nav 1440 x 62 at 1440).
  */
 export function Breadcrumb({
   path,
@@ -40,7 +50,7 @@ export function Breadcrumb({
   current: string
 }) {
   return (
-    <nav aria-label="Fil d’Ariane" className="shell pt-7 md:pt-9">
+    <nav aria-label="Fil d’Ariane" className="shell pt-4 sm:pt-7 md:pt-9">
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-micro text-ink-3">
         {path.map((step, index) => (
           <li

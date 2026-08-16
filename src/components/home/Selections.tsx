@@ -64,7 +64,14 @@ export function Selections({ selections }: { selections: readonly Selection[] })
               else return
               event.preventDefault()
             }}
-            className="e-item flex flex-wrap gap-2"
+            /* ONE ROW THAT ROLLS, NOT FOUR PILLS THAT WRAP. At 390 the four
+                labels need 452 pixels and the shell gives 332, so they broke on
+                to a second line and the set stopped reading as a set of
+                alternatives: two above, two below, and the eye has to be told
+                they are the same control. Rolled sideways they are one row, the
+                fourth is cut at the edge to say there is more, and the tab that
+                is on stays where it was. From sm they fit and nothing rolls. */
+            className="no-scrollbar e-item mx-[calc(var(--gutter)*-1)] flex snap-x snap-mandatory scroll-pl-[var(--gutter)] gap-2 overflow-x-auto overscroll-x-contain px-[var(--gutter)] pb-1 sm:mx-0 sm:flex-wrap sm:snap-none sm:overflow-visible sm:px-0 sm:pb-0"
           >
             {selections.map((selection, position) => {
               const isActive = selection.id === active.id
@@ -91,7 +98,16 @@ export function Selections({ selections }: { selections: readonly Selection[] })
                 // set stood 148px tall above the grid. At px-4 the same two
                 // come to 294 and the four tabs sit on two rows, 96px. The
                 // desktop pill is untouched from sm up.
-                className={`press min-h-11 rounded-pill px-4 py-2 text-small transition-colors duration-[var(--t-fast)] sm:px-5 md:min-h-0 ${
+                /* `shrink-0` AND `whitespace-nowrap` ARE LOAD-BEARING IN A
+                     SCROLLER, AND THEY WERE LOST IN A MERGE. The row rolls
+                     sideways now, so a flex child that is allowed to shrink is
+                     squeezed to the width of the rail instead of taking the
+                     width of its own label: "Sous 50 000 FCFA" came out as four
+                     stacked words inside a pill, and a pill whose content is
+                     taller than it is wide is drawn by `rounded-pill` as an
+                     ellipse. Nothing shrinks, nothing wraps, and the row scrolls
+                     instead. Both are released at sm, where the four fit. */
+                  className={`press min-h-11 shrink-0 snap-start whitespace-nowrap rounded-pill px-4 py-2 text-small transition-colors duration-[var(--t-fast)] sm:shrink sm:snap-align-none sm:whitespace-normal sm:px-5 md:min-h-0 ${
                     isActive
                       ? 'bg-accent font-semibold text-paper'
                       : 'border border-rule text-ink-2 hover:border-ink hover:text-ink'

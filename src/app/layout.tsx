@@ -88,7 +88,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AccountProvider>
           <CartProvider>
             <Header />
-            <main>{children}</main>
+            {/* THE LAST SECTION OF EVERY PAGE STOPS SHORT OF THE FOOTER, AND IT HAD
+            TO BE SAID HERE RATHER THAN ON EACH PAGE. Measured on seven routes:
+            the gap between a page's last element and the footer was 0 pixels
+            everywhere, so the closing band of a page and the green rail beneath
+            it read as one object. Setting it on `main` means a page written
+            tomorrow inherits it without its author having to remember; setting
+            it per page means seven chances to forget and one more each time a
+            route is added.
+
+            A band, not a margin: the footer is a different surface, not the next
+            section, and the page's own rhythm is what says so. */}
+        <main className="pb-band">{children}</main>
             <Footer />
             <CartDrawer />
           </CartProvider>
