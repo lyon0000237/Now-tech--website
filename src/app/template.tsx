@@ -40,14 +40,47 @@ export default function Template({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion()
 
   return (
-    <motion.div
-      initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12 }}
-      animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
-      transition={
-        reduced ? { duration: 0.16 } : { duration: 0.26, ease: EASE_DRAW }
-      }
-    >
-      {children}
-    </motion.div>
+    <>
+      {/* THE BAR LIVES HERE AND NOT IN A `loading.tsx`, AND THAT IS THE WHOLE
+          LESSON OF THIS FILE. A loading.tsx is the framework's own hook for
+          "the next page is being fetched", and it cost this site two measured
+          faults: it wraps its segment in a Suspense boundary, which streams a
+          fallback and commits the HTTP status, so every wrong address answered
+          200 instead of 404; and the three pages carrying it were the only
+          three on the site reporting a hydration mismatch.
+
+          A template re-mounts on every navigation and creates no boundary, sets
+          no status and hydrates once. So the bar is drawn by the page that has
+          ARRIVED rather than by the wait, and it sweeps once across the top edge
+          of the window as that page settles. It says the same thing to the same
+          reader, at the top of the screen where they are looking after a tap,
+          and it cannot break a status code.
+
+          `z-50` clears the masthead's 40 and stays under the basket drawer's 70,
+          so it draws over the green band and never over a panel the reader
+          opened. It is `aria-hidden`: the arrival is announced by the page's own
+          heading, and a decorative sweep has nothing to add to that. */}
+      {reduced ? null : (
+        <motion.span
+          aria-hidden
+          initial={{ scaleX: 0, opacity: 1 }}
+          animate={{ scaleX: 1, opacity: 0 }}
+          transition={{
+            scaleX: { duration: 0.5, ease: EASE_DRAW },
+            opacity: { duration: 0.25, delay: 0.42 },
+          }}
+          style={{ transformOrigin: 'left' }}
+          className="fixed inset-x-0 top-0 z-50 block h-[3px] bg-accent"
+        />
+      )}
+
+      <motion.div
+        initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12 }}
+        animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
+        transition={reduced ? { duration: 0.16 } : { duration: 0.26, ease: EASE_DRAW }}
+      >
+        {children}
+      </motion.div>
+    </>
   )
 }

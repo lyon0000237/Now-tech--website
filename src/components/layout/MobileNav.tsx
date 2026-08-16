@@ -190,7 +190,17 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
                             <Link
                               href={section.href}
                               aria-current={current ? 'page' : undefined}
-                              className={`press block border-b border-rule py-4 text-title leading-[1.1] font-bold tracking-[-0.03em] transition-colors duration-[var(--t-fast)] ${
+                              /* 44 PIXELS A ROW, NOT 59. The five titles were set at the
+                          display size with 16 pixels of padding above and below,
+                          which measured 59 each and 297 for the block: with the
+                          twelve departments under them the last row landed at
+                          747 on an 844 screen, and a phone shorter than an
+                          iPhone lost it. At 20px with 10 of padding the row is
+                          44, still the largest type in the panel and still the
+                          minimum a thumb is owed, and the block gives back 75
+                          pixels. The display size returns from sm, where there
+                          is room for it. */
+                        className={`press block border-b border-rule py-2.5 text-sub leading-[1.15] font-bold tracking-[-0.025em] transition-colors duration-[var(--t-fast)] sm:py-4 sm:text-title sm:leading-[1.1] sm:tracking-[-0.03em] ${
                                 current ? 'text-accent' : 'text-ink hover:text-accent'
                               }`}
                             >
