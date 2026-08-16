@@ -54,7 +54,17 @@ import { BANNERS, type Banner } from '@/constants/banners'
  * share of the artwork's width the window shows.
  *
  * THE PHONE HAS NO ARROWS AND NEVER HAD A SWIPE, WHICH LEFT IT NO CONTROL AT
- * ALL. The arrows are `hidden` under sm on purpose: a 48px disc punched into a
+ * ALL. THE ARROWS AND THE DOTS ARE THE SAME TWO CONTROLS AT EVERY WIDTH NOW.
+ * They were not: the arrows were hidden below sm on the argument that a disc
+ * punched into a 130px band is a hole in the artwork, and the dots were inflated
+ * to 44px squares to be tappable. The result was a phone carrying a different
+ * carousel from the one the shop had designed, with no manual control except
+ * five large targets that did not look like a position readout any more. The
+ * arrows are 40px on a phone and 48 from md, and the dots keep their six pixels
+ * everywhere with a 42px hit area drawn by a pseudo-element, which is how every
+ * other small control on this site is made tappable without being made bigger.
+ * The old reasoning, kept because it is still the reason the discs are
+ * translucent rather than solid: a 48px disc punched into a
  * 154px picture is a hole. But that left five 6px indicators whose hit areas
  * overlapped each other by 24 pixels as the only way to steer, on the one device
  * that cannot hover. So the track now takes a finger: a horizontal drag past 44
@@ -325,7 +335,7 @@ function Track({
         type="button"
         onClick={() => onPick(index - 1 + BANNERS.length)}
         aria-label="Bannière précédente"
-        className="press absolute top-1/2 left-4 z-[1] hidden -translate-y-1/2 place-items-center rounded-full bg-[rgb(255_255_255_/_0.55)] text-ink ring-1 ring-[rgb(20_23_21_/_0.12)] backdrop-blur-[2px] transition-[background-color,transform] duration-[var(--t-base)] ease-brand hover:bg-paper active:scale-95 sm:grid sm:size-10 md:left-6 md:size-12"
+        className="press absolute top-1/2 left-3 z-[1] grid size-10 -translate-y-1/2 place-items-center rounded-full bg-[rgb(255_255_255_/_0.55)] text-ink ring-1 ring-[rgb(20_23_21_/_0.12)] backdrop-blur-[2px] transition-[background-color,transform] duration-[var(--t-base)] ease-brand hover:bg-paper active:scale-95 sm:left-4 md:left-6 md:size-12"
       >
         <IconChevronLeft className="text-[1.125rem]" />
       </button>
@@ -333,7 +343,7 @@ function Track({
         type="button"
         onClick={() => onPick(index + 1)}
         aria-label="Bannière suivante"
-        className="press absolute top-1/2 right-4 z-[1] hidden -translate-y-1/2 place-items-center rounded-full bg-[rgb(255_255_255_/_0.55)] text-ink ring-1 ring-[rgb(20_23_21_/_0.12)] backdrop-blur-[2px] transition-[background-color,transform] duration-[var(--t-base)] ease-brand hover:bg-paper active:scale-95 sm:grid sm:size-10 md:right-6 md:size-12"
+        className="press absolute top-1/2 right-3 z-[1] grid size-10 -translate-y-1/2 place-items-center rounded-full bg-[rgb(255_255_255_/_0.55)] text-ink ring-1 ring-[rgb(20_23_21_/_0.12)] backdrop-blur-[2px] transition-[background-color,transform] duration-[var(--t-base)] ease-brand hover:bg-paper active:scale-95 sm:right-4 md:right-6 md:size-12"
       >
         <IconChevronRight className="text-[1.125rem]" />
       </button>
@@ -351,7 +361,7 @@ function Track({
           below sm, spaced 8px clear of its neighbours, and the span inside it
           keeps the 6px mark. From sm the button is the mark again, at exactly
           its old size, and the pseudo-element carries the pointer's hit area. */}
-      <div className="absolute inset-x-0 bottom-0 z-[1] flex items-center justify-center gap-2 sm:bottom-4 md:bottom-5">
+      <div className="absolute inset-x-0 bottom-4 z-[1] flex items-center justify-center gap-2 md:bottom-5">
         {BANNERS.map((banner, position) => {
           const current = position === index
           return (
@@ -361,7 +371,7 @@ function Track({
               onClick={() => onPick(position)}
               aria-label={banner.label}
               aria-current={current}
-              className={`press relative grid size-11 place-items-center transition-transform duration-[var(--t-base)] ease-brand after:absolute after:inset-0 after:content-[''] sm:size-1.5 sm:after:-inset-4 ${
+              className={`press relative grid size-1.5 place-items-center rounded-full transition-transform duration-[var(--t-base)] ease-brand after:absolute after:-inset-4 after:content-[''] ${
                 current ? 'sm:scale-150' : ''
               }`}
             >
