@@ -2,7 +2,6 @@ import Image from 'next/image'
 
 import { Packshot } from './Packshot'
 
-import { PACKSHOT_BLUR } from '@/constants/blur'
 
 /**
  * The product well.
@@ -79,7 +78,7 @@ export function ProductMedia({
   if (!src) {
     return (
       <div
-        className={`grid aspect-square place-items-center rounded-well bg-space ${className}`}
+        className={`grid aspect-square place-items-center rounded-well bg-[var(--placeholder)] ${className}`}
       >
         <span className="t-label text-ink-3">Photo à venir</span>
       </div>
@@ -126,8 +125,6 @@ export function ProductMedia({
             alt=""
             fill
             sizes={sizes}
-            placeholder="blur"
-            blurDataURL={PACKSHOT_BLUR}
             aria-hidden
             className="object-contain [clip-path:inset(0_100%_0_0)] transition-[clip-path] duration-[var(--t-base)] ease-[var(--ease-shutter)] motion-safe:group-hover:[clip-path:inset(0_0_0_0)] motion-safe:group-focus-within:[clip-path:inset(0_0_0_0)]"
           />

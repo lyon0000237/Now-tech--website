@@ -346,8 +346,34 @@
    BASE
    ========================================================================= */
 
-* {
-  border-color: var(--rule);
+/*
+ * THE DEFAULT HAIRLINE, AND IT USED TO BEAT EVERY BORDER UTILITY ON THE SITE.
+ *
+ * This rule sets the border colour once so no component has to name it, which is
+ * right: almost every border here is the hairline. It was written unlayered, and
+ * unlayered CSS beats anything inside a cascade layer NO MATTER ITS SPECIFICITY,
+ * so a `*` selector with the lowest specificity in the language was overriding
+ * Tailwind's `border-ink` and `border-accent`, which live in `@layer utilities`.
+ *
+ * Measured before this fix: `border-ink` computed rgb(226, 229, 224) and so did
+ * `border-accent`, which is this hairline rather than either of them. Counted
+ * across the source, 37 border colours in 18 files had never once been drawn:
+ * 20 `border-ink`, 9 `border-accent`, 5 `border-rail-rule`, 2 `border-ink-3` and
+ * 1 `border-warn`. Every one of them rendered as a pale grey line, and nobody
+ * caught it because a pale grey line is what most of them should have been
+ * anyway. The ones that mattered were the loud ones: a bordered button meant to
+ * read as ink was drawing at the weight of a table rule.
+ *
+ * `@layer base` puts it back under the utilities, where a default belongs. It is
+ * the third time this stylesheet has lost an argument to its own unlayered rules
+ * (see `.shimmer` and `.route-bar`), and the lesson is the same each time: plain
+ * CSS in this file outranks every utility, so anything written here has to be
+ * something no component should ever be able to override.
+ */
+@layer base {
+  * {
+    border-color: var(--rule);
+  }
 }
 
 html {
@@ -1384,5 +1410,30 @@ body {
       'liste chiffrage'
       'liste reste';
     align-items: start;
+  }
+}
+
+/*
+ * BOD STEPS ASIDE FOR A PINNED ACTION BAR.
+ *
+ * The quote page pins a send bar to the foot of a phone screen, and the
+ * assistant's launcher is pinned to the same corner at a higher z-index: it
+ * covered the last 38 pixels of the button, which is the corner a right thumb
+ * reaches first. Reserving space inside the bar was tried and looked like a
+ * mistake, because a primary action that stops short of its own bar's edge reads
+ * as broken.
+ *
+ * So the floating element yields to the fixed one. `:has()` is what makes this
+ * possible without threading state through the layout: the launcher lives beside
+ * `main` and knows nothing about the page inside it, and a page cannot reach up
+ * to set a variable on the root without a client effect. The bar declares itself
+ * with `data-dock` and the rule reads it from the body.
+ *
+ * Only below `lg`, because that is the only width where the bar exists.
+ */
+@media (width < 64rem) {
+  body:has([data-dock]) [data-assistant-launcher] {
+    /* The bar measures 106px; this clears it with the launcher's own 16px. */
+    bottom: 7.5rem;
   }
 }

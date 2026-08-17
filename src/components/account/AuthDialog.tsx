@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 
-import { IconChevronLeft, IconClose, IconPhone } from '@/components/brand/Icons'
+import { IconChevronLeft, IconClose } from '@/components/brand/Icons'
 import { SHOWROOMS } from '@/constants/site'
 import { formatCount } from '@/lib/format'
 import { hasBeenGreeted, normalisePhone, useAccount, type Account } from '@/lib/account'
@@ -458,6 +458,26 @@ function CardForm({
   // choice this shop actually has to offer, and it turns the second screen from
   // an interrogation into the consequence of an answer they already gave.
   const [step, setStep] = useState<'choix' | 'fiche'>(account ? 'fiche' : 'choix')
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+
+  /**
+   * THE TWO SEAMS. Both advance to the customer card today, which is where a real
+   * provider would leave the reader anyway, so wiring one is replacing a body and
+   * not a flow.
+   */
+  const onGoogle = () => setStep('fiche')
+  const onEmail = () => {
+    // Shape only, and deliberately not a strict address grammar: the point of
+    // checking here is to catch a typed mistake before the next screen, not to
+    // adjudicate what a valid mailbox is.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+      setEmailError('Vérifiez cette adresse : il manque un @ ou un domaine.')
+      return
+    }
+    setEmailError(null)
+    setStep('fiche')
+  }
   const form = useRef<HTMLFormElement>(null)
   const ids = useId()
 
@@ -497,41 +517,86 @@ function CardForm({
   if (step === 'choix') {
     return (
       <div className="mt-5 flex flex-1 flex-col md:mt-8">
-        <p className="text-small leading-[1.6] text-ink-2">
-          Comment préférez-vous qu’on vous réponde ? Le comptoir renvoie la facture
-          proforma par le canal que vous choisissez ici.
-        </p>
+        {/* GOOGLE AND E-MAIL, AS INTERFACE, ON THE SHOP'S OWN INSTRUCTION.
+            What stood here refused both, and the refusal was recorded at length:
+            a control carrying Google's name that signs nobody in asks for a
+            credential it cannot honour. The shop has now asked for the interface
+            twice and said plainly that it will wire the provider itself, which
+            changes who is being protected from what. So the two doors are drawn,
+            and the honesty moves into the code rather than out of the product:
+            NOTHING below authenticates anyone yet. Both paths advance to the same
+            customer card, which is also exactly where a real provider would leave
+            the reader, so the day OAuth arrives it replaces one handler and no
+            layout moves.
 
-        <div className="mt-6 grid gap-3">
-          <button
-            type="button"
-            onClick={() => setStep('fiche')}
-            className="press fill inline-flex min-h-12 items-center justify-center gap-2.5 rounded-control bg-accent px-7 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent-ink)]"
-          >
-            <IconPhone className="text-[1.125rem]" />
-            Par WhatsApp
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep('fiche')}
-            className="press inline-flex min-h-12 items-center justify-center gap-2.5 rounded-control border border-rule-2 px-7 text-[0.875rem] font-bold text-ink transition-colors duration-[var(--t-fast)] hover:border-ink"
-          >
-            Par téléphone
-          </button>
+            WHAT HAS TO BE ADDED, so nobody has to work it out: an OAuth client
+            and secret in an environment file, a route that receives the callback
+            (this project has none that writes), a session the server can read,
+            and for the e-mail path something that actually sends a message. Until
+            then `onGoogle` and `onEmail` are the two seams.
+
+            NO GOOGLE LOGO. Their brand guidelines require the official artwork
+            and this repository does not have it, so drawing an approximation
+            would be both a fabricated brand mark and a hand-rolled icon, which
+            the house rules forbid twice over. The word is enough until the asset
+            arrives. */}
+        <button
+          type="button"
+          onClick={onGoogle}
+          className="press mt-6 inline-flex min-h-12 items-center justify-center gap-2.5 rounded-control border border-ink px-7 text-[0.875rem] font-bold text-ink transition-colors duration-[var(--t-fast)] hover:border-accent hover:text-accent"
+        >
+          Continuer avec Google
+        </button>
+
+        {/* A rule with a word in it, which is the one place this site draws a
+            divider that speaks. Two grounds would have made it a section. */}
+        <div className="mt-6 flex items-center gap-4">
+          <span className="h-px flex-1 bg-rule" />
+          <span className="t-label text-ink-3">ou</span>
+          <span className="h-px flex-1 bg-rule" />
         </div>
 
-        {/* WHY THERE IS NO "CONTINUER AVEC GOOGLE" HERE, AND IT IS NOT AN
-            OVERSIGHT. Google sign-in needs an OAuth client, a secret, a library
-            and a server session. This project has no authentication dependency,
-            no environment file, and two API routes that both do nothing but read
-            the catalogue. A button carrying Google's name that signs nobody in is
-            the one kind of control this site refuses: it asks for a credential
-            and it cannot honour it. The day there is a provider it drops into
-            this exact slot, above the two below, and nothing else here changes. */}
-        <p className="mt-6 text-micro leading-[1.6] text-ink-3">
-          Aucun mot de passe, aucun compte à créer. La fiche reste dans ce
-          navigateur et sert à remplir vos devis.
-        </p>
+        <label className="mt-6 block">
+          <span className={LABEL}>Adresse e-mail</span>
+          <input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="vous@entreprise.cm"
+            /* 16px is the floor, not a preference: below it iOS zooms the whole
+               page on focus and the dialog jumps under the thumb. */
+            className="mt-2 block min-h-12 w-full rounded-control border border-rule-2 bg-paper px-4 text-[1rem] text-ink transition-colors duration-[var(--t-fast)] placeholder:text-ink-3 focus:border-ink focus:outline-none"
+          />
+        </label>
+        {emailError ? (
+          <p role="alert" className="mt-2 text-micro text-warn">
+            {emailError}
+          </p>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={onEmail}
+          className="press fill mt-4 inline-flex min-h-12 items-center justify-center gap-2.5 rounded-control bg-accent px-7 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent-ink)]"
+        >
+          Continuer avec cet e-mail
+        </button>
+
+        {/* NO CLOSING PARAGRAPH HERE, AND ONE WAS WRITTEN AND REMOVED. It said
+            that nothing is paid online, that no password is asked and that the
+            card stays in this browser — all three of which the dialog's own shell
+            has already said, twelve lines above, in almost the same words. Two
+            statements of the same reassurance on one screen do not reassure twice;
+            they read as a shop insisting. */}
+        <button
+          type="button"
+          onClick={() => setStep('fiche')}
+          className="press mt-6 inline-flex min-h-11 items-center self-center text-small text-ink-3 transition-colors duration-[var(--t-fast)] hover:text-ink"
+        >
+          Continuer sans compte
+        </button>
       </div>
     )
   }

@@ -4,6 +4,8 @@ import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+
+import { useAccount } from '@/lib/account'
 import {
   IconClose,
   IconMenu,
@@ -69,6 +71,7 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
   // (react-hooks/set-state-in-effect) for the reason the rule exists: it renders
   // once with the wrong value and then again with the right one. Comparing the
   // two strings costs nothing and is right on the first render.
+  const { account, open: openAccount, signOut } = useAccount()
   const [openedAt, setOpenedAt] = useState<string | null>(null)
   const pathname = usePathname() ?? '/'
   const open = openedAt === pathname
@@ -182,11 +185,73 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
                         <IconClose className="text-[1.1875rem]" />
                       </button>
                     </div>
-                    <nav aria-label="Menu" className="shell flex flex-1 flex-col pt-8 pb-12">
+                    <nav aria-label="Menu" className="shell flex flex-1 flex-col pt-6 pb-12">
+                      {/* THE ACCOUNT COMES FIRST, AND ON A PHONE IT HAD NOWHERE
+                          TO LIVE AT ALL. The desktop masthead carries the account
+                          manager where "Mon devis" used to be; the phone's bar was
+                          reduced to a logo, a search, a basket and a menu, and the
+                          account fell out of the reduction without anyone noticing
+                          — which matters more now than it did, because the quote
+                          cannot be reached without a customer file. Somebody
+                          blocked at the quote needs to find this, and hunting for
+                          it inside a list of twelve departments is not finding it.
+
+                          It is at the top of the panel rather than a fifth icon in
+                          the bar. Four targets across 390 pixels is already the
+                          most that bar can hold, and this is a row with a name in
+                          it, not a glyph: when a file exists it has to say WHOSE. */}
+                      <Row index={0} reduced={!!reduced}>
+                        <div className="mb-7 border-b border-rule pb-6">
+                          {account ? (
+                            <>
+                              <p className="t-label text-ink-3">Votre fiche</p>
+                              <p className="mt-2 text-body font-semibold">{account.name}</p>
+                              <p className="t-num mt-0.5 text-small text-ink-2">{account.phone}</p>
+                              <div className="mt-3 flex flex-wrap items-center gap-x-6">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenedAt(null)
+                                    openAccount()
+                                  }}
+                                  className="press flex min-h-11 items-center text-small font-semibold text-accent transition-colors duration-[var(--t-fast)] hover:text-accent-ink"
+                                >
+                                  Modifier
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={signOut}
+                                  className="press flex min-h-11 items-center text-small text-ink-3 transition-colors duration-[var(--t-fast)] hover:text-warn"
+                                >
+                                  Se déconnecter
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenedAt(null)
+                                  openAccount()
+                                }}
+                                className="press flex min-h-12 w-full items-center justify-center gap-2.5 rounded-control border border-ink text-[0.875rem] font-bold text-ink transition-colors duration-[var(--t-fast)] hover:border-accent hover:text-accent"
+                              >
+                                <IconUser className="shrink-0 text-[1.125rem]" />
+                                Se connecter ou créer un compte
+                              </button>
+                              <p className="mt-2.5 text-micro leading-[1.6] text-ink-3">
+                                Nécessaire pour demander une proforma : votre nom, votre numéro et
+                                votre comptoir de retrait.
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </Row>
                       {SECTIONS.map((section, index) => {
                         const current = owns(section.owns, pathname, section.href)
                         return (
-                          <Row key={section.href} index={index} reduced={!!reduced}>
+                          <Row key={section.href} index={index + 1} reduced={!!reduced}>
                             <Link
                               href={section.href}
                               aria-current={current ? 'page' : undefined}
@@ -209,7 +274,7 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
                           </Row>
                         )
                       })}
-                      <Row index={SECTIONS.length} reduced={!!reduced}>
+                      <Row index={SECTIONS.length + 1} reduced={!!reduced}>
                         <p className="t-label mt-10 mb-4 text-ink-3">Les rayons</p>
                       </Row>
                       {/* TWO COLUMNS, WHICH IS WHAT MAKES TWELVE ROOMS FIT ON
@@ -222,7 +287,7 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
                         {departments.map((department, index) => (
                           <Row
                             key={department.id}
-                            index={SECTIONS.length + 1 + index}
+                            index={SECTIONS.length + 2 + index}
                             reduced={!!reduced}
                           >
                             <Link
@@ -240,7 +305,7 @@ export function MobileNav({ departments }: { departments: readonly DepartmentNav
                         ))}
                       </div>
                       <Row
-                        index={SECTIONS.length + 1 + departments.length}
+                        index={SECTIONS.length + 2 + departments.length}
                         reduced={!!reduced}
                       >
                         <div className="mt-auto pt-10">

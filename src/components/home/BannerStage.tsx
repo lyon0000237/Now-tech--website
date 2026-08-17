@@ -60,7 +60,8 @@ import { BANNERS, type Banner } from '@/constants/banners'
  * to 44px squares to be tappable. The result was a phone carrying a different
  * carousel from the one the shop had designed, with no manual control except
  * five large targets that did not look like a position readout any more. The
- * arrows are 40px on a phone and 48 from md, and the dots keep their six pixels
+ * arrows are 32px on a phone, 40 from sm and 48 from md, and the dots keep six
+ * pixels
  * everywhere with a 42px hit area drawn by a pseudo-element, which is how every
  * other small control on this site is made tappable without being made bigger.
  * The old reasoning, kept because it is still the reason the discs are
@@ -509,17 +510,17 @@ function Track({
         type="button"
         onClick={() => onPick(index - 1 + BANNERS.length)}
         aria-label="Bannière précédente"
-        className="press absolute top-1/2 left-3 z-[1] grid size-10 -translate-y-1/2 place-items-center rounded-full bg-[rgb(255_255_255_/_0.55)] text-ink ring-1 ring-[rgb(20_23_21_/_0.12)] backdrop-blur-[2px] transition-[background-color,transform] duration-[var(--t-base)] ease-brand hover:bg-paper active:scale-95 sm:left-4 md:left-6 md:size-12"
+        className="press absolute top-1/2 left-1.5 z-[1] grid size-8 -translate-y-1/2 place-items-center rounded-full bg-[rgb(255_255_255_/_0.55)] text-ink ring-1 ring-[rgb(20_23_21_/_0.12)] backdrop-blur-[2px] transition-[background-color,transform] duration-[var(--t-base)] ease-brand hover:bg-paper active:scale-95 sm:left-4 sm:size-10 md:left-6 md:size-12"
       >
-        <IconChevronLeft className="text-[1.125rem]" />
+        <IconChevronLeft className="text-[0.9375rem] sm:text-[1.125rem]" />
       </button>
       <button
         type="button"
         onClick={() => onPick(index + 1)}
         aria-label="Bannière suivante"
-        className="press absolute top-1/2 right-3 z-[1] grid size-10 -translate-y-1/2 place-items-center rounded-full bg-[rgb(255_255_255_/_0.55)] text-ink ring-1 ring-[rgb(20_23_21_/_0.12)] backdrop-blur-[2px] transition-[background-color,transform] duration-[var(--t-base)] ease-brand hover:bg-paper active:scale-95 sm:right-4 md:right-6 md:size-12"
+        className="press absolute top-1/2 right-1.5 z-[1] grid size-8 -translate-y-1/2 place-items-center rounded-full bg-[rgb(255_255_255_/_0.55)] text-ink ring-1 ring-[rgb(20_23_21_/_0.12)] backdrop-blur-[2px] transition-[background-color,transform] duration-[var(--t-base)] ease-brand hover:bg-paper active:scale-95 sm:right-4 sm:size-10 md:right-6 md:size-12"
       >
-        <IconChevronRight className="text-[1.125rem]" />
+        <IconChevronRight className="text-[0.9375rem] sm:text-[1.125rem]" />
       </button>
 
       {/* On the picture, at its foot, centred. Circles rather than bars because

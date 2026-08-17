@@ -3,7 +3,6 @@
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
-import { PACKSHOT_BLUR } from '@/constants/blur'
 
 /**
  * The photographs, at the size the decision is actually made at.
@@ -286,7 +285,7 @@ export function ProductGallery({
      when it has run out of things to print. */
   if (images.length === 0) {
     return (
-      <div className="grid aspect-[4/3] max-w-[22rem] place-items-center rounded-well border border-rule bg-space">
+      <div className="grid aspect-[4/3] max-w-[22rem] place-items-center rounded-well border border-rule bg-[var(--placeholder)]">
         <span className="t-label text-ink-3">Photo à venir</span>
       </div>
     )
@@ -368,8 +367,6 @@ export function ProductGallery({
                   alt={`${name}, photographie ${index + 1} sur ${images.length}`}
                   fill
                   sizes="(max-width: 767px) 88vw, (max-width: 1279px) 46vw, 44vw"
-                  placeholder="blur"
-                  blurDataURL={PACKSHOT_BLUR}
                   priority={index === 0}
                   className="magnify-subject object-contain motion-safe:[animation:e-media-shutter_var(--e-media)_var(--ease-shutter)_both]"
                 />

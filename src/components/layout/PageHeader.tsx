@@ -46,11 +46,29 @@ export function PageHeader({
   title,
   lead,
   aside,
+  emphasis = false,
 }: {
   title: ReactNode
   lead?: ReactNode
   /** A count, a date, anything short that belongs on the title's baseline. */
   aside?: ReactNode
+  /**
+   * Promotes the lead from a caption into a statement.
+   *
+   * WHY THIS EXISTS RATHER THAN A ONE-OFF IN THE PAGE. On most pages the lead is
+   * a caption: the title carries the meaning and the sentence under it adds
+   * detail, so it is set small and grey and nobody needs to read it. On one page
+   * that is backwards. The quote is where a customer decides whether a shop that
+   * takes no money online can be trusted, and the answer to that is in the
+   * sentence, not in the words "Votre devis". Asked to put the description
+   * forward, the honest move is to change its rank, not to add a block beneath
+   * it.
+   *
+   * It is a rank rather than a size: larger type, ink instead of grey, and a
+   * hairline in the accent down its leading edge, which is the one place on this
+   * site where a rule means "read this" rather than "this is a boundary".
+   */
+  emphasis?: boolean
 }) {
   return (
     <header className="shell pt-6 pb-5 sm:pt-[clamp(3rem,6vw,5.5rem)] sm:pb-[clamp(2.5rem,4vw,4rem)]">
@@ -61,7 +79,13 @@ export function PageHeader({
         {aside ? <span className="t-num text-small text-ink-3">{aside}</span> : null}
       </div>
       {lead ? (
-        <p className="mt-3 max-w-[62ch] text-lead leading-[1.55] text-ink-2 sm:mt-6">{lead}</p>
+        emphasis ? (
+          <p className="mt-4 max-w-[54ch] border-l-2 border-accent pl-4 text-lead leading-[1.5] text-pretty text-ink sm:mt-7 sm:pl-6 sm:text-sub sm:leading-[1.45]">
+            {lead}
+          </p>
+        ) : (
+          <p className="mt-3 max-w-[62ch] text-lead leading-[1.55] text-ink-2 sm:mt-6">{lead}</p>
+        )
       ) : null}
     </header>
   )

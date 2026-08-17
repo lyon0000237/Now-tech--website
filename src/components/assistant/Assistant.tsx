@@ -786,6 +786,7 @@ export function Assistant() {
         style={{ pointerEvents: away ? 'none' : 'auto' }}
         // White disc, not a green one: the artwork is a green bot, and set on
         // the brand green it disappears into its own background.
+        data-assistant-launcher
         className="fixed right-4 bottom-4 z-[var(--z-assistant)] grid size-13 place-items-center overflow-hidden rounded-full bg-paper ring-1 ring-rule shadow-[var(--shadow-panel)] sm:right-6 sm:bottom-6 md:size-14"
       >
         <span className="relative block size-10 md:size-11">

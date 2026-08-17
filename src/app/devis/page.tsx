@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 
 import { Devis } from '@/components/devis/Devis'
-import { QuoteSteps } from '@/components/devis/QuoteSteps'
 import { PageHeader } from '@/components/layout/PageHeader'
 
 /**
@@ -39,9 +38,27 @@ export default function DevisPage() {
     <>
       <PageHeader
         title="Votre devis"
-        lead="Rien ne se paie en ligne ici. Cette page transforme votre liste de matériel en facture proforma, et c’est un humain au comptoir qui vous la renvoie."
+        /* THE DESCRIPTION IS THE THING PUT FORWARD, NOT A BLOCK ADDED UNDER IT.
+           A three-step sequence was built below the header first, and the shop
+           was right to reject it: asked to give one sentence more weight, it
+           answered by writing more furniture, which pushed the sentence further
+           down the page it was meant to lead. So the paragraph itself is
+           promoted, in place, with `emphasis`.
+
+           The sentence is also cut down to what carries the page. Three facts,
+           in the order a doubt arrives: nothing is paid here, this becomes a
+           proforma, a person sends it. The two words that answer the doubt are
+           the only marked ones. */
+        lead={
+          <>
+            Rien ne se paie en ligne ici. Cette page transforme votre liste en{' '}
+            <strong className="font-semibold text-ink">facture proforma</strong>, et c’est{' '}
+            <strong className="font-semibold text-ink">un humain au comptoir</strong> qui vous la
+            renvoie.
+          </>
+        }
+        emphasis
       />
-      <QuoteSteps />
       <Devis />
     </>
   )

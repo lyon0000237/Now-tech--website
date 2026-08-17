@@ -350,6 +350,7 @@ export function Devis() {
           `env(safe-area-inset-bottom)` because on an iPhone the home indicator
           would otherwise sit on top of the label. */}
       <div
+        data-dock
         className="fixed inset-x-0 bottom-0 z-[var(--z-sticky)] border-t border-rule bg-paper/95 px-[var(--gutter)] pt-3 backdrop-blur-[6px] lg:hidden"
         style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
       >
@@ -361,13 +362,15 @@ export function Devis() {
             is true about it. Given its own row it has the full width and sets on
             one line.
 
-            AND THE ROW IS SHORT OF THE RIGHT EDGE ON PURPOSE. Bod's launcher is
-            a 52 pixel disc pinned 16 from the right at z-index 60, and this bar
-            sits at 20: measured, it covered the last 38 pixels of the button,
-            which is the corner a right thumb presses first. Raising this bar
-            above it would bury the assistant instead, so the button stops short
-            and the gap is where Bod already lives. Nothing is hidden and nothing
-            is stacked. */}
+            AND BOD MOVES INSTEAD OF THE BUTTON GIVING UP WIDTH. The first
+            attempt stopped this row 4.5rem short of the right edge, because the
+            assistant's launcher is a 52 pixel disc pinned 16 from the right at
+            z-index 60 against this bar's 20, and it covered the last 38 pixels of
+            the button. The shop read the result correctly: a primary action that
+            does not reach the edges of its own bar looks like a mistake. It is
+            the floating thing that should step aside, not the fixed one, so the
+            launcher is lifted above this bar for as long as it exists. The rule
+            is in globals.css, keyed on `data-dock`. */}
         <div className="flex items-baseline justify-between gap-4">
           <p className="t-label text-ink-3">Total TTC</p>
           <p className="t-num text-body font-bold tracking-[-0.015em]">
@@ -378,7 +381,7 @@ export function Devis() {
           href={message.href}
           target="_blank"
           rel="noreferrer"
-          className="mt-2.5 min-h-12 w-[calc(100%-4.5rem)]"
+          className="mt-2.5 min-h-12 w-full"
         >
           Envoyer ma commande
         </Action>
