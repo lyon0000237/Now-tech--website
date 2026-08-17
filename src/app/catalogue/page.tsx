@@ -116,9 +116,17 @@ export async function generateMetadata({ searchParams }: Params): Promise<Metada
 
   return {
     title: 'Le catalogue',
+    // THE COUNT IS READ, NOT WRITTEN, AND IT USED TO BE WRITTEN. This sentence
+    // said "4 254 références" as a literal, which was true on the day it was
+    // typed and stopped being true the first time the catalogue synchronised
+    // itself: the page then announced 4 268 in its own heading while this tag
+    // told search engines 4 254. From the moment the source of the data is a
+    // timer rather than a person, every hard-coded fact about the data is a
+    // future lie, and this was the only one left in the metadata.
     description:
-      'Les 4 254 références NowTech Center, rayon par rayon et famille par famille : ' +
-      'informatique, réseau, sécurité électronique, impression, énergie et électroménager.',
+      `Les ${getMeta().productCount.toLocaleString('fr-FR')} références NowTech Center, ` +
+      'rayon par rayon et famille par famille : informatique, réseau, ' +
+      'sécurité électronique, impression, énergie et électroménager.',
     ...(filtered ? { robots: { index: false, follow: true } } : {}),
   }
 }
