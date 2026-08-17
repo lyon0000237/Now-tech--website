@@ -200,14 +200,23 @@ export function Devis() {
           quantity is asking about the total, and it is the only thing on the
           page that answers without moving the focus.
 
-          IT IS STICKY ON ITS OWN NOW, AND NOT AS PART OF A COLUMN. The three
-          cards used to travel together inside one sticky aside; the total is the
-          only one of the three worth keeping in view while eleven quantities are
-          being corrected, and pinning the other two along with it meant the
-          channels card scrolled off and came back for no reason. */}
+          IT DOES NOT FOLLOW THE SCROLL, AND IT USED TO. The whole right column
+          was pinned once, then just this card, on the reasoning that a total is
+          worth keeping in view while quantities are corrected. On a desktop that
+          reasoning is thinner than it looks: the figures are already beside the
+          rows they add up, the column is shorter than the list it sits next to,
+          so the card reaches its resting place and then travels for the rest of
+          the page as the one element that refuses to stay where it was put. A
+          panel that slides against the page while nothing else moves reads as an
+          overlay rather than as part of the document.
+
+          The phone keeps the behaviour that earns it: the total is pinned to the
+          foot of the screen there because the button beside it is the page's
+          whole purpose and the list above it is 2 900 pixels long. That is a
+          different argument, and it is the only one that held. */}
       <section
         aria-labelledby={sumId}
-        className="devis-chiffrage rounded-space border border-rule p-7 lg:sticky lg:top-[8.5rem]">
+        className="devis-chiffrage rounded-space border border-rule p-7">
           <h2 id={sumId} className="text-sub font-semibold tracking-[-0.02em]">
             Le chiffrage
           </h2>
