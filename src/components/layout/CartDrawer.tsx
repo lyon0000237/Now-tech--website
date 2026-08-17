@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
-import { IconClose, IconPhone } from "@/components/brand/Icons";
+import { IconArrowRight, IconClose, IconPhone } from "@/components/brand/Icons";
 import { Action } from "@/components/ui/Action";
 import { useCart } from "@/lib/cart";
+import { useCheckoutGate } from "@/lib/checkout-gate";
 import { formatPrice } from "@/lib/format";
-import { PHONES, dialable } from "@/constants/site";
+import { PHONES, WHATSAPP, dialable } from "@/constants/site";
 
 /**
  * The basket, as a drawer.
@@ -51,9 +52,22 @@ const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 export function CartDrawer() {
   const { isOpen, close, lines, subtotal, count, setQty, remove, lastAdded } =
     useCart();
+  const { go } = useCheckoutGate();
   const panel = useRef<HTMLDivElement>(null);
   const restoreTo = useRef<HTMLElement | null>(null);
   const reduced = useReducedMotion();
+
+  /* A QUESTION, NOT AN ORDER, AND SHORTER THAN ONE ON PURPOSE. The quote page
+     writes the whole list into WhatsApp line by line, which is right there: that
+     message IS the order. Here the customer has a doubt, not a document, and
+     eleven rows of material pushed into a chat window before they have typed
+     their question buries it. So this carries the two facts that let an adviser
+     pick the conversation up, the number of articles and the total, and leaves
+     the rest of the message to the person writing it. */
+  const askHref = `https://wa.me/${dialable(WHATSAPP)}?text=${encodeURIComponent(
+    `Bonjour, j'ai une question sur ma sélection : ${count} article${count < 2 ? "" : "s"}, ` +
+      `total ${formatPrice(subtotal)}.`,
+  )}`;
 
   useEffect(() => {
     if (isOpen) {
@@ -260,9 +274,48 @@ export function CartDrawer() {
                     la TVA.
                   </p>
 
-                  <Action href="/devis" onClick={close} className="mt-6 w-full">
-                    Demander la proforma
-                  </Action>
+                  {/* TWO DOORS OUT, AND THEY ARE NOT THE SAME DOOR.
+                      "Commander maintenant" is the shop's own path: the quote,
+                      where this list becomes the proforma the business runs on.
+                      It is a button and not a link because it may not navigate
+                      at all: the quote needs a name, a number and a counter, so
+                      an unfilled customer meets the card first and arrives at
+                      the quote by themselves once it is filled.
+
+                      "Demande plus d'information" is the other real thing a
+                      customer wants at this exact moment, and it used to have no
+                      control at all. Someone holding eleven references and one
+                      doubt does not want a document, they want a person, and the
+                      only person on this panel was a telephone number set in
+                      grey below the fold of a 26rem drawer. It opens WhatsApp
+                      with the list already written, as a question rather than as
+                      an order, which is the difference the label promises.
+
+                      The telephone line stays underneath both. It is the channel
+                      that works when the data does not, and this audience uses
+                      it. */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      close()
+                      go()
+                    }}
+                    className="press fill mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-control bg-accent px-6 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent-ink)]"
+                  >
+                    Commander maintenant
+                    <IconArrowRight className="text-[1.0625rem]" />
+                  </button>
+
+                  <a
+                    href={askHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={close}
+                    className="press mt-2.5 inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-control border border-rule px-6 text-[0.875rem] font-bold text-ink transition-colors duration-[var(--t-fast)] ease-brand hover:border-ink hover:text-accent"
+                  >
+                    Demande plus d’information
+                  </a>
+
                   <a
                     href={`tel:${dialable(PHONES[0])}`}
                     className="t-num mt-2 flex min-h-11 items-center justify-center gap-2.5 text-small text-ink-2 transition-colors duration-[var(--t-fast)] hover:text-ink md:mt-4 md:min-h-0"

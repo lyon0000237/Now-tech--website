@@ -58,9 +58,50 @@ export function Devis() {
 
   if (lines.length === 0) return <QuoteEmpty />
 
+  // THE CONDITION, ENFORCED WHERE IT CANNOT BE WALKED AROUND. Both buttons that
+  // lead here check for a customer file first, but a reader can arrive by the
+  // masthead menu, the footer, the counter strip or a bookmark, and a condition
+  // that only one path honours is not a condition. So the list is held behind the
+  // card here too.
+  //
+  // IT IS NOT AN ERROR SCREEN AND IT DOES NOT LOSE ANYTHING. The list is intact
+  // in the browser and comes back the moment the card is filled; the figures are
+  // even shown, because hiding the total from someone who has already chosen
+  // eleven references reads as a toll rather than as a reason. What is withheld
+  // is only the sending, and the reason is stated instead of asserted: a proforma
+  // addressed to nobody, sent to no number, collected from no counter is not a
+  // document.
+  if (!account) {
+    return (
+      <div className="shell max-w-[42rem] pb-4">
+        <section className="rounded-space border border-rule p-7 sm:p-9">
+          <h2 className="text-sub font-semibold tracking-[-0.02em] text-balance">
+            Une dernière chose avant la proforma
+          </h2>
+          <p className="mt-4 text-body leading-[1.6] text-pretty text-ink-2">
+            Votre liste de {formatCount(lines.length, 'référence')} est prête, et son total est de{' '}
+            <span className="t-num font-bold text-ink">{formatPrice(totals.ttc)}</span>. Le comptoir
+            a besoin de savoir à qui adresser le document et sur quel numéro vous répondre.
+          </p>
+          <p className="mt-3 text-small leading-[1.6] text-ink-3">
+            Trois champs : votre nom, votre numéro WhatsApp et le comptoir où vous retirez. Ils
+            restent dans ce navigateur, sur cet appareil. Aucun mot de passe, aucun compte en ligne.
+          </p>
+          <button
+            type="button"
+            onClick={openAccount}
+            className="press fill mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-control bg-accent px-7 text-[0.875rem] font-bold text-paper transition-colors duration-[var(--t-fast)] ease-brand [--fill-to:var(--accent-ink)] sm:w-auto"
+          >
+            Remplir ma fiche
+          </button>
+        </section>
+      </div>
+    )
+  }
+
   return (
-    <div className="shell grid items-start gap-x-16 gap-y-14 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <section aria-labelledby={listId}>
+    <div className="devis-grid shell gap-x-16 gap-y-12 pb-40 lg:pb-0">
+      <section aria-labelledby={listId} className="devis-liste">
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 border-b border-rule pb-4">
           <h2 id={listId} className="text-sub font-semibold tracking-[-0.02em]">
             Votre liste
@@ -155,11 +196,18 @@ export function Devis() {
         </p>
       </section>
 
-      <aside aria-labelledby={sumId} className="lg:sticky lg:top-[8.5rem]">
-        {/* `aria-live` on the figures and nowhere else: a reader changing a
-            quantity is asking about the total, and it is the only thing on the
-            page that answers without moving the focus. */}
-        <section className="rounded-space border border-rule p-7">
+      {/* `aria-live` on the figures and nowhere else: a reader changing a
+          quantity is asking about the total, and it is the only thing on the
+          page that answers without moving the focus.
+
+          IT IS STICKY ON ITS OWN NOW, AND NOT AS PART OF A COLUMN. The three
+          cards used to travel together inside one sticky aside; the total is the
+          only one of the three worth keeping in view while eleven quantities are
+          being corrected, and pinning the other two along with it meant the
+          channels card scrolled off and came back for no reason. */}
+      <section
+        aria-labelledby={sumId}
+        className="devis-chiffrage rounded-space border border-rule p-7 lg:sticky lg:top-[8.5rem]">
           <h2 id={sumId} className="text-sub font-semibold tracking-[-0.02em]">
             Le chiffrage
           </h2>
@@ -186,9 +234,10 @@ export function Devis() {
             de {VAT_LABEL}, elles ne s’y ajoutent pas. Livraison et installation ne sont pas
             comprises : la proforma les chiffre.
           </p>
-        </section>
+      </section>
 
-        <section className="mt-6 rounded-space border border-rule p-7">
+      <aside className="devis-reste">
+        <section className="rounded-space border border-rule p-7">
           <h2 className="t-label text-ink-3">Vos coordonnées</h2>
 
           {account ? (
@@ -234,10 +283,16 @@ export function Devis() {
           <h2 className="text-sub font-semibold leading-[1.2] tracking-[-0.02em]">
             Envoyer la liste au comptoir
           </h2>
+          {/* FOUR SENTENCES BECAME ONE. The paragraph explained the mechanism
+              in full: the new tab, what is written in it, the rereading, the
+              pressing, the reply, and a disclaimer. All of it true, and all of it
+              read AFTER the button had already been pressed, because nobody
+              studies an explanation of a control they can simply use. What a
+              reader needs before pressing is the one fact that is not obvious:
+              nothing leaves without them. */}
           <p className="mt-3 text-small leading-[1.6] text-pretty text-rail-ink-2">
-            WhatsApp s’ouvre dans un nouvel onglet avec la liste, les quantités et le total déjà
-            écrits. Vous relisez, vous appuyez sur envoyer, et le comptoir répond avec la proforma.
-            Rien ne part de cette page toute seule.
+            La liste, les quantités et le total partent déjà écrits. Vous relisez et vous envoyez :
+            rien ne quitte cette page tout seul.
           </p>
 
           <Action
@@ -247,7 +302,7 @@ export function Devis() {
             rel="noreferrer"
             className="mt-6 w-full"
           >
-            Ouvrir WhatsApp
+            Envoyer ma commande
           </Action>
 
           {message.omitted > 0 ? (
@@ -277,6 +332,57 @@ export function Devis() {
           </div>
         </section>
       </aside>
+
+      {/* THE ONE CONTROL THAT MUST NEVER BE SCROLLED PAST, ON THE ONE SCREEN
+          WHERE IT ALWAYS WAS. On a phone the send button sits at the very foot of
+          the page, under the list, the figures, the customer card and two
+          telephone numbers: with eleven references that is past 3 000 pixels, so
+          the action the page exists for is the last thing a thumb can reach. It
+          is now pinned, with the total beside it, because a send button with no
+          figure next to it asks someone to commit to a number they last saw a
+          screen and a half ago.
+
+          It is a bar and not a floating disc: the label has to be legible, and
+          the figure has to fit next to it. `pb-28` on the grid above is what
+          keeps it from covering the last row of the list, and it is dropped from
+          `lg` where the button lives in the sticky column instead.
+
+          `env(safe-area-inset-bottom)` because on an iPhone the home indicator
+          would otherwise sit on top of the label. */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-[var(--z-sticky)] border-t border-rule bg-paper/95 px-[var(--gutter)] pt-3 backdrop-blur-[6px] lg:hidden"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+      >
+        {/* TWO ROWS, AND THE FIRST ARRANGEMENT WAS MEASURED WRONG. Total and
+            button side by side left the button 223 pixels wide, and "Envoyer ma
+            commande" set in 14px bold does not fit on one line in 223 minus its
+            own padding: it broke in two and the control came out 66 pixels tall.
+            A primary call to action that wraps is a broken button, whatever else
+            is true about it. Given its own row it has the full width and sets on
+            one line.
+
+            AND THE ROW IS SHORT OF THE RIGHT EDGE ON PURPOSE. Bod's launcher is
+            a 52 pixel disc pinned 16 from the right at z-index 60, and this bar
+            sits at 20: measured, it covered the last 38 pixels of the button,
+            which is the corner a right thumb presses first. Raising this bar
+            above it would bury the assistant instead, so the button stops short
+            and the gap is where Bod already lives. Nothing is hidden and nothing
+            is stacked. */}
+        <div className="flex items-baseline justify-between gap-4">
+          <p className="t-label text-ink-3">Total TTC</p>
+          <p className="t-num text-body font-bold tracking-[-0.015em]">
+            {formatPrice(totals.ttc)}
+          </p>
+        </div>
+        <Action
+          href={message.href}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2.5 min-h-12 w-[calc(100%-4.5rem)]"
+        >
+          Envoyer ma commande
+        </Action>
+      </div>
     </div>
   )
 }

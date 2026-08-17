@@ -1343,3 +1343,46 @@ body {
     box-shadow: none;
   }
 }
+
+
+/* ============================================================================
+   LA PAGE DEVIS
+
+   THE TOTAL GOES ABOVE THE LIST ON A PHONE, AND THAT IS NOT A PREFERENCE.
+   The desktop layout is a list on the left and a column of three cards on the
+   right, which stacks on a phone into list-then-cards: the customer scrolls
+   eleven rows of material before meeting the figure the whole page exists to
+   produce. On a 390 screen with eleven references that is 2 900 pixels of
+   scrolling before the total. So the phone reads total, list, the rest.
+
+   Named areas rather than `order`, because `order` would need the three blocks
+   to be siblings of the same flex container AND would leave the reading order
+   for a screen reader following the DOM rather than the design. With areas the
+   DOM stays in the order that makes sense read aloud (the list, then its
+   figures, then the channels) and only the paint moves.
+   ========================================================================= */
+.devis-grid {
+  display: grid;
+  grid-template-areas: 'chiffrage' 'liste' 'reste';
+}
+.devis-chiffrage {
+  grid-area: chiffrage;
+}
+.devis-liste {
+  grid-area: liste;
+}
+.devis-reste {
+  grid-area: reste;
+}
+
+@media (width >= 64rem) {
+  .devis-grid {
+    /* The same two columns as before: the list takes what is left, the cards
+       take 22rem. The list spans both rows so the right column can stack. */
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    grid-template-areas:
+      'liste chiffrage'
+      'liste reste';
+    align-items: start;
+  }
+}

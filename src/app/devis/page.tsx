@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { Devis } from '@/components/devis/Devis'
+import { QuoteSteps } from '@/components/devis/QuoteSteps'
 import { PageHeader } from '@/components/layout/PageHeader'
 
 /**
@@ -38,8 +39,9 @@ export default function DevisPage() {
     <>
       <PageHeader
         title="Votre devis"
-        lead="Rien ne se paie en ligne chez NowTech Center, et ce site n’envoie rien tout seul. Vous constituez ici la liste du matériel, vous l’ouvrez dans WhatsApp ou vous appelez le comptoir, et le comptoir vous renvoie une facture proforma avec les prix confirmés, les délais et la TVA."
+        lead="Rien ne se paie en ligne ici. Cette page transforme votre liste de matériel en facture proforma, et c’est un humain au comptoir qui vous la renvoie."
       />
+      <QuoteSteps />
       <Devis />
     </>
   )
