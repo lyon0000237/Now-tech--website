@@ -86,7 +86,16 @@ export function checkProduct(p: WooProduct): string | null {
   if (Array.isArray(p.variations) && p.variations.length > 0) return 'produit à variations'
   if (Number(price) === 0 && p.is_purchasable) return 'prix nul sur un produit achetable'
 
-  if (!Array.isArray(p.categories) || p.categories.length === 0) return 'aucune catégorie'
+  // AN UNFILED PRODUCT IS NOT AN INVALID PRODUCT, AND REFUSING IT WAS WORSE
+  // THAN KEEPING IT. This clause used to reject `categories: []`, and the first
+  // full reconciliation showed what that costs: 19 products, verified against
+  // the API one by one, genuinely carry no category upstream because nobody has
+  // filed them, and rejecting them deleted them from the shop entirely. That is
+  // the opposite of the intent. `build-catalog.ts` has had a hidden "Non classé"
+  // bucket for exactly this case since long before any of this, so an unfiled
+  // product lands there, stays searchable and stays purchasable, and shows up in
+  // the build report where someone can go and file it.
+  if (!Array.isArray(p.categories)) return 'liste de catégories absente'
   for (const c of p.categories) {
     if (!Number.isSafeInteger(c?.id) || c.id <= 0) return 'catégorie sans identifiant'
     if (typeof c.name !== 'string' || c.name.trim() === '') return 'catégorie sans nom'

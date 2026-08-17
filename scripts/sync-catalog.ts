@@ -230,6 +230,9 @@ function pickPrimary(
   categories: WooProduct['categories'],
   depth: Map<number, number>,
 ): string {
+  // Unfiled upstream: the export has always carried an empty cell here, and
+  // `build-catalog.ts` reads that as the hidden "Non classé" bucket.
+  if (!categories.length) return ''
   let best = categories[0]
   let bestDepth = depth.get(best.id) ?? 0
   for (const c of categories.slice(1)) {
@@ -402,8 +405,16 @@ async function main(): Promise<void> {
     return !why
   })
   if (rejected.length) {
+    // Counted by reason first, then listed in full. A capped list is how a
+    // recurring fault hides: nineteen identical lines under a cap of twenty read
+    // as one incident rather than as a pattern.
+    const byReason = new Map<string, number>()
+    for (const r of rejected) byReason.set(r.raison, (byReason.get(r.raison) ?? 0) + 1)
     say(`  refusés : ${rejected.length}`)
-    for (const r of rejected.slice(0, 20)) say(`    ${r.id} — ${r.raison} — ${r.name}`)
+    for (const [raison, n] of [...byReason].sort((a, b) => b[1] - a[1])) {
+      say(`    ${n} × ${raison}`)
+    }
+    for (const r of rejected) say(`      ${r.id} — ${r.raison} — ${r.name}`)
   }
 
   // -- build the new file ---------------------------------------------------
