@@ -450,7 +450,7 @@ function Track({
 
                     `objectPosition` carries the banner's declared `focus`, so
                     what survives the crop is the half with the words in it. */}
-                <span className="relative block aspect-[3/1] w-full sm:aspect-[14179/3000]">
+                <span className="relative block aspect-[3/1] w-full bg-[var(--placeholder)] sm:aspect-[14179/3000]">
                   <Image
                     src={`/branding/${banner.file}`}
                     alt={banner.alt}

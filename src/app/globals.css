@@ -19,6 +19,10 @@
      honest register for a catalogue of racks, switches and cabling. */
   --paper: #ffffff;
   --space: #f1f3ef; /* spec chips, empty states, quiet fills */
+  /* Where a photograph is going to be and is not yet. Two per cent off white:
+     a frame the eye passes over, never an object it stops on. One value, used
+     by `.shimmer` and by the banner's mount box, so the two can never drift. */
+  --placeholder: #f6f7f5;
   --space-2: #e8ebe5;
   /* Kept as its own token even though it equals --paper today: a well is a
      role, and the day one needs to lift off the page it changes here and
@@ -1212,10 +1216,35 @@ body {
    It stops for a reader who asked for less motion and becomes a flat tint: a
    surface that pulses forever is exactly what that preference is about. */
 
+/*
+ * THE PLACEHOLDER, AND IT HAS BEEN WRONG IN BOTH DIRECTIONS.
+ *
+ * First it was invisible: `.shimmer` declares `position: relative` here, plain
+ * CSS beat the `absolute` utility on the same element, and 36 shimmers sat in
+ * the document at zero height. The fix for that was a darker tint and a second
+ * element, and it overshot completely. `--rule-2` is #ccd0c9, a mid grey chosen
+ * for hairlines, and a hairline colour is not a fill colour: on the catalogue
+ * that painted 300 pixel squares of solid mid grey onto a white page, twelve of
+ * them at once, and the shop called it catastrophic. It was right. The page read
+ * as a wireframe, and the sweep was invisible on top of it because a white band
+ * over #ccd0c9 has almost nowhere to travel.
+ *
+ * SO IT IS NOW A FRAME RATHER THAN A HOLE, and the reference is the one the shop
+ * pointed at. cm.oraimo.com, measured, does not animate anything: it paints
+ * rgb(249, 249, 249) behind every unloaded image and leaves it there. That is
+ * two per cent away from white, so a reader reads it as an empty space where a
+ * picture goes, which is exactly what it is, rather than as a grey object that
+ * has arrived.
+ *
+ * The sweep is kept but taken right down: at 0.55 alpha over a near-white tint
+ * it is a breath rather than a stripe, and it is what separates "not yet" from
+ * "empty". A slower cycle for the same reason, since the thing it has to say is
+ * "still coming", not "something is happening".
+ */
 .shimmer {
   position: relative;
   overflow: hidden;
-  background-color: var(--rule-2);
+  background-color: var(--placeholder);
 }
 .shimmer::after {
   content: '';
@@ -1224,11 +1253,11 @@ body {
   background: linear-gradient(
     90deg,
     rgb(255 255 255 / 0) 0%,
-    rgb(255 255 255 / 0.85) 50%,
+    rgb(255 255 255 / 0.55) 50%,
     rgb(255 255 255 / 0) 100%
   );
   transform: translateX(-100%);
-  animation: shimmer-sweep 1500ms infinite;
+  animation: shimmer-sweep 2200ms infinite;
 }
 
 @keyframes shimmer-sweep {
