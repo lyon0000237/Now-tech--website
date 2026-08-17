@@ -1,0 +1,147 @@
+# Ce qui remplace l'export manuel.
+#
+# CE QUE CE FICHIER FAIT, EN UNE PHRASE : il va voir chez WooCommerce ce qui a
+# changé, réécrit data/source/catalog.csv et data/source/categories.csv, et
+# commite. Le commit déclenche le déploiement Vercel, et le site suit. Personne
+# n'exporte plus rien à la main.
+#
+# POURQUOI UN COMMIT ET PAS UN APPEL DIRECT. Le site ne lit jamais WooCommerce
+# pendant qu'un lecteur ouvre une page : cette origine répond entre 2,9 et 17,6
+# secondes, et la recherche du site est un balayage en mémoire des 4 254
+# produits qui coûte 1,0 ms précisément parce que tout est déjà chargé. Passer
+# par un commit garde les pages à 100 ms, garde la recherche, rend chaque
+# synchronisation lisible dans un diff, et surtout annulable par un git revert.
+#
+# LES DEUX CADENCES, ET POURQUOI ELLES SONT DEUX.
+#
+# `schedule` toutes les deux heures est le battement de fond : il rattrape ce
+# qu'un webhook aurait manqué et il garantit que le catalogue ne peut pas
+# vieillir de plus de deux heures même si tout le reste est cassé. Le dépôt
+# déployé est privé, donc les minutes d'Action sont comptées : 2 000 par mois
+# offertes, une exécution facturée environ 2 minutes, donc 360 exécutions par
+# mois à cette cadence, soit 720 minutes. À l'heure ce serait 1 440 minutes, ce
+# qui tient encore mais ne laisse plus de marge pour le reste.
+#
+# `repository_dispatch` est l'instantané. C'est le point d'entrée qu'un webhook
+# WooCommerce appelle quand le client publie quelque chose, et c'est lui qui
+# rend la chose vraiment dynamique : la modification part de WordPress et
+# arrive ici dans la seconde. Il faut pour cela que le client crée les webhooks
+# une fois dans son admin (WooCommerce, Réglages, Avancé, Webhooks). Tant qu'il
+# ne l'a pas fait, le battement de deux heures suffit et rien d'autre ne change.
+#
+# UN EFFET DE BORD HEUREUX : GitHub désactive un workflow planifié après 60
+# jours sans activité sur le dépôt. Celui-ci commite, donc il entretient sa
+# propre activité et ne peut pas s'éteindre en silence, ce qui est exactement le
+# mode de panne qu'une automatisation non surveillée produit d'habitude.
+
+name: Synchroniser le catalogue
+
+on:
+  schedule:
+    # Toutes les deux heures. La précision de GitHub est de l'ordre de quelques
+    # minutes en heures chargées, ce qui est sans conséquence ici.
+    - cron: '17 */2 * * *'
+    # Une réconciliation complète le dimanche à 3 h UTC, soit 4 h à Douala.
+    # Elle seule voit les suppressions : modified_after ne renvoie jamais ce qui
+    # n'existe plus, donc sans ce passage un produit retiré resterait en vente.
+    - cron: '0 3 * * 0'
+  repository_dispatch:
+    types: [catalogue-modifie]
+  workflow_dispatch:
+    inputs:
+      complete:
+        description: 'Aspiration complète (43 pages, 4 à 5 minutes)'
+        type: boolean
+        default: false
+
+# Jamais deux synchronisations en même temps : elles écriraient le même fichier
+# et se pousseraient dessus. La seconde attend, elle n'est pas annulée, parce
+# qu'une modification détectée ne doit pas être perdue.
+concurrency:
+  group: synchronisation-catalogue
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  synchroniser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          # La branche que Vercel déploie. À vérifier dans le tableau de bord
+          # Vercel (Settings, Git, Production Branch) : ce dépôt a trois
+          # branches et sa branche par défaut est feat/catalogue-produit-assistant.
+          ref: ${{ vars.BRANCHE_PRODUCTION || 'main' }}
+          # L'historique complet n'est pas nécessaire et coûte du temps sur un
+          # dépôt de 33 Mo.
+          fetch-depth: 1
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci --ignore-scripts
+
+      - name: Choisir le mode
+        id: mode
+        run: |
+          if [ "${{ github.event.schedule }}" = "0 3 * * 0" ] || [ "${{ inputs.complete }}" = "true" ]; then
+            echo "complete=--full" >> "$GITHUB_OUTPUT"
+            echo "Mode : aspiration complète"
+          else
+            echo "complete=" >> "$GITHUB_OUTPUT"
+            echo "Mode : incrémental"
+          fi
+
+      - name: Synchroniser depuis WooCommerce
+        run: node scripts/sync-catalog.ts ${{ steps.mode.outputs.complete }}
+
+      - name: Reconstruire le jeu de données
+        # Le même script qu'en local et qu'au build : si la synchronisation a
+        # écrit quelque chose qu'il n'accepte pas, l'échec est ici et non chez
+        # Vercel. Il fige aussi les slugs des nouveaux produits.
+        run: npm run catalog
+
+      - name: Vérifier que le site compile encore
+        # Un catalogue accepté par le builder peut malgré tout casser une page.
+        # Ce garde-fou coûte quelques minutes et évite de commiter un
+        # déploiement rouge.
+        run: npm run typecheck
+
+      - name: Publier le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-synchronisation
+          path: |
+            data/source/sync-report.txt
+            src/data/generated/build-report.txt
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Commiter si quelque chose a changé
+        run: |
+          set -euo pipefail
+          git config user.name "Synchronisation catalogue"
+          git config user.email "noreply@now-tech-website.vercel.app"
+          # Seuls les fichiers source sont versionnés : src/data/generated est
+          # dans .gitignore et se reconstruit au build.
+          git add data/source/catalog.csv data/source/categories.csv \
+                  data/source/sync-state.json data/source/slug-map.json
+          if git diff --cached --quiet; then
+            echo "Rien n'a changé chez le client : aucun commit."
+            exit 0
+          fi
+          PRODUITS=$(node -e "const s=require('./data/source/sync-state.json');console.log(s.productCount)")
+          git commit -q -m "Synchroniser le catalogue depuis WooCommerce (${PRODUITS} produits)" \
+                        -m "$(head -c 2000 data/source/sync-report.txt)"
+          git push
+          echo "Commité et poussé. Vercel prend la suite."

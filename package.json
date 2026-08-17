@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "catalog": "node scripts/build-catalog.ts",
+    "sync": "node scripts/sync-catalog.ts",
+    "sync:full": "node scripts/sync-catalog.ts --full",
+    "sync:dry": "node scripts/sync-catalog.ts --dry-run",
     "predev": "npm run catalog",
     "prebuild": "npm run catalog",
     "dev": "next dev",

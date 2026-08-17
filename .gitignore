@@ -49,3 +49,6 @@ next-env.d.ts
 # core.ignorecase on macOS, so the pattern matched `banner-1-cuisine.jpg` too
 # and the site would have been pushed without a single banner in it.
 /public/branding/*.jpeg
+
+# rapport de la derniere synchronisation, regenere a chaque execution
+/data/source/sync-report.txt

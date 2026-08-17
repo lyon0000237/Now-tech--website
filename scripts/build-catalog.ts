@@ -12,7 +12,7 @@
  * derived from real export data. Nothing is invented; missing data stays null.
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -574,6 +574,23 @@ function build(): Catalog {
 
   note(`unique products: ${productDrafts.size} (${suppressed} withheld, see constants/suppressed.ts)`)
 
+  // A SLUG IS PROMISED ONCE AND KEPT FOR EVER, AND THAT MATTERS FROM THE DAY
+  // THE SOURCE STOPS BEING A HUMAN EXPORT. Our URLs are `slugify(name)`, and
+  // 95.8 per cent of them already differ from WooCommerce's own slug, so they
+  // are ours and nobody upstream is guarding them. The day a synchronisation
+  // runs on a timer, the client's first corrected typo rewrites a name, the name
+  // rewrites the slug, and an indexed address becomes a 404 with no one
+  // involved. So the first slug an id ever receives is written down here and
+  // reused whatever the name becomes afterwards. The file is a source, not a
+  // build artefact: it is committed, because a promise nobody can read is not a
+  // promise.
+  const SLUG_MAP = join(SOURCE_DIR, 'slug-map.json')
+  const frozenSlugs: Record<string, string> = existsSync(SLUG_MAP)
+    ? (JSON.parse(readFileSync(SLUG_MAP, 'utf8')) as Record<string, string>)
+    : {}
+  let slugsFrozen = 0
+  let slugsMinted = 0
+
   const usedProductSlugs = new Map<string, number>()
   const products: Product[] = []
   let unresolvedPrimary = 0
@@ -584,9 +601,16 @@ function build(): Catalog {
     const row = draft.row
     const name = cleanProductName(draft.rawName) || normaliseTypography(decodeEntities(draft.rawName))
 
-    let slug = slugify(name)
-    const collision = usedProductSlugs.get(slug)
-    if (collision !== undefined) slug = `${slug}-${draft.id}`
+    let slug = frozenSlugs[String(draft.id)] || ''
+    if (slug) {
+      slugsFrozen++
+    } else {
+      slug = slugify(name)
+      const collision = usedProductSlugs.get(slug)
+      if (collision !== undefined) slug = `${slug}-${draft.id}`
+      frozenSlugs[String(draft.id)] = slug
+      slugsMinted++
+    }
     usedProductSlugs.set(slug, draft.id)
 
     const allNames = row.all_categories
@@ -639,6 +663,9 @@ function build(): Catalog {
   }
 
   note(`products kept: ${products.length}`)
+  note(`  slugs honoured from slug-map.json: ${slugsFrozen}, newly minted: ${slugsMinted}`)
+  // Written back so a slug minted on this run is a promise on the next one.
+  writeFileSync(SLUG_MAP, JSON.stringify(frozenSlugs, null, 0) + '\n')
   note(`  primary category unresolvable (fell back to first listed): ${unresolvedPrimary}`)
   note(`  filed under the hidden "Non classé" bucket: ${noCategory}`)
   note(`  no photography: ${noImage}`)
