@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import { getImageProps } from 'next/image'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
@@ -109,26 +109,27 @@ import { BANNERS, type Banner } from '@/constants/banners'
 const AUTOPLAY_MS = 5000
 const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 
-/** The artwork's own proportion, and the window the phone shows it through. */
-const ART_RATIO = 14179 / 3000
-const PHONE_RATIO = 21 / 9
-/** Share of the artwork's width that window shows: 0.4937. */
-const WINDOW_SHARE = PHONE_RATIO / ART_RATIO
-
 /**
- * `object-position` for the phone window, from the banner's declared `focus`.
+ * THE DESIGNER'S CUT ARRIVED, AND IT RETIRED THIRTY LINES OF ARITHMETIC.
  *
- * Under `object-fit: cover` a percentage aligns the same percentage of the image
- * with that percentage of the box, so the visible span is
- * [(1-k)X, (1-k)X + k] and its centre is (1-k)X + k/2. Setting that centre to
- * the declared focus gives the line below. Clamped, because three of the five
- * pieces put their words far enough right that the window ends up flush to the
- * artwork's edge.
+ * What stood here was a conversion from a banner's declared `focus` to an
+ * `object-position`, plus the three constants it needed: the artwork's own
+ * 4.726:1, the 21:9 window a phone was shown it through, and the 0.4937 share of
+ * the width that window revealed. It existed for one reason, which the comment at
+ * the head of this file stated as a limitation rather than as a design: a
+ * 14 179 by 3 000 piece cannot be shown whole on a phone, so something had to
+ * choose which half survived, and no choice was good because the headlines span
+ * up to 43 per cent of a width the window only showed 49 per cent of.
+ *
+ * That comment also named the two ways out and said both belonged to the designer
+ * and not to the code. One of them has now been taken: each piece has been
+ * recomposed at 3.046:1, so the phone is shown a complete picture and nothing is
+ * cropped at all. The arithmetic that chose a crop has nothing left to choose,
+ * and code kept "in case" is code nobody dares to change. `focus` stays in the
+ * constant, unread, as the honest record of where the words sit on the wide
+ * piece, and because a sixth banner arriving without a mobile cut would need it
+ * back.
  */
-function phoneCrop(focus: number): string {
-  const x = (focus / 100 - WINDOW_SHARE / 2) / (1 - WINDOW_SHARE)
-  return `${Math.round(Math.min(1, Math.max(0, x)) * 1000) / 10}% center`
-}
 
 /** A drag shorter than this is a tap, not a swipe. */
 const SWIPE_MIN = 44
@@ -409,7 +410,23 @@ function Track({
             animate={{ x: `-${index * (100 / BANNERS.length)}%` }}
             transition={reduced ? { duration: 0 } : SPRING}
           >
-            {BANNERS.map((banner: Banner, position) => (
+            {BANNERS.map((banner: Banner, position) => {
+              const common = { alt: banner.alt, sizes: '100vw' }
+              const { props: wide } = getImageProps({
+                ...common,
+                src: `/branding/${banner.file}`,
+                width: 14179,
+                height: 3000,
+                priority: position === 0,
+              })
+              const { props: narrow } = getImageProps({
+                ...common,
+                src: `/branding/${banner.mobileFile}`,
+                width: 2400,
+                height: 788,
+                priority: position === 0,
+              })
+              return (
               <Link
                 key={banner.file}
                 href={banner.href}
@@ -450,20 +467,35 @@ function Track({
 
                     `objectPosition` carries the banner's declared `focus`, so
                     what survives the crop is the half with the words in it. */}
-                <span className="relative block aspect-[3/1] w-full bg-[var(--placeholder)] sm:aspect-[14179/3000]">
-                  <Image
-                    src={`/branding/${banner.file}`}
-                    alt={banner.alt}
-                    fill
-                    priority={position === 0}
-                    sizes="100vw"
-                    draggable={false}
-                    style={{ objectPosition: phoneCrop(banner.focus) }}
-                    className="object-cover select-none sm:!object-[50%_center]"
-                  />
+                <span className="relative block aspect-[2400/788] w-full bg-[var(--placeholder)] sm:aspect-[14179/3000]">
+                  {/* ONE PICTURE ELEMENT, TWO FILES, AND THE BROWSER CHOOSES.
+                      `getImageProps` is Next's own answer to art direction, and it
+                      is the right tool here for a reason two stacked `Image`s
+                      would have got wrong: with `hidden sm:block` both files are
+                      in the document, and the one carrying `priority` is fetched
+                      whether it will be shown or not. A phone on a metered
+                      connection would have paid for a 14 179-pixel-wide desktop
+                      banner it never displays. A `<source media>` is decided
+                      before a single byte moves.
+
+                      The query is 640px because that is Tailwind's `sm`, and `sm`
+                      is where the box changes ratio two lines above. The two have
+                      to be the same number, or for one breakpoint's width the
+                      frame and the file disagree and the piece is either cropped
+                      or letterboxed. */}
+                  <picture>
+                    <source media="(min-width: 640px)" srcSet={wide.srcSet} sizes="100vw" />
+                    <img
+                      {...narrow}
+                      alt={banner.alt}
+                      draggable={false}
+                      className="absolute inset-0 size-full object-cover select-none"
+                    />
+                  </picture>
                 </span>
               </Link>
-            ))}
+              )
+            })}
           </motion.div>
         </div>
       </div>

@@ -52,3 +52,6 @@ next-env.d.ts
 
 # rapport de la derniere synchronisation, regenere a chaque execution
 /data/source/sync-report.txt
+
+# bannieres mobiles brutes du designer, redimensionnees dans public/branding/mobile
+/public/branding/mobile banner/

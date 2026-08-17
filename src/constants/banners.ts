@@ -39,13 +39,28 @@ export interface Banner {
    * exists only in the pixels.
    */
   readonly alt: string
-  /** Where the words sit across the width, for the phone's window. */
+  /**
+   * THE PHONE'S OWN CUT OF THE SAME PIECE, AND ITS ARRIVAL RETIRED A WHOLE
+   * MECHANISM. `focus` below exists because the phone used to be shown the wide
+   * 4.726:1 artwork through a narrow window, so something had to decide WHICH
+   * part of the composition survived; the answer was never good, because a
+   * headline that spans 43 per cent of the width cannot be centred inside a
+   * window that shows 49. The designer has now supplied each piece recomposed at
+   * 3.046:1, so the phone is shown a whole picture and nothing is cropped at all.
+   *
+   * `focus` is kept and no longer read for the mobile file. It is still the
+   * honest record of where the words sit on the wide piece, and it would be
+   * needed again the day a sixth banner arrives with no mobile cut.
+   */
+  readonly mobileFile: string
+  /** Where the words sit across the width of the WIDE piece. See `mobileFile`. */
   readonly focus: number
 }
 
 export const BANNERS: readonly Banner[] = [
   {
     file: 'banner-1-cuisine.jpg',
+    mobileFile: 'mobile/banner-1-cuisine.jpg',
     href: '/categorie/electromenager',
     label: 'Cuisine',
     alt: 'Moins d’effort, plus de plaisir en cuisine. Micro-ondes, blenders et bouilloires chez NowTech Center.',
@@ -53,6 +68,7 @@ export const BANNERS: readonly Banner[] = [
   },
   {
     file: 'banner-3-reseaux.jpg',
+    mobileFile: 'mobile/banner-3-reseaux.jpg',
     href: '/rayon/reseaux-switchs-routeurs',
     label: 'Réseaux',
     alt: 'Protégez votre réseau, sécurisez vos données. Solutions de sécurité réseau et licences Cisco et Fortinet.',
@@ -60,6 +76,7 @@ export const BANNERS: readonly Banner[] = [
   },
   {
     file: 'banner-4-tv-audio.jpg',
+    mobileFile: 'mobile/banner-4-tv-audio.jpg',
     href: '/categorie/televisions-tv-ecrans-plats',
     label: 'TV et audio',
     alt: 'Le meilleur du son et de l’image. Téléviseurs, barres de son, enceintes et casques.',
@@ -67,6 +84,7 @@ export const BANNERS: readonly Banner[] = [
   },
   {
     file: 'banner-5-electromenager.jpg',
+    mobileFile: 'mobile/banner-5-electromenager.jpg',
     href: '/categorie/electromenager',
     label: 'Électroménager',
     alt: 'L’essentiel de l’électroménager. Réfrigérateurs, congélateurs, lave-linge, climatiseurs et ventilateurs.',
@@ -74,6 +92,7 @@ export const BANNERS: readonly Banner[] = [
   },
   {
     file: 'banner-6-impression.jpg',
+    mobileFile: 'mobile/banner-6-impression.jpg',
     href: '/categorie/imprimantes-copieurs',
     label: 'Impression',
     alt: 'Imprimez sans limites. Des imprimantes performantes pour la maison et le bureau.',
