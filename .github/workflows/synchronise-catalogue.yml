@@ -130,8 +130,21 @@ jobs:
       - name: Commiter si quelque chose a changé
         run: |
           set -euo pipefail
-          git config user.name "Synchronisation catalogue"
-          git config user.email "noreply@now-tech-website.vercel.app"
+          # L'AUTEUR DOIT ETRE QUELQU'UN QUE VERCEL CONNAIT, ET LA PREMIERE
+          # VERSION NE L'ETAIT PAS. Elle commitait sous
+          # noreply@now-tech-website.vercel.app, une adresse que j'avais
+          # inventee parce qu'elle avait l'air officielle. Elle n'appartient a
+          # aucun compte, et Vercel refuse de deployer un commit dont l'auteur
+          # n'a pas acces au projet: c'est sa protection contre les poussees non
+          # autorisees. La synchronisation fonctionnait donc parfaitement,
+          # commitait, et le deploiement etait bloque juste apres, ce qui est le
+          # pire endroit ou echouer puisque rien dans le journal du robot ne le
+          # dit.
+          #
+          # Elle est configurable pour que le jour ou le compte Vercel change,
+          # ce soit une variable a modifier et pas un fichier a redeployer.
+          git config user.name "${{ vars.AUTEUR_NOM || 'Synchronisation catalogue' }}"
+          git config user.email "${{ vars.AUTEUR_EMAIL || 'nvcreativesstaff@gmail.com' }}"
           # Seuls les fichiers source sont versionnés : src/data/generated est
           # dans .gitignore et se reconstruit au build.
           git add data/source/catalog.csv data/source/categories.csv \
