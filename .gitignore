@@ -55,3 +55,9 @@ next-env.d.ts
 
 # bannieres mobiles brutes du designer, redimensionnees dans public/branding/mobile
 /public/branding/mobile banner/
+
+# export du catalogue, regenerable par npm run catalog
+/export/
+
+# lien vers export/images pour le rendu local (MEDIA_LOCAL=1)
+/public/media

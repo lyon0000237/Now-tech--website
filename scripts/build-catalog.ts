@@ -361,8 +361,87 @@ function extractSpecs(name: string, limit = 3): string[] {
 }
 
 /** `YYYY-MM` taken from the WordPress upload path — the export has no created_at. */
+/**
+ * Sert les photographies depuis le disque plutot que depuis le client.
+ *
+ * POURQUOI C'EST UN INTERRUPTEUR ET PAS UN CHANGEMENT. En production les images
+ * viennent de nowtechcenter.com, ce qui est correct: elles y sont deja, elles
+ * sont servies par le cache de Cloudflare, et next/image les redimensionne en
+ * AVIF au palier exact de la vignette. Rien de tout cela ne merite d'etre
+ * remplace tant que la boutique du client existe.
+ *
+ * Mais les 6 686 fichiers ont ete exportes dans export/images, et il faut
+ * pouvoir verifier que le site rend a l'identique avec eux, sans reseau. D'ou
+ * MEDIA_LOCAL=1: le prefixe des URL bascule vers /media, que public/media pointe
+ * par un lien symbolique. Aucune copie, aucun octet dans le depot, et le
+ * comportement par defaut est inchange.
+ *
+ * C'est aussi la porte de sortie du jour ou le catalogue devra vivre sans le
+ * WordPress du client: le meme remplacement, avec l'adresse d'un stockage objet
+ * a la place de /media.
+ */
+const MEDIA_SOURCE = 'https://nowtechcenter.com/wp-content/uploads/'
+const MEDIA_LOCAL = process.env.MEDIA_LOCAL === '1'
+
+/**
+ * LES CINQUANTE-TROIS FICHIERS QUI FAISAIENT TOMBER LES FICHES PRODUIT.
+ *
+ * Vercel repondait 502 sur des fiches produit, et l'optimiseur d'images en etait
+ * la cause: `application-code: 18ms` contre `next.js: 7.3s`. Plafonner les
+ * paliers a 1080 a regle 98,8 pour cent des cas, parce qu'un packshot ordinaire
+ * s'encode en 0,24 a 0,48 seconde. Il restait 53 fichiers de plus d'un mega,
+ * tous en PNG, dont 47 generees par ChatGPT et deposees sans compression: 2,5 Mo
+ * chacune, 1254 par 1254, et 3 a 5 secondes pour etre decodees puis reencodees
+ * QUELLE QUE SOIT la largeur demandee. Mesure: 3,31 s meme a 640 pixels. Le
+ * cout dominant n'est pas la sortie, c'est le decodage du PNG plus le trajet
+ * jusqu'a une origine qui repond entre 2 et 17 secondes.
+ *
+ * On ne peut pas rallonger le budget d'une fonction Vercel. Donc on retire le
+ * travail au lieu d'acheter du temps: ces 53 images sont reencodees une fois, a
+ * 1080 en WebP, et servies depuis notre propre depot. Elles passent de 108,8 Mo
+ * a 6,83 Mo, soit 132 Ko en moyenne et 94 pour cent de moins, ce qui tient sans
+ * gene dans `public/`. L'optimiseur ne voit plus qu'un petit WebP local, sans
+ * trajet reseau: le meme travail que pour les 6 633 autres.
+ *
+ * CE N'EST PAS DERRIERE MEDIA_LOCAL, et c'est delibere. MEDIA_LOCAL sert a
+ * verifier hors ligne; ceci corrige la production. Les 6 633 fichiers legers
+ * continuent de venir du client, ou ils sont a leur place et servis par
+ * Cloudflare.
+ *
+ * La table est un fichier source, versionne a cote des images: le jour ou le
+ * magasin en depose une nouvelle de 2,5 Mo, il faut la regenerer, et un fichier
+ * qu'on lit est plus honnete qu'une regle qu'on devine.
+ */
+const ALLEGEES: Record<string, string> = existsSync(join(SOURCE_DIR, 'images-allegees.json'))
+  ? (JSON.parse(readFileSync(join(SOURCE_DIR, 'images-allegees.json'), 'utf8')) as Record<string, string>)
+  : {}
+
+function mediaUrl(url: string): string {
+  const allegee = ALLEGEES[url]
+  if (allegee) return allegee
+  if (!MEDIA_LOCAL || !url.startsWith(MEDIA_SOURCE)) return url
+  return '/media/' + url.slice(MEDIA_SOURCE.length)
+}
+
+/**
+ * Les racines sous lesquelles une photographie peut vivre.
+ *
+ * UNE SEULE LISTE, PARCE QUE DEUX LISTES ONT CASSE LA MEME CHOSE DEUX FOIS. La
+ * date d'ajout d'un produit n'existe nulle part dans l'export: elle est deduite
+ * du chemin WordPress de sa premiere photographie, /uploads/2018/04/. Chaque
+ * fois qu'une nouvelle racine est apparue, `uploadMonth` l'a ignoree et les
+ * produits concernes ont perdu leur date en silence. Au premier coup ce fut
+ * /media, et les 4 268 produits d'un coup; au second /allege, et 50 des 52
+ * images lourdes reencodees, ce qui a fait tomber le total de 4 230 a 4 180 sans
+ * une seule erreur nulle part.
+ *
+ * Le defaut n'etait pas la regex, c'etait d'avoir la meme connaissance ecrite a
+ * deux endroits. Elle est ici, et les deux fonctions la lisent.
+ */
+const RACINES_MEDIA = ['uploads', 'media', 'allege'] as const
+
 function uploadMonth(imageUrl: string): string | null {
-  const match = imageUrl.match(/\/uploads\/(\d{4})\/(\d{2})\//)
+  const match = imageUrl.match(new RegExp(`/(?:${RACINES_MEDIA.join('|')})/(\\d{4})/(\\d{2})/`))
   return match ? `${match[1]}-${match[2]}` : null
 }
 
@@ -567,7 +646,7 @@ function build(): Catalog {
     if (row.image_url) {
       const alt = normaliseTypography(decodeEntities(row.image_alt || row.product_name))
       if (!draft.images.some((img) => img.url === row.image_url)) {
-        draft.images.push({ url: row.image_url, alt })
+        draft.images.push({ url: mediaUrl(row.image_url), alt })
       }
     }
   }

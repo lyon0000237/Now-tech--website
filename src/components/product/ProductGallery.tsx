@@ -1,6 +1,8 @@
 'use client'
 
 import Image from 'next/image'
+
+import { Packshot } from './Packshot'
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 
@@ -358,14 +360,26 @@ export function ProductGallery({
                   selected ? 'md:block' : 'md:hidden'
                 }`}
               >
-                <Image
+                {/* LE MEME PLACEHOLDER QUE LES CARTES, CE QUI N'ETAIT PAS LE
+                    CAS. La grille passe par `Packshot`, qui pose un squelette
+                    derriere la photographie et le retire quand elle arrive; la
+                    fiche produit, elle, montait un `<Image>` nu. Le resultat est
+                    exactement ce que le magasin a remarque: les vignettes du
+                    catalogue attendent poliment et la fiche, qui affiche la plus
+                    grande image du site, restait vide. C'est l'endroit ou
+                    l'attente est la plus longue et il etait le seul sans reponse.
+
+                    `Packshot` reçoit ici la classe d'animation telle quelle: le
+                    volet joue toujours sur la photographie, et la clef reste sur
+                    lui pour que le remontage rejoue le volet sur un vrai choix.
+                    Rien du comportement existant ne change, il gagne un fond. */}
+                <Packshot
                   // See the head of this file: the active index is in the key on
                   // a wide screen so the shutter replays on a real choice, and
                   // out of it on the rail so a swipe never re-wipes anything.
                   key={!isRail && selected ? `${image}@${active}` : image}
                   src={image}
                   alt={`${name}, photographie ${index + 1} sur ${images.length}`}
-                  fill
                   sizes="(max-width: 767px) 88vw, (max-width: 1279px) 46vw, 44vw"
                   priority={index === 0}
                   className="magnify-subject object-contain motion-safe:[animation:e-media-shutter_var(--e-media)_var(--ease-shutter)_both]"
