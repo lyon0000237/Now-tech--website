@@ -90,6 +90,8 @@ export interface Category {
  * panel. See `src/constants/universes.ts` for the full rationale and bindings.
  */
 export type UniverseId =
+  | 'appliance'
+  | 'smart'
   | 'computing'
   | 'network'
   | 'security'

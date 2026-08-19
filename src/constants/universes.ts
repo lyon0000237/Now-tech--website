@@ -88,11 +88,43 @@ export const UNIVERSE_DEFINITIONS: readonly UniverseDefinition[] = [
   },
   {
     id: 'vision',
-    slug: 'tv-audio-electromenager',
-    name: 'TV, Audio & Électroménager',
-    shortName: 'TV & Audio',
-    tagline: 'Téléviseurs, vidéoprojection, hi-fi, photo, gadgets et électroménager.',
-    categoryIds: [109, 142, 1356, 1228, 1041, 1328, 1270, 395, 1346],
+    slug: 'tv-son-video',
+    name: 'TV, Son & Vidéo',
+    shortName: 'TV & Son',
+    tagline: 'Téléviseurs, vidéoprojection, hi-fi, micros et supports d’écran.',
+    // RESSERRE SUR L IMAGE ET LE SON, ET IL FALLAIT LE FAIRE. Ce rayon portait
+    // 351 produits dont 226 d image et son, 83 d electromenager et 42 qui
+    // n etaient ni l un ni l autre: un refrigerateur, un videoprojecteur, un
+    // appareil photo et un masseur partageaient la meme page. La racine 109
+    // reste ici parce qu elle s appelle « Electromenager/TV/Audio » et que sa
+    // majorite est de l image; l electromenager en est extrait par une liaison
+    // explicite sur 400, plus specifique, qui l emporte.
+    categoryIds: [109, 142, 1328, 1228, 1350],
+  },
+  {
+    id: 'appliance',
+    slug: 'electromenager',
+    name: 'Électroménager',
+    shortName: 'Électroménager',
+    tagline: 'Réfrigérateurs, congélateurs, lavage, cuisson, climatisation et ventilation.',
+    // Uniquement 400, pas la racine 109: celle-ci melange l electromenager aux
+    // televiseurs, et la lier ici ferait entrer 68 televisions et 41 chaines
+    // hi-fi dans un rayon d electromenager.
+    categoryIds: [400],
+  },
+  {
+    id: 'smart',
+    slug: 'photo-drones-objets-connectes',
+    name: 'Photo, Drones & Objets connectés',
+    shortName: 'Photo & Drones',
+    tagline: 'Appareils photo, caméscopes, drones, GPS, dictaphones et objets connectés.',
+    // Ces familles n avaient aucun foyer et se repartissaient entre deux rayons
+    // ou elles n avaient rien a faire: la photo et les drones sous TV/Audio, le
+    // GPS Garmin sous Securite/Biometrie. La liaison sur 77 est plus specifique
+    // que celle de la racine 62, donc elle sort le GPS de la videosurveillance.
+    // Le tracker GPS (736) reste en securite, ou il est a sa place: suivre un
+    // vehicule est un usage de securite, pas de navigation.
+    categoryIds: [1041, 1270, 395, 1356, 1346, 77],
   },
   {
     id: 'connectics',
@@ -107,8 +139,11 @@ export const UNIVERSE_DEFINITIONS: readonly UniverseDefinition[] = [
     slug: 'stockage-disques-nas',
     name: 'Stockage, Disques & NAS',
     shortName: 'Stockage',
-    tagline: 'Disques internes et externes, SSD, cartes mémoire et baies NAS.',
-    categoryIds: [428],
+    tagline: 'Disques internes et externes, SSD, clés USB, cartes mémoire et baies NAS.',
+    // 103 est un enfant de « Accessoires Ordinateurs » dans l export, donc il
+    // atterrissait en informatique alors qu un rayon Stockage existe. La
+    // liaison explicite le ramene ici.
+    categoryIds: [428, 103],
   },
   {
     id: 'telecom',
@@ -175,4 +210,6 @@ export const DEPARTMENT_HERO_PRODUCT: Readonly<Record<UniverseId, number>> = {
   mobile: 47141, // Galaxy Tab A9
   office: 56198, // Tool chest
   services: 39583, // Reconditioned monitor
+  appliance: 47074, // Réfrigérateur LG, porte fermée sur fond blanc
+  smart: 41026, // Canon EOS 90D, trois quarts objectif monté
 }

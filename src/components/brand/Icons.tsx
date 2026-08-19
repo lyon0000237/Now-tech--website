@@ -361,4 +361,12 @@ export const DEPARTMENT_ICON: Readonly<Record<UniverseId, ComponentType<IconProp
   mobile: IconMobile,
   office: IconChest,
   services: IconCycle,
+  // DEUX RAYONS NEUFS, AUCUNE ICONE NEUVE. La maison interdit de dessiner un
+  // glyphe de plus: la famille est fermee et un vingt-septieme trace, meme
+  // reussi, se voit. `IconBox` pour l electromenager, parce qu un refrigerateur
+  // et une machine a laver sont deux grands volumes et que c est exactement ce
+  // que le glyphe dit; `IconDome` pour la photo et les drones, parce que
+  // l objectif est ce que ces trois familles ont en commun.
+  appliance: IconBox,
+  smart: IconDome,
 }

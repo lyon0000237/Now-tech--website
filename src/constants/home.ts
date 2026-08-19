@@ -85,6 +85,20 @@ export const DEPARTMENT_CARDS: Readonly<Record<UniverseId, DepartmentCard>> = {
       'avec. {n} références, dont Canon, HP, Epson et Ricoh.',
     cta: 'Voir le rayon impression',
   },
+  appliance: {
+    headline: ['Le froid, le lavage,', 'la cuisson.'],
+    body:
+      'Réfrigérateurs, congélateurs, machines à laver, climatiseurs et cuisson. ' +
+      '{n} références, livrées et raccordées à Douala et Yaoundé.',
+    cta: 'Voir le rayon électroménager',
+  },
+  smart: {
+    headline: ['Ce qui capte,', 'ce qui vole.'],
+    body:
+      'Appareils photo, caméscopes, drones, GPS et objets connectés. ' +
+      '{n} références, du reflex au traceur de randonnée.',
+    cta: 'Voir le rayon photo et drones',
+  },
   vision: {
     headline: ['L’image et le son,', 'du salon à la salle.'],
     body:
