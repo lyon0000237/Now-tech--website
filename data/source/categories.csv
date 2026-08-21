@@ -1,8 +1,8 @@
 category_id,name,slug,parent_id,level,full_path,product_count
 17,DIVERS,non-classe,0,0,DIVERS,33
 62,Securité Electronique/Biometrie,securite_electronique,0,0,Securité Electronique/Biometrie,752
-63,Réseaux et Télecommunication,reseau-telecom,0,0,Réseaux et Télecommunication,863
-65,Accessoires Ordinateurs,accessoires_ordinateurs,0,0,Accessoires Ordinateurs,287
+63,Réseaux et Télecommunication,reseau-telecom,0,0,Réseaux et Télecommunication,864
+65,Accessoires Ordinateurs,accessoires_ordinateurs,0,0,Accessoires Ordinateurs,288
 66,Materiels de Bureautique,materiel_bureautique,0,0,Materiels de Bureautique,8
 67,.Ordinateurs,ordinateur,0,0,.Ordinateurs,541
 69,Ordinateur de Bureau/ Desktop,desktop,67,1,.Ordinateurs > Ordinateur de Bureau/ Desktop,94
@@ -14,14 +14,14 @@ category_id,name,slug,parent_id,level,full_path,product_count
 76,Interphones,interphone,62,1,Securité Electronique/Biometrie > Interphones,36
 77,GPS Garmin,gps-garmin,62,1,Securité Electronique/Biometrie > GPS Garmin,28
 78,Système Contrôle Accès/presence,controle_acces,62,1,Securité Electronique/Biometrie > Système Contrôle Accès/presence,108
-82,Routeurs/AP Wifi/ Antennes Radio,routeur-ap,63,1,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio,307
+82,Routeurs/AP Wifi/ Antennes Radio,routeur-ap,63,1,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio,308
 83,Switchs,switch,63,1,Réseaux et Télecommunication > Switchs,155
 84,Consommables Imprimantes,accessoire_imprimante,0,0,Consommables Imprimantes,229
 87,Câblage/Testeurs/ Accessoires Réseaux,cablage_lan,63,1,Réseaux et Télecommunication > Câblage/Testeurs/ Accessoires Réseaux,146
 88,Fibre Optique,fibre_optique,63,1,Réseaux et Télecommunication > Fibre Optique,39
 89,Onduleurs &amp; Batteries,onduleur_batterie,0,0,Onduleurs &amp; Batteries,185
 90,UTM/Firewall/QoS,utm,63,1,Réseaux et Télecommunication > UTM/Firewall/QoS,11
-91,Stockage NAS,nas,428,1,Stockages/disques Dur > Stockage NAS,34
+91,Stockage NAS,nas,428,1,Stockages/disques Dur > Stockage NAS,35
 92,Ecrans Moniteurs,ecran_ordinateur,67,1,.Ordinateurs > Ecrans Moniteurs,69
 93,Afficheurs Laptop,afficheur_laptop,65,1,Accessoires Ordinateurs > Afficheurs Laptop,7
 94,Claviers Laptop,clavier_laptop,65,1,Accessoires Ordinateurs > Claviers Laptop,10
@@ -59,7 +59,7 @@ category_id,name,slug,parent_id,level,full_path,product_count
 139,Onduleurs LIGHTWAVE,onduleur_lightwave,89,1,Onduleurs &amp; Batteries > Onduleurs LIGHTWAVE,13
 141,Onduleurs NITRAM,onduleur_nitram,89,1,Onduleurs &amp; Batteries > Onduleurs NITRAM,1
 142,Vidéoprojecteurs,videoprojecteur,0,0,Vidéoprojecteurs,52
-144,Routeurs/AP/Antennes Mikrotik,mikrotik,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP/Antennes Mikrotik,54
+144,Routeurs/AP/Antennes Mikrotik,mikrotik,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Routeurs/AP/Antennes Mikrotik,55
 145,Laptop ASUS,laptop_asus,70,2,.Ordinateurs > Ordinateurs portables / Laptop > Laptop ASUS,5
 146,Serveurs,serveur,67,1,.Ordinateurs > Serveurs,53
 147,Tablettes,tablette,719,1,Telephones Mobile &amp; Tablettes > Tablettes,16
@@ -83,7 +83,7 @@ category_id,name,slug,parent_id,level,full_path,product_count
 175,Lecteurs/pointeuses IPBio,lecteur_ipbio,78,2,Securité Electronique/Biometrie > Système Contrôle Accès/presence > Lecteurs/pointeuses IPBio,10
 176,Autres Cameras,autre_camera,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Autres Cameras,20
 177,Nas QNAP,nas_qnap,91,2,Stockages/disques Dur > Stockage NAS > Nas QNAP,17
-178,Nas Synology,nas_synology,91,2,Stockages/disques Dur > Stockage NAS > Nas Synology,10
+178,Nas Synology,nas_synology,91,2,Stockages/disques Dur > Stockage NAS > Nas Synology,11
 179,Régulateurs de Tension,regulateur_tension,0,0,Régulateurs de Tension,66
 180,Compteurs Billets/Detecteurs Faux Billets,detecteur_billet,0,0,Compteurs Billets/Detecteurs Faux Billets,8
 181,Télévisions TV/Ecrans Plats,television,109,1,Electromenager/TV/Audio > Télévisions TV/Ecrans Plats,68
@@ -103,11 +103,11 @@ category_id,name,slug,parent_id,level,full_path,product_count
 300,Encre RICOH,encre-ricoh,84,1,Consommables Imprimantes > Encre RICOH,4
 301,Accessoires Securité Electroniques,accessoires-securite-electroniques,62,1,Securité Electronique/Biometrie > Accessoires Securité Electroniques,35
 310,Cameras CP Plus,cameras-cp-plus,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Cameras CP Plus,1
-312,chargeurs laptop,chargeurs-laptop,65,1,Accessoires Ordinateurs > chargeurs laptop,18
+312,chargeurs laptop,chargeurs-laptop,65,1,Accessoires Ordinateurs > chargeurs laptop,19
 323,Téléphones Panasonic,telephones-panasonic,106,2,Réseaux et Télecommunication > .Téléphonie > Téléphones Panasonic,21
 324,Alimentation Caméras,alimentation-camera,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Alimentation Caméras,9
 325,Calculatrices,calculatrice,0,0,Calculatrices,1
-326,.Scanners,scanners,720,1,Imprimantes &amp; Scanner > .Scanners,30
+326,.Scanners,scanners,720,1,Imprimantes &amp; Scanner > .Scanners,31
 328,Étiqueteuses,etiqueteuses,720,1,Imprimantes &amp; Scanner > Étiqueteuses,18
 329,Nos Services,services,0,0,Nos Services,32
 331,JEUX VIDEOS ET CONSOLES,jeux-videos-et-consoles,0,0,JEUX VIDEOS ET CONSOLES,13
@@ -129,7 +129,7 @@ category_id,name,slug,parent_id,level,full_path,product_count
 369,Onduleur PREMAX,onduleur-premax,89,1,Onduleurs &amp; Batteries > Onduleur PREMAX,9
 372,bureautique,bureautique,0,0,bureautique,7
 377,Connecteurs/Prises/Coupleurs,connecteurs,87,2,Réseaux et Télecommunication > Câblage/Testeurs/ Accessoires Réseaux > Connecteurs/Prises/Coupleurs,27
-381,Disques Dur serveur et SAS,disques-dur-sas-serveur,428,1,Stockages/disques Dur > Disques Dur serveur et SAS,20
+381,Disques Dur serveur et SAS,disques-dur-sas-serveur,428,1,Stockages/disques Dur > Disques Dur serveur et SAS,21
 382,Backup Electrique/Solaire,backup-electrique-solaire,0,0,Backup Electrique/Solaire,46
 385,Système Solaire,systeme-solaires,382,1,Backup Electrique/Solaire > Système Solaire,36
 388,Multimètre,multimetre,456,1,Accessoires électriques et rallonges > Multimètre,3
@@ -150,7 +150,7 @@ category_id,name,slug,parent_id,level,full_path,product_count
 413,Casques,casques,65,1,Accessoires Ordinateurs > Casques,13
 426,Onduleur SALICRU,onduleur-salicru-onduleur_batterie,89,1,Onduleurs &amp; Batteries > Onduleur SALICRU,16
 427,Autres Imprimantes,autres-imprimantes,71,2,Imprimantes &amp; Scanner > Imprimantes/Copieurs > Autres Imprimantes,2
-428,Stockages/disques Dur,stockages,0,0,Stockages/disques Dur,178
+428,Stockages/disques Dur,stockages,0,0,Stockages/disques Dur,180
 429,CAISSE ENREGISTREUSE,caisse-enregistreuse,0,0,CAISSE ENREGISTREUSE,10
 430,Acces Point Grandstream,acces-grandstream,82,2,Réseaux et Télecommunication > Routeurs/AP Wifi/ Antennes Radio > Acces Point Grandstream,12
 435,Amplificateur de Signal,amplificateur-de-signal,63,1,Réseaux et Télecommunication > Amplificateur de Signal,20
@@ -188,7 +188,7 @@ category_id,name,slug,parent_id,level,full_path,product_count
 503,Camera Espion,camera-espion,75,2,Securité Electronique/Biometrie > .Caméras de Surveillance > Camera Espion,1
 718,Alarmes,alarmes,62,1,Securité Electronique/Biometrie > Alarmes,74
 719,Telephones Mobile &amp; Tablettes,telephones-mobile-tablettes,0,0,Telephones Mobile &amp; Tablettes,77
-720,Imprimantes &amp; Scanner,imprimantes-scanner,0,0,Imprimantes &amp; Scanner,288
+720,Imprimantes &amp; Scanner,imprimantes-scanner,0,0,Imprimantes &amp; Scanner,289
 723,Tambours/raclette/rouleau,tambours-raclette,84,1,Consommables Imprimantes > Tambours/raclette/rouleau,12
 724,VideoConference,video-conference,397,1,LOGITECH > VideoConference,4
 728,Ram Serveur,ram-serveur,65,1,Accessoires Ordinateurs > Ram Serveur,8

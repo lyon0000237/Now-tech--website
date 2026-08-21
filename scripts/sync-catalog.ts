@@ -75,6 +75,7 @@ import {
   type WooCategory,
   type WooProduct,
 } from './lib/woo.ts'
+import { allegerLesLourdes, synchroniserImages } from './lib/media.ts'
 import {
   checkCategory,
   checkProduct,
@@ -91,6 +92,9 @@ const CATEGORIES_CSV = join(SOURCE, 'categories.csv')
 const STATE = join(SOURCE, 'sync-state.json')
 const SLUGS = join(SOURCE, 'slug-map.json')
 const REPORT = join(SOURCE, 'sync-report.txt')
+const IMAGES = join(ROOT, 'export', 'images')
+const ALLEGE = join(ROOT, 'public', 'allege')
+const TABLE_ALLEGEES = join(SOURCE, 'images-allegees.json')
 
 const full = process.argv.includes('--full')
 const dryRun = process.argv.includes('--dry-run')
@@ -505,6 +509,27 @@ async function main(): Promise<void> {
   const productRows = [...rowsByProduct.entries()]
     .sort((a, b) => a[0] - b[0])
     .flatMap(([, rows]) => rows)
+
+  // -- les fichiers suivent les donnees --------------------------------------
+  //
+  // AVANT D ECRIRE LE CSV, PAS APRES. Si le rapatriement echoue, le catalogue
+  // n est pas reecrit et l ancien reste en place: mieux vaut un produit de
+  // moins qu un produit dont la photographie est introuvable. Les URL viennent
+  // de tout le fichier et non des seuls produits touches, ce qui rattrape aussi
+  // les images manquantes d une execution precedente.
+  const toutesLesImages = productRows
+    .map((r) => r[COLUMNS.indexOf('image_url')])
+    .filter((u) => u && u.startsWith('https://'))
+
+  const media = await synchroniserImages(toutesLesImages, IMAGES, say)
+  if (media.echecs) {
+    say(`  ATTENTION : ${media.echecs} photographies n ont pas pu etre rapatriees.`)
+    for (const u of media.manquantes.slice(0, 10)) say(`    ${u}`)
+  }
+  if (media.telechargees) {
+    say(`  rapatriees : ${media.telechargees} fichiers, ${(media.octets / 1048576).toFixed(1)} Mo`)
+  }
+  await allegerLesLourdes(toutesLesImages, IMAGES, ALLEGE, TABLE_ALLEGEES, say)
 
   mkdirSync(SOURCE, { recursive: true })
   writeCsv(CATALOG_CSV, COLUMNS, productRows)

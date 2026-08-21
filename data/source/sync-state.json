@@ -1,8 +1,8 @@
 {
-  "lastSyncedAt": "2026-08-17T11:37:16.708Z",
-  "lastModifiedSeen": "2026-08-17T11:37:16.708Z",
-  "productCount": 4270,
+  "lastSyncedAt": "2026-08-21T10:45:02.388Z",
+  "lastModifiedSeen": "2026-08-21T10:45:02.388Z",
+  "productCount": 4275,
   "medianPrice": 80000,
-  "onlineTotal": 4273,
-  "mode": "complète"
+  "onlineTotal": 4278,
+  "mode": "incrémentale"
 }

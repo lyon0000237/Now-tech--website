@@ -61,3 +61,6 @@ next-env.d.ts
 
 # lien vers export/images pour le rendu local (MEDIA_LOCAL=1)
 /public/media
+
+# livrables commerciaux, regenerables
+/documents/
